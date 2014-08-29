@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  ~ Mineotaur: a visual analytics tool for high-throughput microscopy screens
+  ~ Copyright (C) 2014  Bálint Antal (University of Cambridge)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*/
+<div th:fragment="plotTools">
+    <span class="label label-primary">Plot tools</span><br/>
+    <input id="log" name="log" type="checkbox" class="tool"/>
+    <label for="log">Logarithm</label><br/>
+    <input id="transpose" name="transpose" type="checkbox" class="tool"/>
+    <label for="transpose">Transpose</label><br/>
+    <input id="regression" name="regression" type="checkbox" class="tool"/>
+    <label for="regression">Regression
+
+    </label><br/>
+    <select id="regressionType">
+        <option id="linear" value="linear">Linear</option>
+        <option id="exponential" value="exponential">Exponential</option>
+        <option id="logarithmic" value="logarithmic">Logarithmic</option>
+        <option id="power" value="power">Power</option>
+        <option id="polynomial" value="polynomial">Polynomial</option>
+    </select><br/>
+    <input id="selection" name="selection" type="checkbox" class="tool"/>
+    <label for="selection">Select area</label>
+</div>
+<div th:fragment="buttons">
+    <h6><span class="glyphicon glyphicon-download"/> Download
+        <a id="csvDownload" class="tool" href="#">
+            CSV
+        </a>
+        <a id="svgDownload" class="tool" href="#">
+            SVG
+        </a> <br/>
+        <span class="glyphicon glyphicon-stats"/>
+        <a id="infoLink" role="button" class="tool" href="#">
+            Statistics
+        </a>  <br/>
+        <span class="glyphicon glyphicon-link"/>
+        <a class="tool"  id="share" href="#">
+            Share link
+        </a> <br/>
+        <span class="glyphicon glyphicon-gift"/>
+        <a class="tool"  id="embed" href="#">
+            Embed chart
+        </a>
+        <br/>
+        <span class="glyphicon glyphicon-export"/>
+        <a class="tool" href="#" id="sendToCompare">
+            Select for comparison
+        </a>
+        <br/>
+        <span class="glyphicon glyphicon-th-large"/>
+        <a class="tool compare-popup" href="#comparison">
+            Show comparison sheet
+        </a>
+        <br/>
+    </h6>
+</div>
+/*/-->
+</body>
+</html>

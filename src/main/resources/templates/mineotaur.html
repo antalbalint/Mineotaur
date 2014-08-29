@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!--
+  ~ Mineotaur: a visual analytics tool for high-throughput microscopy screens
+  ~ Copyright (C) 2014  Bálint Antal (University of Cambridge)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head lang="en">
+    <meta charset="UTF-8"/>
+    <title></title>
+
+    <link href="css/bootstrap.css" rel="stylesheet"/>
+
+    <link href="css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="css/jquery.multiselect.css" rel="stylesheet" type="text/css"/>
+    <link href="css/jquery.multiselect.filter.css" rel="stylesheet" type="text/css"/>
+    <link href="css/jquery.contextMenu.css" rel="stylesheet" type="text/css"/>
+    <link href="css/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="css/magnific-popup.css" rel="stylesheet" type="text/css"/>
+    <link href="css/sticky-footer-navbar.css" rel="stylesheet" type="text/css"/>
+    <script src="js/require.min.js"></script>
+</head>
+<!--data-main="js/mineotaur.js" -->
+<body>
+<!--<div id="genewise" class="tab-pane active">
+    <form id="graphForm" action="/getScatterPlotDataGeneJSONSeparate">
+        <div class="row clearfix">
+            <div class="col-md-8 column">
+                <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
+                    <div class="col-md-4 column"
+                         th:include="fragments/query::property('Property 1', 'prop1', ${cellProperties})"/>
+                    <div class="col-md-4 column"
+                         th:include="fragments/query::aggregation('aggProp1', ${aggValues})"/>
+                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop1')"/>
+                </div>
+                <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
+                    <div class="col-md-4 column"
+                         th:include="fragments/query::property('Property 2', 'prop2', ${cellProperties})"/>
+                    <div class="col-md-4 column"
+                         th:include="fragments/query::aggregation('aggProp2', ${aggValues})"/>
+                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop2')"/>
+                </div>
+            </div>
+            <div class="col-md-4 column">
+                <div class="col-md-4 column" style="border-right: 1px solid #ccc;"
+                     th:include="fragments/query::hits (${hits}, '')"/>
+                <div class="col-md-8 column"
+                     th:include="fragments/query::genes (${geneNames}, 'List', true, true)"/>
+            </div>
+        </div>
+        <div th:include="fragments/query::formButtons ('graphForm')"/>
+
+    </form>
+</div>
+<div class="col-md-12 column " id="graph" style="max-height:550px"/>
+<div id="spin"/>-->
+<div th:include="fragments/core::modal ('noDataModal','No data returned', 'The query did not return any data.')"/>
+<div th:include="fragments/core::modal ('sheetFullModal','The comparison sheet is full', 'The maximum number of plots to be compares is 4. Please remove one before to add a new one.')"/>
+<div th:include="fragments/core::geneList ('geneListModal','Enter a list of genes', 'Enter a list of genes (each line should contain the name of a gene):', 'geneListTextArea', 'submitGeneList')"/>
+<div th:include="fragments/core::geneList ('geneListDistModal','Enter a list of genes', 'Enter a list of genes (each line should contain the name of a gene):', 'geneListDistTextArea', 'submitGeneListDist')"/>
+
+<div th:include="fragments/core::geneList ('shareModal','Share chart', 'Copy the following URL to share the current graph:', 'shareTextArea', '')"/>
+<div th:include="fragments/core::geneList ('embedModal','Embed chart', 'Insert the following HTML tags to embed the current graph in your page:', 'embedTextArea', '')"/>
+
+
+<div class="row clearfix">
+
+    <nav class="navbar navbar-default" role="navigation">
+
+        <div class="container">
+
+            <div th:include="fragments/core::navbar"/>
+        </div>
+        <div class="tab-content container">
+            <div id="genewise" class="tab-pane active">
+                <form id="graphForm" action="/genewiseScatterJSON">
+                    <div class="row clearfix">
+                        <div class="col-md-8 column">
+                            <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
+                                <div class="col-md-4 column"
+                                     th:include="fragments/query::property('Property 1', 'prop1', ${cellProperties}, false)"/>
+                                <div class="col-md-4 column"
+                                     th:include="fragments/query::aggregation('aggProp1', ${aggValues})"/>
+                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop1')" th:if="${hasFilter}"/>
+                            </div>
+                            <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
+                                <div class="col-md-4 column"
+                                     th:include="fragments/query::property('Property 2', 'prop2', ${cellProperties}, false)"/>
+                                <div class="col-md-4 column"
+                                     th:include="fragments/query::aggregation('aggProp2', ${aggValues})"/>
+                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop2')" th:if="${hasFilter}"/>
+                            </div>
+                        </div>
+                        <div class="col-md-4 column">
+                            <div class="col-md-4 column" style="border-right: 1px solid #ccc;"
+                                 th:include="fragments/query::hits (${hits}, '', false)"/>
+                            <div class="col-md-8 column"
+                                 th:include="fragments/query::genes (${geneNames}, 'List', true, true)"/>
+                        </div>
+                    </div>
+                    <div th:include="fragments/query::formButtons ('graphForm')"/>
+                </form>
+            </div>
+
+
+            <div id="genewiseDistribution" class="tab-pane">
+                <form id="genewiseDistributionForm" action="/genewiseDistributionJSON">
+                    <div class="row clearfix">
+                        <div class="col-md-4 column" style="padding-right:0px; border-right: 1px solid #ccc;">
+                            <div class="col-md-6 column"
+                                 th:include="fragments/query::property('Property', 'propGWDist', ${cellProperties}, false)"/>
+                            <div class="col-md-6 column"
+                                 th:include="fragments/query::aggregation(aggGWDist, ${aggValues})"/>
+                        </div>
+                        <div class="col-md-4 column"
+                             style="padding-right:0px; padding-left:0px; border-right: 1px solid #ccc;">
+                            <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'GWDist')" th:if="${hasFilter}"/>
+                            <div class="col-md-6 column" th:include="fragments/query::hits (${hits}, 'GWDist', false)"/>
+                        </div>
+
+                        <div class="col-md-4 column" style="padding-left:0px;">
+                            <div class="col-md-4 column"
+                                 th:include="fragments/query::distributionPlot ('genewise', true)"/>
+                            <div class="col-md-8 column"
+                                 th:include="fragments/query::genes (${geneNames}, 'ListDist', true, true)"/>
+                        </div>
+                    </div>
+                    <br/>
+
+                    <div th:include="fragments/query::formButtons ('genewiseDistribution')"/>
+                </form>
+            </div>
+
+            <div id="cellwise" class="tab-pane">
+                <form id="cellwiseGraphForm" action="/cellwiseScatterJSON">
+                    <div class="row clearfix">
+                        <div class="col-md-12 column">
+                            <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
+                                <div class="col-md-6 column"
+                                     th:include="fragments/query::property('Property 1', 'cellwiseProp1', ${cellProperties}, false)"/>
+                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CellwiseProp1')" th:if="${hasFilter}"/>
+                            </div>
+                            <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
+                                <div class="col-md-6 column"
+                                     th:include="fragments/query::property('Property 2', 'cellwiseProp2', ${cellProperties}, false)"/>
+                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CellwiseProp2')" th:if="${hasFilter}"/>
+                            </div>
+                        </div>
+                        <div class="col-md-4 column"
+                             th:include="fragments/query::genes (${geneNames}, 'CWProp1', false, false)"/>
+                    </div>
+                    <div th:include="fragments/query::formButtons ('cellwiseGraph')"/>
+                </form>
+            </div>
+            <div id="cellwiseDistribution" class="tab-pane">
+                <form id="cellwiseDistributionForm" action="/cellwiseDistributionJSON">
+                    <div class="row clearfix">
+                        <div class="col-md-6 column">
+                            <div class="col-md-4 column"
+                                 th:include="fragments/query::genes (${geneNames}, 'CWDist', false, false)"/>
+                            <div class="col-md-4 column"
+                                 th:include="fragments/query::property('Property', 'propCWDist', ${cellProperties}, false)"/>
+                            <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CWDist')" th:if="${hasFilter}"/>
+                        </div>
+
+                        <div class="col-md-6 column"
+                             th:include="fragments/query::distributionPlot ('cellwise', false)"/>
+                    </div>
+                    <br/>
+
+                    <div th:include="fragments/query::formButtons ('cellwiseDistribution')"/>
+                </form>
+            </div>
+
+            <div id="tools" class="tab-pane">
+                <div class="row clearfix">
+                    <div class="col-md-4 column">
+                        <div class="col-md-6 column" th:include="fragments/tools::plotTools"/>
+                        <div class="col-md-6 column">
+                            <div  th:include="fragments/query::hits (${hits}, 'Filt', false)"/>
+                            Allow multiple hit types <input type="checkbox" name="include" checked="true" />
+                        </div>
+                    </div>
+                    <div class="col-md-4 column" th:include="fragments/tools::buttons"/>
+                    <div class="col-md-4 column">
+                        <div th:include="fragments/query::genes (${geneNames}, 'Filt', true, false)" />
+                        <a href="#" id="geneFiltLink">Filter</a> <a href="#" id="resetFiltLink">Reset filter</a>
+                    </div>
+
+                </div>
+            </div>
+            <div id="spin"/>
+        </div>
+
+    </nav>
+</div>
+
+<div class="container">
+    <div th:include="fragments/core::alert ('shareAlert', 'glyphicon glyphicon-ok', 'The URL of the current plot is successfully copied to your clipboard.')"/>
+    <div class="row clearfix">
+        <div class="col-md-12 column " id="graph" style="max-height:550px"/>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-12 column" id="info" hidden="hidden" th:include="fragments/core::info" />
+    </div>
+</div>
+
+<div class="mfp-hide col-md-12 column container" id="comparison" th:include="fragments/core::comparison" />
+<div th:include="fragments/core::contextMenu('menu_1',${menu1})"/>
+<div th:include="fragments/core::contextMenu('menu_2',${menu2})"/>
+<div th:include="fragments/core::startupScript"/>
+<div class="footer">
+    <div class="container">
+
+        <p class="text-muted"><img src = "img/logo.png" alt="Powered by Mineotaur" height="45px"/>Place sticky footer content here.</p>
+    </div>
+</div>
+</body>
+</html>

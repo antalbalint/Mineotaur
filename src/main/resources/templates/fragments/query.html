@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--
+  ~ Mineotaur: a visual analytics tool for high-throughput microscopy screens
+  ~ Copyright (C) 2014  Bálint Antal (University of Cambridge)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<!--/*/
+<div th:fragment="property (label, name, list, desc)">
+   <span class="label label-primary" th:text="${label}"/> <br/>
+   <select th:id="${name}" th:name="${name}" style="width: 100px">
+       <th:block th:each="p : ${list}" th:if="${desc == true}">
+           <optgroup th:label="${#strings.substringAfter(p,'#')}" th:if="${#strings.startsWith(p,'#')}"/>
+           <option th:value="${#strings.substringBefore(p,'/')}" th:text="${#strings.substringAfter(p,'/')}" th:if="!${#strings.startsWith(p,'#')}"/>
+       </th:block>
+       <th:block th:each="p : ${list}" th:if="${desc == false}">
+
+           <option th:value="${p}" th:text="${p}"/>
+       </th:block>
+   </select>
+</div>
+<div th:fragment="aggregation (name, list)">
+    <span class="label label-primary">Aggregation mode</span><br/>
+    <select th:id="${name}" th:name="${name}" style="width: 100px">
+        <option th:each="p : ${list}" th:value="${p}" th:text="${p.toString()}"/>
+    </select>
+</div>
+<div th:fragment="cellcycle2 (suffix)">
+    <span class="label label-primary">Cell cycle stage</span><br/>
+    <th:block th:with="name=${#strings.append('mapValues',suffix)}">
+        <th:block th:with="id=${#strings.append('interphase',suffix)}">
+            <input th:id="${id}" th:value="interphase" th:name="${name}" type="checkbox" checked="true"/>
+            <label th:for="${id}">Interphase</label><br/>
+        </th:block>
+        <th:block th:with="id=${#strings.append('spindle',suffix)}">
+            <input th:id="${id}" th:value="spindle"  th:name="${name}" type="checkbox" checked="true"/>
+            <label th:for="${id}">Spindle</label><br/>
+        </th:block>
+        <th:block th:with="id=${#strings.append('paa',suffix)}">
+            <input th:id="${id}" th:value="paa"  th:name="${name}" type="checkbox" checked="true"/>
+            <label th:for="${id}">PAA</label><br/>
+        </th:block>
+        <th:block th:with="id=${#strings.append('interphase2',suffix)}">
+            <input th:id="${id}" th:value="interphase2"  th:name="${name}" type="checkbox" checked="true"/>
+            <label th:for="${id}">Interphase2</label><br/>
+        </th:block>
+    </th:block>
+</div>
+<div th:fragment="cellcycle (cellcycle, suffix)">
+    <span class="label label-primary">Cell cycle stage</span><br/>
+    <th:block th:each="h: ${cellcycle}">
+        <th:block th:with="id=${#strings.append(h.key,suffix)}">
+        <input th:id="${id}" th:value="${h.key}" type="checkbox" checked="true" th:name="${#strings.append('mapValues',suffix)}"/>
+        <label th:for="${id}" th:text="${h.value}"/><br/>
+        </th:block>
+    </th:block>
+</div>
+<div th:fragment="hits (hits, suffix, desc)">
+    <span class="label label-primary">Hit type</span><br/>
+    <th:block th:each="h: ${hits}" th:if="${desc == true}">
+        <th:block th:with="id=${#strings.append(h.key,suffix)}">
+        <input th:id="${id}" th:value="${h.key}" type="checkbox" checked="true" th:name="${#strings.append('hitCheckbox',suffix)}"/>
+        <label th:for="${id}" th:text="${h.value}"/><br/>
+        </th:block>
+    </th:block>
+    <th:block th:each="h: ${hits}" th:if="${desc == false}">
+        <th:block th:with="id=${#strings.append(h,suffix)}">
+        <input th:id="${id}" th:value="${h}" type="checkbox" checked="true" th:name="${#strings.append('hitCheckbox',suffix)}"/>
+        <label th:for="${id}" th:text="${h}"/><br/>
+        </th:block>
+    </th:block>
+
+
+</div>
+<div th:fragment="genes (geneNames, suffix, multiple, selected)">
+    <span class="label label-primary">Genes</span> <br/>
+    <th:block th:with="id=${#strings.append('gene',suffix)}">
+    <select th:id="${id}" th:name="${id}" th:multiple="${multiple}" style="width: 100px">
+        <option th:each="p : ${geneNames}" th:value="${p}" th:text="${p}" th:selected="${selected}"/>
+    </select>
+    <br/><a href="#" th:id="${#strings.append('showGene',suffix)}" th:if="${multiple}">Enter a list of genes</a>
+    </th:block>
+
+</div>
+<div th:fragment="formButtons (prefix)">
+    <input type="submit" value="Submit" th:id="${#strings.append(prefix, 'Submit')}"/>
+    <input type="reset" value="Reset" th:id="${#strings.append(prefix, 'Reset')}" onclick="this.form.resetForm();"/>
+</div>
+<div th:fragment="distributionPlot (prefix,multi)">
+    <span class="label label-primary">Plot type</span> <br/>
+    <select th:id="${#strings.append(prefix, 'PlotType')}" style="width: 100px">
+        <option th:value="${#strings.append(prefix, 'Histogram')}">Histogram</option>
+        <option th:value="${#strings.append(prefix, 'MultiHistogram')}" th:if="${multi}">Multihistogram</option>
+        <option th:value="${#strings.append(prefix, 'KDE')}">Kernel Density Estimation</option>
+    </select>
+</div>
+/*/-->
+
+</body>
+</html>

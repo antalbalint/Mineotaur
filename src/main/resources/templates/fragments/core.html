@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!--
+  ~ Mineotaur: a visual analytics tool for high-throughput microscopy screens
+  ~ Copyright (C) 2014  Bálint Antal (University of Cambridge)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modal (id, title, lead)">
+    <div class="modal fade" th:id="${id}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" th:text="${title}" />
+                </div>
+                <div class="modal-body">
+                    <p class="lead"  th:text="${lead}" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:fragment="geneList (id, title, lead, txtid, submitId)">
+    <div class="modal fade" th:id="${id}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" th:text="${title}" />
+                </div>
+                <div class="modal-body">
+                    <p class="lead"  th:text="${lead}" />
+                    <textarea th:id="${txtid}" rows="10" cols="80%" autofocus="true"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" th:id="${submitId}">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:fragment="navbar">
+    <!--<div class="page-header">
+        <h1>
+            The Tool
+            &lt;!&ndash;<span class="glyphicon glyphicon-wrench"/> The tool&ndash;&gt;
+    &lt;!&ndash;<small>Use it, please.</small>&ndash;&gt;
+        </h1>
+    </div>-->
+    <ul class="nav navbar-nav" id="navigation">
+
+        <li class="active">
+            <a href="#genewise" data-toggle="tab">Gene-wise scatterplot</a>
+        </li>
+        <li>
+            <a href="#genewiseDistribution" data-toggle="tab">Gene-wise distribution</a>
+        </li>
+
+        <li>
+            <a href="#cellwise" data-toggle="tab">Cell-wise scatterplot</a>
+        </li>
+        <li>
+            <a href="#cellwiseDistribution" data-toggle="tab">Cell-wise distribution</a>
+        </li>
+        <li id="toolNav" class="disabled">
+            <a href="#tools" data-toggle="tab">Tools</a>
+        </li>
+    </ul>
+</div>
+<div th:fragment="alert (id, icon, message)">
+    <div class="alert alert-success alert-dismissable" th:id="${id}" style="display:none;">
+        <button type="button" class="close" aria-hidden="true">&times;</button>
+        <span th:class="${icon}" th:text="${message}"/>
+    </div>
+</div>
+<div th:fragment="info">
+    Number of datapoints:
+    <div id="num"/>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Property</th>
+            <th>Average</th>
+            <th>St. dev</th>
+            <th>Median</th>
+            <th>Min</th>
+            <th>Max</th>
+        </tr>
+        </thead>
+        <tbody id="infoBody" />
+    </table>
+</div>
+<div th:fragment="comparison">
+    <div class="row clearfix">
+        <div class="popup-content col-md-12 column">
+            <a href="#" id="switchChartsLink">
+                Switch
+            </a>
+            <a href="#" id="synchronizeChartsLink">
+                Synchronize
+            </a>
+        </div>
+    </div>
+    <div class="popup-content col-md-6 column" id="graph0" hidden="hidden"/>
+    <div class="popup-content col-md-6 column" id="graph1" hidden="hidden"/>
+    <div class="popup-content col-md-6 column" id="graph2" hidden="hidden"/>
+    <div class="popup-content col-md-6 column" id="graph3" hidden="hidden"/>
+</div>
+<div th:fragment="contextMenu(id, items)">
+    <ul th:id="${id}" class="jeegoocontext cm_default">
+        <th:block th:each="p:${items}">
+            <li th:id="${p.key}" th:text="${p.value}" />
+        </th:block>
+    </ul>
+</div>
+<div th:fragment="startupScript">
+    <script th:inline="javascript">
+
+        /*<![CDATA[*/
+         require.config({
+    baseUrl: 'js/lib',
+    paths: {
+        mineotaur: '../mineotaur'
+    },
+    urlArgs: "bust=" + (new Date()).getTime(),
+    shim: {
+            'jquery.blockUI': ['jquery'],
+            'jquery.form': ['jquery'],
+            'jquery.history': ['jquery'],
+            'jquery.jeegoocontext': ['jquery'],
+            'jquery.magnific-popup': ['jquery'],
+            'jquery.multiselect': ['jquery','jquery-ui'],
+            'jquery.multiselect.filter': ['jquery','jquery-ui','jquery.multiselect'],
+            'jquery-ui': ['jquery'],
+            'bootstrap': ['jquery'],
+            'regression' : {exports: 'regression'},
+            'numbers': {exports: 'numbers'},
+            'underscore': {
+                  exports: '_'
+                },
+    }
+});
+
+require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur/events', 'jquery', 'jquery.blockUI'], function(controller, context, ui, events, $) {
+    var sharedLink = /*[[${sharedLink}]]*/false;
+            console.log(sharedLink);
+            geneNames = /*[[${geneNames}]]*/null;
+            if (sharedLink) {
+
+                prop1 = /*[[${prop1}]]*/null;
+                console.log(prop1);
+
+                prop2 = /*[[${prop2}]]*/null;
+                console.log(prop2);
+                context.setProperties([prop1, prop2]);
+                data = /*[[${dataPoints}]]*/null;
+                console.log(data);
+                context.setData(data);
+                type = /*[[${type}]]*/null;
+                console.log(type);
+                context.setType(type);
+                context.setTarget('#graph');
+                context.setId('chart');
+                ui.showSpinner('spin');
+                $.blockUI();
+                if (type == 'genewiseScatter') {
+                    events.genewiseScatterSuccess(data,prop1,prop2);
+                }
+                else if (type == 'cellwiseScatter') {
+                    events.cellwiseScatterSuccess(data,prop1,prop2);
+                }
+                else if (type == 'genewiseHistogram' || type == 'genewiseMultiHistogram' || type == 'genewiseKDE') {
+                    events.genewiseDistributionSuccess(data,prop1);
+                }
+                else if (type == 'cellwiseHistogram' || type == 'cellwiseKDE') {
+                    events.cellwiseDistributionSuccess(data,prop1);
+                }
+            }
+});
+
+        /*]]>*/
+
+</script>
+</div>
+</body>
+</html>
