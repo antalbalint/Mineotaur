@@ -16,33 +16,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.common;
+package org.mineotaur.provider;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.tooling.GlobalGraphOperations;
+
 import java.util.List;
+import java.util.Map;
 
 /**
- * Created by balintantal on 29/05/2014.
+ * Created by balintantal on 14/01/2014.
  */
-public class FileUtil {
+public interface GraphDatabaseProvider {
 
-    public static List<String> processTextFile(String file) {
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lines.add(line);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return lines;
-    }
+    GraphDatabaseService getDatabaseService();
 
+    GlobalGraphOperations getGlobalGraphOperations();
+
+    List<String> getGeneNames();
+
+    List<String> getCellProperties();
+
+    List<String> getAggregationModes();
+
+    Map<String, String> getTimePoints();
+
+    Map<String, org.neo4j.graphdb.Label> getHitLabels();
+
+    Map<org.neo4j.graphdb.Label, String> getHitNames();
+
+    Map<String, Node> getStrainsByName();
+
+    Node findStrainByGenename(String name);
+
+    Map<String, Object> getContext();
+
+    Map<String, String> getTexts();
 }
+

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.importer;
+package org.mineotaur.importer;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

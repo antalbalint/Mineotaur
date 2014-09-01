@@ -16,32 +16,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.model;
+package org.mineotaur.common;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by balintantal on 29/05/2014.
  */
-public enum AggregationMode {
-    AVERAGE("Average"), MIN("Min"), MAX("Max"), MEDIAN("Median"), STDEV("Standard deviation"), NUMBER("Number");
+public class FileUtil {
 
-    private String name;
-
-    AggregationMode(String name) {
-        this.name = name;
-    }
-
-    public static AggregationMode byName(String _name) {
-        AggregationMode[] values = values();
-        for (AggregationMode mode: values) {
-            if (mode.name.equals(_name)) {
-                return mode;
+    public static List<String> processTextFile(String file) {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lines.add(line);
             }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        throw new EnumConstantNotPresentException(AggregationMode.class, "There is no aggregation mode with the name: " + _name);
+        return lines;
     }
 
-    @Override
-    public String toString() {
-        return name;
+    public static void saveList(String file, List<String> list) {
+        try (PrintWriter pw = new PrintWriter(file)) {
+            for (String s: list) {
+                pw.println(s);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
+
 }

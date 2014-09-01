@@ -7,7 +7,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	var colors = ["#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#e41a1c", "#ffff33"];
 	// NOT USED. Old color palette, not colorblind safe.
 	var oldColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd"];
-	var allLabels = ['Wild type', 'Microtubule hit', 'Shape hit', 'Cell cycle hit', 'Control'];
+	var allLabels = null/* = ['Wild type', 'Microtubule hit', 'Shape hit', 'Cell cycle hit', 'Control']*/;
 	var brush = 0;
 	var margin = {
 		top: 20,
@@ -18,6 +18,9 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	var selected = [];
 
 	function getColor(label) {
+	    if (allLabels === null) {
+	        allLabels = context.getLabels();
+	    }
 			for (i = 0; i < allLabels.length; ++i) {
 				if (label == allLabels[i]) {
 					return colors[i];

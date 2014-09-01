@@ -28,7 +28,8 @@ define(['underscore'], function (_) {
                             };
     var URL;
     var include;
-        var keyisdown = false;
+    var keyisdown = false;
+    var labels;
 
 
     function doLog(input, adjustRange) {
@@ -72,7 +73,12 @@ define(['underscore'], function (_) {
                     });
     }
     return {
-
+        setLabels: function(_labels) {
+            labels = _labels;
+        },
+        getLabels: function() {
+            return labels;
+        },
         setURL: function(_URL) {
             URL=_URL;
         },

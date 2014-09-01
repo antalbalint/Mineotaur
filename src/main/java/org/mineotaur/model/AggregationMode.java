@@ -16,17 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.importer;
+package org.mineotaur.model;
 
 /**
- * Created by balintantal on 30/06/2014.
+ * Created by balintantal on 29/05/2014.
  */
-public class IdSequence {
+public enum AggregationMode {
+    AVERAGE("Average"), MIN("Min"), MAX("Max"), MEDIAN("Median"), STDEV("Standard deviation"), NUMBER("Number");
 
-    private int count=0;
+    private String name;
 
-    public int getNextId() {
-        return count++;
+    AggregationMode(String name) {
+        this.name = name;
     }
 
+    public static AggregationMode byName(String _name) {
+        AggregationMode[] values = values();
+        for (AggregationMode mode: values) {
+            if (mode.name.equals(_name)) {
+                return mode;
+            }
+        }
+        throw new EnumConstantNotPresentException(AggregationMode.class, "There is no aggregation mode with the name: " + _name);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

@@ -16,26 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.application;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import java.util.logging.Logger;
+package org.mineotaur.importer;
 
 /**
- * Created by balintantal on 28/05/2014.
+ * Created by balintantal on 30/06/2014.
  */
-@ComponentScan(basePackages = {"org.org.mineotor.controller", "org.org.mineotor.application"})
-@EnableAutoConfiguration
-public class Mineotor extends WebMvcConfigurerAdapter {
+public class IdSequence {
 
-    public static Logger LOGGER = Logger.getLogger(Mineotor.class.getName());
+    private int count=0;
 
-    public static void main(String[] args) {
-        SpringApplication.run(Mineotor.class, args);
+    public int getNextId() {
+        return count++;
     }
 
 }

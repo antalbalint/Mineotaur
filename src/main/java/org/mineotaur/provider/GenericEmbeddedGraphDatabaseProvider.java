@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.provider;
+package org.mineotaur.provider;
 
 
-import org.mineotor.common.FileUtil;
+import org.mineotaur.common.FileUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -35,7 +35,7 @@ import java.util.*;
 /**
  * Created by balintantal on 28/05/2014.
  */
-public class GenericEmbeddedGraphDatabaseProvider implements org.mineotor.provider.GraphDatabaseProvider {
+public class GenericEmbeddedGraphDatabaseProvider implements org.mineotaur.provider.GraphDatabaseProvider {
 
     /*static {
         initProperties();
@@ -57,11 +57,11 @@ public class GenericEmbeddedGraphDatabaseProvider implements org.mineotor.provid
 
     private void initProperties() {
             try {
-                PROPERTIES = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotor.properties"));
-                EXTERNAL_TEXTS = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotor.strings"));
+                PROPERTIES = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotaur.properties"));
+                EXTERNAL_TEXTS = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotaur.strings"));
                 String baseDir = PROPERTIES.getString("base_dir");
-                CONTEXT.put("features", FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("features_path")));
-                if (PROPERTIES.getString("hasFilter").equals("false")) {
+                CONTEXT.put("features", FileUtil.processTextFile("conf" + File.separator + "mineotaur.features"));
+                if (PROPERTIES.getString("hasFilters").equals("false")) {
                     CONTEXT.put("hasFilter", false);
                 }
                 else {

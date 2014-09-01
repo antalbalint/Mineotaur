@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.application;
+package org.mineotaur.application;
 
 import org.apache.catalina.connector.Connector;
-import org.mineotor.provider.GenericEmbeddedGraphDatabaseProvider;
-import org.mineotor.provider.GraphDatabaseProvider;
+import org.mineotaur.provider.GenericEmbeddedGraphDatabaseProvider;
+import org.mineotaur.provider.GraphDatabaseProvider;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
 import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;

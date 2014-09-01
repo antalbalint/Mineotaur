@@ -16,16 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.mineotor.controller;
+package org.mineotaur.controller;
 
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
-import org.mineotor.application.Mineotor;
-import org.mineotor.provider.GraphDatabaseProvider;
+import org.mineotaur.application.Mineotaur;
+import org.mineotaur.provider.GraphDatabaseProvider;
 import org.neo4j.graphdb.*;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -476,12 +477,12 @@ public class MineotorController {
         model.addAttribute("menu1", menu1);
         model.addAttribute("menu2", menu2);
         List<String> features = (List<String>) context.get("features");
-        Mineotor.LOGGER.info(features.toString());
+        Mineotaur.LOGGER.info(features.toString());
         filters = (List<String>) context.get("filters");
         hasFilter = filters != null && !filters.isEmpty();
         if (hasFilter) {
             model.addAttribute("cellcycle", filters);
-            Mineotor.LOGGER.info(filters.toString());
+            Mineotaur.LOGGER.info(filters.toString());
         }
 
             model.addAttribute("hasFilter", hasFilter);
@@ -493,5 +494,8 @@ public class MineotorController {
         model.addAttribute("aggValues", aggregationModes);
     }
 
-
+    @ModelAttribute("allLabels")
+    public List<Label> getAllHitLabels() {
+        return allHitLabels;
+    }
 }

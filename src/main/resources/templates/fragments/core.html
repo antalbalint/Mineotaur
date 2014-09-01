@@ -160,6 +160,7 @@
 });
 
 require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur/events', 'jquery', 'jquery.blockUI'], function(controller, context, ui, events, $) {
+    context.setLabels(/*[[${allLabels}]]*/null);
     var sharedLink = /*[[${sharedLink}]]*/false;
             console.log(sharedLink);
             geneNames = /*[[${geneNames}]]*/null;
