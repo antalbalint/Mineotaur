@@ -1,0 +1,5 @@
+org.mineotaur.application
+org.mineotaur.common
+org.mineotaur.controller
+org.mineotaur.importer
+org.mineotaur.provider
