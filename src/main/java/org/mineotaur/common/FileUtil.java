@@ -23,10 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by balintantal on 29/05/2014.
+ * Class for common file utilites.
  */
 public class FileUtil {
 
+    /**
+     * Reads a text file line by line and returns a list containing the lines.
+     * @param file Path to the text file.
+     * @return the list containing the lines
+     */
     public static List<String> processTextFile(String file) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -42,6 +47,11 @@ public class FileUtil {
         return lines;
     }
 
+    /**
+     * Saves a list of strings as lines to a text file
+     * @param file Path to the text file.
+     * @param list the list containing the lines.
+     */
     public static void saveList(String file, List<String> list) {
         try (PrintWriter pw = new PrintWriter(file)) {
             for (String s: list) {

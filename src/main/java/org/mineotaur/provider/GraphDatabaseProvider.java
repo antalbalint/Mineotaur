@@ -19,39 +19,34 @@
 package org.mineotaur.provider;
 
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.tooling.GlobalGraphOperations;
 
-import java.util.List;
 import java.util.Map;
 
 /**
+ * Interface for the graph database providers.
+ *
  * Created by balintantal on 14/01/2014.
  */
 public interface GraphDatabaseProvider {
 
+    /**
+     * Method to access the database instance started.
+     * @return The graph database service instance.
+     */
     GraphDatabaseService getDatabaseService();
 
+    /**
+     * Method to access the GlobalGraphOperations instance.
+     * @return the GlobalGraphOperations instance.
+     */
     GlobalGraphOperations getGlobalGraphOperations();
 
-    List<String> getGeneNames();
-
-    List<String> getCellProperties();
-
-    List<String> getAggregationModes();
-
-    Map<String, String> getTimePoints();
-
-    Map<String, org.neo4j.graphdb.Label> getHitLabels();
-
-    Map<org.neo4j.graphdb.Label, String> getHitNames();
-
-    Map<String, Node> getStrainsByName();
-
-    Node findStrainByGenename(String name);
-
+    /**
+     * Method to access the context variables.
+     * @return A map containing all the context vaiables.
+     */
     Map<String, Object> getContext();
 
-    Map<String, String> getTexts();
 }
 

@@ -34,25 +34,28 @@ import java.util.*;
 
 /**
  * Class containing fields and methods to generate a graph database from the input provided by the user.
+ * @author Bálint Antal
+ * @version 0.5b
  */
 public class DatabaseGenerator {
 
-    public static final String HIT = "HIT";
-    public static final String NUMBER = "NUMBER";
-    public static final String ID = "ID";
-    public static final String JAVA_LANG_STRING = "java.lang.String";
-    public static final String FILTER = "FILTER";
-    public static final String COLLECTED = "COLLECTED";
+    private static final String HIT = "HIT";
+    private static final String NUMBER = "NUMBER";
+    private static final String ID = "ID";
+    private static final String JAVA_LANG_STRING = "java.lang.String";
+    private static final String FILTER = "FILTER";
+    private static final String COLLECTED = "COLLECTED";
+    private static final String FILE_SEPARATOR = File.separator;
+    private static final String CONF = "conf";
+    private static final String DB = "db";
     private ResourceBundle properties;
     private String prop;
     private String name;
     private String separator;
-    private static final String FILE_SEPARATOR = File.separator;
-    private static final String CONF = "conf";
-    private static final String DB = "db";
     private String path;
     private String dbPath;
     private String group;
+    private String descriptive;
     private String groupName;
     private List<String> unique;
     private GraphDatabaseService db;
@@ -86,7 +89,7 @@ public class DatabaseGenerator {
     /**
      *  Method for processing of environment variables and creating and starting an empty database.
      */
-    private void init() {
+    protected void init() {
         try {
             processProperties();
             startDB();
@@ -100,7 +103,7 @@ public class DatabaseGenerator {
      * Processing input properties and creating a directory to store configuration files.
      * @throws IOException if there is an error with the input property file
      */
-    private void processProperties() throws IOException {
+    protected void processProperties() throws IOException {
         properties = new PropertyResourceBundle(new FileReader(prop));
         name = properties.getString("name");
         group = properties.getString("group");
@@ -108,7 +111,8 @@ public class DatabaseGenerator {
         groupName = properties.getString("groupName");
         mineotaurProperties.put("groupName", groupName);
         groupLabel = DynamicLabel.label(group);
-        descriptiveLabel = DynamicLabel.label(properties.getString("descriptive"));
+        descriptive = properties.getString("descriptive");
+        descriptiveLabel = DynamicLabel.label(descriptive);
         unique = Arrays.asList(properties.getString("unique").split(","));
         separator = properties.getString("separator");
         createDirs();
@@ -126,7 +130,7 @@ public class DatabaseGenerator {
     /**
      * Method for creating a directory for the configuration files.
      */
-    private void createDirs() {
+    protected void createDirs() {
         new File(name).mkdir();
         //System.out.println(new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).toString());
         new File(path).mkdir();
@@ -136,7 +140,7 @@ public class DatabaseGenerator {
      * Creates relationships between the appropriate nodes.
      * @param rels A string containing the names. Each relationship should be separated by a ',', while the nodes should be separated by '-'.
      */
-    private void createRelationships(String rels) {
+    protected void createRelationships(String rels) {
         String[] terms = rels.split(",");
         for (String s : terms) {
             String[] objects = s.split("-");
@@ -152,7 +156,7 @@ public class DatabaseGenerator {
     /**
      * Starts the database. If there was no database in the path present, a new instance is created.
      */
-    private void startDB() {
+    protected void startDB() {
         GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(dbPath);
         gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, totalMemory);
         gdb.setConfig(GraphDatabaseSettings.cache_type, cache);
@@ -165,7 +169,7 @@ public class DatabaseGenerator {
      * Registers a shutdown hook for the database (from neo4j.com).
      * @param graphDb The database.
      */
-    private static void registerShutdownHook(final GraphDatabaseService graphDb) {
+    protected static void registerShutdownHook(final GraphDatabaseService graphDb) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -193,7 +197,7 @@ public class DatabaseGenerator {
             precompute(Integer.valueOf(properties.getString("precompute_limit")));
         }
         else {
-            mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptiveLabel));
+            mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
         }
         storeFeatureNames(db);
         storeGroupnames(db);
@@ -210,7 +214,7 @@ public class DatabaseGenerator {
      * @throws InstantiationException
      * @throws NoSuchFieldException
      */
-    private void readInput(String input) throws IOException, javassist.NotFoundException, CannotCompileException, IllegalAccessException, InstantiationException, NoSuchFieldException {
+    protected void readInput(String input) throws IOException, javassist.NotFoundException, CannotCompileException, IllegalAccessException, InstantiationException, NoSuchFieldException {
         try (BufferedReader br = new BufferedReader(new FileReader(input)); Transaction tx = db.beginTx()) {
             header = br.readLine().split(separator);
             nodeTypes = br.readLine().split(separator);
@@ -270,7 +274,7 @@ public class DatabaseGenerator {
      * @throws NotFoundException
      * @throws CannotCompileException
      */
-    private void generateClasses() throws NotFoundException, CannotCompileException {
+    protected void generateClasses() throws NotFoundException, CannotCompileException {
         ClassPool pool = ClassPool.getDefault();
         for (String key : keySet) {
             CtClass claz = pool.makeClass(key);
@@ -302,7 +306,7 @@ public class DatabaseGenerator {
      * @param idFields The names of the fields act as identifiers for the class.
      * @return The text of the equals method.
      */
-    private String buildEquals(String name, List<String> idFields) {
+    protected String buildEquals(String name, List<String> idFields) {
         StringBuilder sb = new StringBuilder();
         sb.append("public boolean equals(Object o) {\n");
         sb.append("if (this == o) return true;\n" +
@@ -324,7 +328,7 @@ public class DatabaseGenerator {
      * @throws InstantiationException
      * @throws NoSuchFieldException
      */
-    private void processData(BufferedReader br) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
+    protected void processData(BufferedReader br) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
         String line;
         while ((line = br.readLine()) != null) {
             String[] terms = line.split(separator);
@@ -372,7 +376,7 @@ public class DatabaseGenerator {
      * @return The Node created from the object.
      * @throws IllegalAccessException
      */
-    private Node createNode(Object o) throws IllegalAccessException {
+    protected Node createNode(Object o) throws IllegalAccessException {
         Class claz = o.getClass();
         Label label = labels.get(claz.getName());
         Node node = db.createNode(label);
@@ -389,7 +393,7 @@ public class DatabaseGenerator {
      * @return The retireved Node object or if not exists, a new one created by createNode.
      * @throws IllegalAccessException
      */
-    private Node lookupNode(Object o) throws IllegalAccessException {
+    protected Node lookupNode(Object o) throws IllegalAccessException {
         Class claz = o.getClass();
         String label = claz.getName();
         List<Node> storedNodes = nonUniqueNodes.get(label);
@@ -422,16 +426,14 @@ public class DatabaseGenerator {
      * Method to label group objects.
      * @param file The ?SV file containing the labels.
      */
-    private void labelGenes(String file) {
+    protected void labelGenes(String file) {
         try (Transaction tx = db.beginTx(); BufferedReader br = new BufferedReader(new FileReader(file))) {
             String[] header = br.readLine().split(separator);
             //System.out.println(Arrays.toString(header));
             String line;
             //int count = 0;
             List<String> list = new ArrayList<>();
-            for (int i = 1; i < header.length; ++i) {
-                list.add(header[i]);
-            }
+            list.addAll(Arrays.asList(header).subList(1, header.length));
             FileUtil.saveList(new StringBuilder(path).append("mineotaur.hitLabels").toString(), list);
             while ((line = br.readLine()) != null) {
                 String[] terms = line.split("\t");
@@ -469,14 +471,14 @@ public class DatabaseGenerator {
      * @param limit The maximum number of fetched Nodes per transactions.
      * @throws IOException
      */
-    private void precompute(int limit) throws IOException {
+    protected void precompute(int limit) throws IOException {
         int count = 0;
         Transaction tx = null;
         try {
             tx = db.beginTx();
             Label precomputed = DynamicLabel.label(group + "_" + COLLECTED);
             RelationshipType preRT = DynamicRelationshipType.withName(COLLECTED);
-            RelationshipType rt = relationships.get(group).get(descriptiveLabel);
+            RelationshipType rt = relationships.get(group).get(descriptive);
             Iterator<Node> nodes = ggo.getAllNodesWithLabel(groupLabel).iterator();
             while (nodes.hasNext()) {
                 count++;
@@ -534,7 +536,11 @@ public class DatabaseGenerator {
         }
     }
 
-    public void storeFeatureNames(GraphDatabaseService db) {
+    /**
+     * Method to store feature names in an external file.
+     * @param db The GraphDatabaseService instance.
+     */
+    protected void storeFeatureNames(GraphDatabaseService db) {
         try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
@@ -548,15 +554,17 @@ public class DatabaseGenerator {
                         labels.add(prop);
                     }
                 }
-                //labels.add(node.getProperty("GFP","") + ", " + node.getProperty("Deletion",""));
             }
-            //System.out.println(labels.toString());
             FileUtil.saveList(new StringBuilder(path).append("mineotaur.features").toString(), labels);
             tx.success();
         }
     }
 
-    public void storeGroupnames(GraphDatabaseService db) {
+    /**
+     * Method to store the names of the group objects in an external file.
+     * @param db The GraphDatabaseService instance.
+     */
+    protected void storeGroupnames(GraphDatabaseService db) {
         try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(groupLabel).iterator();
@@ -576,9 +584,25 @@ public class DatabaseGenerator {
         }
     }
 
-    private void generatePropertyFile() throws IOException {
+    /**
+     * Method to store the filters in an external file.
+     */
+    protected void storeFilters() {
+        List<String> filterNames = new ArrayList<>();
+        for (Integer i : filters) {
+            filterNames.add(header[i]);
+        }
+        FileUtil.saveList(new StringBuilder(path).append("mineotaur.filters").toString(), filterNames);
+    }
+
+    /**
+     * Method to store the environment properties for the Mineotaur instance.
+     * @throws IOException
+     */
+    protected void generatePropertyFile() throws IOException {
         if (filters.isEmpty()) {
             mineotaurProperties.put("hasFilters", "false");
+            storeFilters();
         }
         mineotaurProperties.store(new FileWriter(new StringBuilder(path).append("mineotaur.properties").toString()), "Mineotaur configuration properties");
     }

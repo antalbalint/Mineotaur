@@ -26,18 +26,27 @@ import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomize
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
- * Created by balintantal on 28/05/2014.
+ * Spring Config for Mineotaur.
  */
 @Configuration
-public class MineotorConfig {
+public class MineotaurConfig {
 
+    /**
+     * Injects a provider instance.
+     * @return The GraphDatabaseProvider instance.
+     */
     @Bean(name = "provider")
     public GraphDatabaseProvider graphDatabaseProvider() {
         return new GenericEmbeddedGraphDatabaseProvider();
     }
 
+    /**
+     * Sets servlet container properties.
+     * @return the EmbeddedServletContainerFactory instance.
+     */
     @Bean
     public EmbeddedServletContainerFactory servletContainer() {
         TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();

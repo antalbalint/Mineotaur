@@ -31,14 +31,27 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Created by balintantal on 28/05/2014.
+ * Main class for mineotaur.
+ * Parses command line arguments and either start the Mineotaur, imports a dataset or prints out the usage help.
  */
 @ComponentScan(basePackages = {"org.mineotaur.controller", "org.mineotaur.application"})
 @EnableAutoConfiguration
 public class Mineotaur extends WebMvcConfigurerAdapter {
 
+    /**
+     * Logger instance for Mineotaur.
+     */
     public static Logger LOGGER = Logger.getLogger(Mineotaur.class.getName());
 
+    /**
+     * Name of the current Mineotaur instance.
+     */
+    public static String name;
+
+    /**
+     * Method to parse command line arguments using Apache Commons CLI.
+     * @param args command-line arguments.
+     */
     private static void parseArguments(String[] args) {
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
@@ -49,7 +62,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
         try {
             CommandLine line = parser.parse(options, args);
             if (line.hasOption("start")) {
-                //TODO set mine path
+                name = args[2];
                 SpringApplication.run(Mineotaur.class, args);
             }
             else if (line.hasOption("import")) {
@@ -77,6 +90,10 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
         }
     }
 
+    /**
+     * Main entry point for the application.
+     * @param args command-line arguments.
+     */
     public static void main(String[] args) {
         parseArguments(args);
     }

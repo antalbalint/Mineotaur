@@ -41,24 +41,24 @@
             <div class="col-md-8 column">
                 <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                     <div class="col-md-4 column"
-                         th:include="fragments/query::property('Property 1', 'prop1', ${cellProperties})"/>
+                         th:include="fragments/query::property('Property 1', 'prop1', ${features})"/>
                     <div class="col-md-4 column"
                          th:include="fragments/query::aggregation('aggProp1', ${aggValues})"/>
-                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop1')"/>
+                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop1')"/>
                 </div>
                 <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                     <div class="col-md-4 column"
-                         th:include="fragments/query::property('Property 2', 'prop2', ${cellProperties})"/>
+                         th:include="fragments/query::property('Property 2', 'prop2', ${features})"/>
                     <div class="col-md-4 column"
                          th:include="fragments/query::aggregation('aggProp2', ${aggValues})"/>
-                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop2')"/>
+                    <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop2')"/>
                 </div>
             </div>
             <div class="col-md-4 column">
                 <div class="col-md-4 column" style="border-right: 1px solid #ccc;"
                      th:include="fragments/query::hits (${hits}, '')"/>
                 <div class="col-md-8 column"
-                     th:include="fragments/query::genes (${geneNames}, 'List', true, true)"/>
+                     th:include="fragments/query::genes (${groupNames}, 'List', true, true)"/>
             </div>
         </div>
         <div th:include="fragments/query::formButtons ('graphForm')"/>
@@ -91,24 +91,24 @@
                         <div class="col-md-8 column">
                             <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::property('Property 1', 'prop1', ${cellProperties}, false)"/>
+                                     th:include="fragments/query::property('Property 1', 'prop1', ${features}, false)"/>
                                 <div class="col-md-4 column"
                                      th:include="fragments/query::aggregation('aggProp1', ${aggValues})"/>
-                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop1')" th:if="${hasFilter}"/>
+                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop1')" th:if="${hasFilter}"/>
                             </div>
                             <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::property('Property 2', 'prop2', ${cellProperties}, false)"/>
+                                     th:include="fragments/query::property('Property 2', 'prop2', ${features}, false)"/>
                                 <div class="col-md-4 column"
                                      th:include="fragments/query::aggregation('aggProp2', ${aggValues})"/>
-                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'Prop2')" th:if="${hasFilter}"/>
+                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop2')" th:if="${hasFilter}"/>
                             </div>
                         </div>
                         <div class="col-md-4 column">
                             <div class="col-md-4 column" style="border-right: 1px solid #ccc;"
                                  th:include="fragments/query::hits (${hits}, '', false)"/>
                             <div class="col-md-8 column"
-                                 th:include="fragments/query::genes (${geneNames}, 'List', true, true)"/>
+                                 th:include="fragments/query::genes (${groupNames}, 'List', true, true)"/>
                         </div>
                     </div>
                     <div th:include="fragments/query::formButtons ('graphForm')"/>
@@ -121,13 +121,13 @@
                     <div class="row clearfix">
                         <div class="col-md-4 column" style="padding-right:0px; border-right: 1px solid #ccc;">
                             <div class="col-md-6 column"
-                                 th:include="fragments/query::property('Property', 'propGWDist', ${cellProperties}, false)"/>
+                                 th:include="fragments/query::property('Property', 'propGWDist', ${features}, false)"/>
                             <div class="col-md-6 column"
                                  th:include="fragments/query::aggregation(aggGWDist, ${aggValues})"/>
                         </div>
                         <div class="col-md-4 column"
                              style="padding-right:0px; padding-left:0px; border-right: 1px solid #ccc;">
-                            <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'GWDist')" th:if="${hasFilter}"/>
+                            <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'GWDist')" th:if="${hasFilter}"/>
                             <div class="col-md-6 column" th:include="fragments/query::hits (${hits}, 'GWDist', false)"/>
                         </div>
 
@@ -135,7 +135,7 @@
                             <div class="col-md-4 column"
                                  th:include="fragments/query::distributionPlot ('genewise', true)"/>
                             <div class="col-md-8 column"
-                                 th:include="fragments/query::genes (${geneNames}, 'ListDist', true, true)"/>
+                                 th:include="fragments/query::genes (${groupNames}, 'ListDist', true, true)"/>
                         </div>
                     </div>
                     <br/>
@@ -150,17 +150,17 @@
                         <div class="col-md-12 column">
                             <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
                                 <div class="col-md-6 column"
-                                     th:include="fragments/query::property('Property 1', 'cellwiseProp1', ${cellProperties}, false)"/>
-                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CellwiseProp1')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::property('Property 1', 'cellwiseProp1', ${features}, false)"/>
+                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'CellwiseProp1')" th:if="${hasFilter}"/>
                             </div>
                             <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
                                 <div class="col-md-6 column"
-                                     th:include="fragments/query::property('Property 2', 'cellwiseProp2', ${cellProperties}, false)"/>
-                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CellwiseProp2')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::property('Property 2', 'cellwiseProp2', ${features}, false)"/>
+                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'CellwiseProp2')" th:if="${hasFilter}"/>
                             </div>
                         </div>
                         <div class="col-md-4 column"
-                             th:include="fragments/query::genes (${geneNames}, 'CWProp1', false, false)"/>
+                             th:include="fragments/query::genes (${groupNames}, 'CWProp1', false, false)"/>
                     </div>
                     <div th:include="fragments/query::formButtons ('cellwiseGraph')"/>
                 </form>
@@ -170,10 +170,10 @@
                     <div class="row clearfix">
                         <div class="col-md-6 column">
                             <div class="col-md-4 column"
-                                 th:include="fragments/query::genes (${geneNames}, 'CWDist', false, false)"/>
+                                 th:include="fragments/query::genes (${groupNames}, 'CWDist', false, false)"/>
                             <div class="col-md-4 column"
-                                 th:include="fragments/query::property('Property', 'propCWDist', ${cellProperties}, false)"/>
-                            <div class="col-md-4 column" th:include="fragments/query::cellcycle(${cellcycle}, 'CWDist')" th:if="${hasFilter}"/>
+                                 th:include="fragments/query::property('Property', 'propCWDist', ${features}, false)"/>
+                            <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'CWDist')" th:if="${hasFilter}"/>
                         </div>
 
                         <div class="col-md-6 column"
@@ -196,7 +196,7 @@
                     </div>
                     <div class="col-md-4 column" th:include="fragments/tools::buttons"/>
                     <div class="col-md-4 column">
-                        <div th:include="fragments/query::genes (${geneNames}, 'Filt', true, false)" />
+                        <div th:include="fragments/query::genes (${groupNames}, 'Filt', true, false)" />
                         <a href="#" id="geneFiltLink">Filter</a> <a href="#" id="resetFiltLink">Reset filter</a>
                     </div>
 

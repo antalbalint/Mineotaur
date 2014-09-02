@@ -19,6 +19,7 @@
 package org.mineotaur.provider;
 
 
+import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.FileUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
@@ -33,54 +34,57 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * An implementation of GraphDatabaseProvider interface.
+ * Initializes a context object and starts the database for the requested Mineotaur database.
+ *
  * Created by balintantal on 28/05/2014.
  */
-public class GenericEmbeddedGraphDatabaseProvider implements org.mineotaur.provider.GraphDatabaseProvider {
-
-    /*static {
-        initProperties();
-        initDatabase();
-    }*/
+public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvider {
+    public static final String AVERAGE = "Average";
+    public static final String MAXIMUM = "Maximum";
+    public static final String MINIMUM = "Minimum";
+    public static final String MEDIAN = "Median";
+    public static final String STANDARD_DEVIATION = "Standard deviation";
+    public static final String COUNT = "Count";
 
     private static ResourceBundle PROPERTIES;
-    private static ResourceBundle EXTERNAL_TEXTS;
     private static GraphDatabaseService DATABASE;
     private static GlobalGraphOperations GGO;
     private static Map<String, Object> CONTEXT = new HashMap<>();
-    private static Map<String, String> TEXTS = new HashMap<>();
     private static List<String> AGGREGATION_MODES;
-    private static Map<String, Node> STRAINS_BY_GENE_NAMES;
-    private static List<String> GENE_NAMES;
-    private static List<String> hitLabels;
+    private static List<String> GROUP_NAMES;
+    private static List<String> HIT_LABELS;
     private Label groupLabel;
     private String groupName;
 
-    private void initProperties() {
+    /**
+     * Method to load initial properties from.
+     */
+    protected void initProperties() {
             try {
-                PROPERTIES = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotaur.properties"));
-                EXTERNAL_TEXTS = new PropertyResourceBundle(new FileReader("conf" + File.separator + "mineotaur.strings"));
-                String baseDir = PROPERTIES.getString("base_dir");
-                CONTEXT.put("features", FileUtil.processTextFile("conf" + File.separator + "mineotaur.features"));
+                String baseDir = Mineotaur.name + File.separator + "conf" + File.separator;
+                PROPERTIES = new PropertyResourceBundle(new FileReader(baseDir + "mineotaur.properties"));
+                CONTEXT.put("features", FileUtil.processTextFile(baseDir + "mineotaur.features"));
                 if (PROPERTIES.getString("hasFilters").equals("false")) {
                     CONTEXT.put("hasFilter", false);
                 }
                 else {
                     CONTEXT.put("hasFilter", true);
-                    CONTEXT.put("filters", FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("filters_path")));
+                    CONTEXT.put("filters", FileUtil.processTextFile(baseDir + "mineotaur.filters"));
                 }
-                GENE_NAMES = FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("strain_names_path"));
-                CONTEXT.put("geneNames", GENE_NAMES);
+                GROUP_NAMES = FileUtil.processTextFile(baseDir + "mineotaur.groupNames");
+                CONTEXT.put("geneNames", GROUP_NAMES);
                 List<String> labels = FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("node_labels_path"));
                 Map<String, Label> labelMap = new HashMap<>();
                 for (String label: labels) {
                     labelMap.put(label, DynamicLabel.label(label));
                 }
                 CONTEXT.put("nodeLabels", labelMap);
-                hitLabels = FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("hit_labels_path"));
-                CONTEXT.put("hitNames", hitLabels);
+                HIT_LABELS = FileUtil.processTextFile(baseDir + "mineotaur.hitLabels");
+                CONTEXT.put("hitNames", HIT_LABELS);
                 Map<String, Label> labelMap2 = new HashMap<>();
                 Map<Label, String> labelMap3 = new HashMap<>();
-                for (String label: hitLabels) {
+                for (String label: HIT_LABELS) {
                     Label l = DynamicLabel.label(label);
                     labelMap2.put(label, l);
                     labelMap3.put(l, label);
@@ -88,68 +92,68 @@ public class GenericEmbeddedGraphDatabaseProvider implements org.mineotaur.provi
                 CONTEXT.put("hitLabels", labelMap2);
                 CONTEXT.put("hitsByLabel", labelMap3);
                 CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
+                CONTEXT.put("aggValues", getAggregationModes());
                 groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
                 groupName = PROPERTIES.getString("group_name");
-                String[] aggModes = {"avg", "max", "min", "median", "stdev", "number"};
-                for (String mode: aggModes) {
-                    TEXTS.put(mode, EXTERNAL_TEXTS.getString(mode));
+                Map<String, Node> groupByGroupName = new HashMap<>();
+                try (Transaction tx = DATABASE.beginTx()) {
+                        for (String name: GROUP_NAMES) {
+                            Iterator<Node> nodes = DATABASE.findNodesByLabelAndProperty(groupLabel, groupName, name).iterator();
+                            Node node = nodes.next();
+                            if (nodes.hasNext()) {
+                                throw new IllegalStateException("There are more group objects in the database with the same name.");
+                            }
+                            groupByGroupName.put(name, node);
+                        }
+                    tx.success();
                 }
+                CONTEXT.put("groupByGroupName", groupByGroupName);
             } catch (IOException e) {
                 e.printStackTrace();
             }
     }
 
-    public List<String> getAggregationModes() {
+    /**
+     * Method to retrieve the list of aggregation modes.
+     * @return A list containing the aggregation modes.
+     */
+    private List<String> getAggregationModes() {
         if (AGGREGATION_MODES == null) {
             AGGREGATION_MODES = new ArrayList<>();
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("avg"));
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("max"));
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("min"));
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("median"));
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("stdev"));
-            AGGREGATION_MODES.add(EXTERNAL_TEXTS.getString("number"));
+            AGGREGATION_MODES.add(AVERAGE);
+            AGGREGATION_MODES.add(MAXIMUM);
+            AGGREGATION_MODES.add(MINIMUM);
+            AGGREGATION_MODES.add(MEDIAN);
+            AGGREGATION_MODES.add(STANDARD_DEVIATION);
+            AGGREGATION_MODES.add(COUNT);
         }
         return AGGREGATION_MODES;
     }
 
-    private void initDatabase() {
+    /**
+     * Method to start the database.
+     */
+    protected void initDatabase() {
         if (PROPERTIES == null) {
             initProperties();
         }
         if (DATABASE ==  null) {
             GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-            //gdb.setConfig( GraphDatabaseSettings.read_only, "true" );
             gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
             gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-            //gdb.setConfig(GraphDatabaseSettings.allow_store_upgrade, "true");
             DATABASE = gdb.newGraphDatabase();
 
         }
         if (GGO == null) {
             GGO = GlobalGraphOperations.at(DATABASE);
         }
-        /*try (Transaction tx = DATABASE.beginTx()) {
-            Iterator<Node> strains = GGO.getAllNodesWithLabel(((Map<String, Label>)CONTEXT.get("nodeLabels")).get("STRAIN")).iterator();
-            Map<String, Map<String, Node>> strainMap = new HashMap<>();
-            while (strains.hasNext()) {
-                Node strainNode = strains.next();
-                //TODO store strain properties, select group by property
-                String deletion = (String) strainNode.getProperty("Deletion", null);
-                String gfp = (String) strainNode.getProperty("GFP", null);
-                Map<String, Node> map = strainMap.get(deletion);
-                if (map == null) {
-                    map = new HashMap<>();
-                }
-                map.put(gfp, strainNode);
-
-                strainMap.put(deletion, map);
-                CONTEXT.put("strains", strainMap);
-            }
-            tx.success();
-        }*/
 
     }
 
+    /**
+     * Method to access the database instance started.
+     * @return The graph database service instance.
+     */
     @Override
     public GraphDatabaseService getDatabaseService() {
         if (DATABASE == null) {
@@ -158,6 +162,10 @@ public class GenericEmbeddedGraphDatabaseProvider implements org.mineotaur.provi
         return DATABASE;
     }
 
+    /**
+     * Method to access the GlobalGraphOperations instance.
+     * @return the GlobalGraphOperations instance.
+     */
     @Override
     public GlobalGraphOperations getGlobalGraphOperations() {
         if (DATABASE == null) {
@@ -166,70 +174,13 @@ public class GenericEmbeddedGraphDatabaseProvider implements org.mineotaur.provi
         return GGO;
     }
 
-    @Override
-    public List<String> getGeneNames() {
-        return GENE_NAMES;
-    }
-
-    @Override
-    public List<String> getCellProperties() {
-        return null;
-    }
-
-
-    @Override
-    public Map<String, String> getTimePoints() {
-        return null;
-    }
-
-    @Override
-    public Map<String, Label> getHitLabels() {
-        return null;
-    }
-
-    @Override
-    public Map<Label, String> getHitNames() {
-
-        return null;
-    }
-
-    @Override
-    public Map<String, Node> getStrainsByName() {
-        try (Transaction tx = DATABASE.beginTx()) {
-            Iterator<Node> nodes = GGO.getAllNodesWithLabel(groupLabel).iterator();
-            /*while (nodes.hasNext()) {
-                System.out.println(nodes.next().getProperty(groupName));
-            }*/
-            if (STRAINS_BY_GENE_NAMES == null) {
-                List<String> geneNames = getGeneNames();
-                STRAINS_BY_GENE_NAMES = new HashMap<>();
-                for (String name: geneNames) {
-                    STRAINS_BY_GENE_NAMES.put(name, findStrainByGenename(name));
-                }
-            }
-            tx.success();
-        }
-
-        return STRAINS_BY_GENE_NAMES;
-    }
-
-    @Override
-    public Node findStrainByGenename(String name) {
-
-        Iterator<Node> nodes = DATABASE.findNodesByLabelAndProperty(groupLabel, groupName, name).iterator();
-        Node node = nodes.next();
-        return node;
-    }
-
+    /**
+     * Method to access the context variables.
+     * @return A map containing all the context vaiables.
+     */
     @Override
     public Map<String, Object> getContext() {
         return CONTEXT;
     }
-
-    @Override
-    public Map<String, String> getTexts() {
-        return GenericEmbeddedGraphDatabaseProvider.TEXTS;
-    }
-
 
 }
