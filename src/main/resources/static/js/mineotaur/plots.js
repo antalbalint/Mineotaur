@@ -4,7 +4,8 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	// Maximum opacity value for the circles. 1 = not opaque, 0 = completely opaque.
 	var maxOpacity = 0.8;
 	// Colorblind safe palette for labels. From colorbrewer2.org.
-	var colors = ["#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#e41a1c", "#ffff33"];
+	var colors = ["#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#e41a1c", "#ffff33", "#9467bd"];
+    //var colors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(254,224,144)','rgb(224,243,248)','rgb(171,217,233)','rgb(116,173,209)','rgb(69,117,180)','rgb(49,54,149)']
 	// NOT USED. Old color palette, not colorblind safe.
 	var oldColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd"];
 	var allLabels = null/* = ['Wild type', 'Microtubule hit', 'Shape hit', 'Cell cycle hit', 'Control']*/;
@@ -21,6 +22,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	    if (allLabels === null) {
 	        allLabels = context.getLabels();
 	    }
+	    console.log(allLabels)
 			for (i = 0; i < allLabels.length; ++i) {
 				if (label == allLabels[i]) {
 					return colors[i];
@@ -279,13 +281,13 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 			.data(data)
 			.enter()
 			// Adds link to each circle to the corresponding sysgro page.
-			.append("a")
-			.attr("xlink:href", function (d) {
-				if (d.name != "") {
-					return "http://sysgro.org/omero/HTscape/geneFromScreen/" + d.name
-				}
-			})
-			.attr("target", "_blank")
+//			.append("a")
+//			.attr("xlink:href", function (d) {
+//				if (d.name != "") {
+//					return "http://sysgro.org/omero/HTscape/geneFromScreen/" + d.name
+//				}
+//			})
+//			.attr("target", "_blank")
 			.append("circle")
 			// Adds context menu via the context_1 class attribute. See eventlistener.js for more.
 			.attr("class", "dot context_1")

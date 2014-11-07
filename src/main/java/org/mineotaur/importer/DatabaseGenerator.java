@@ -80,6 +80,9 @@ public class DatabaseGenerator {
     private Properties mineotaurProperties = new Properties();
     private String totalMemory;
     private String cache;
+    private Set<String> relKeySet;
+    private boolean toPrecompute;
+
 
     public DatabaseGenerator(String prop) {
         this.prop = prop;
@@ -93,7 +96,7 @@ public class DatabaseGenerator {
         try {
             processProperties();
             startDB();
-            Mineotaur.LOGGER.info("Database started.");
+            Mineotaur.LOGGER.info("Database created.");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -107,24 +110,24 @@ public class DatabaseGenerator {
         properties = new PropertyResourceBundle(new FileReader(prop));
         name = properties.getString("name");
         group = properties.getString("group");
-        mineotaurProperties.put("group", group);
         groupName = properties.getString("groupName");
-        mineotaurProperties.put("groupName", groupName);
         groupLabel = DynamicLabel.label(group);
         descriptive = properties.getString("descriptive");
         descriptiveLabel = DynamicLabel.label(descriptive);
         unique = Arrays.asList(properties.getString("unique").split(","));
         separator = properties.getString("separator");
-        createDirs();
-        createRelationships(properties.getString("relationships"));
+
 
         //mineotaurProperties.put("base_dir", name);
         totalMemory = properties.getString("total_memory");
         cache = properties.getString("cache");
-        mineotaurProperties.put("total_memory", totalMemory);
-        path = new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).append(FILE_SEPARATOR).toString();
+        //path = new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).append(FILE_SEPARATOR).toString();
+        path = name + File.separator + CONF + File.separator;
         dbPath = new StringBuilder(name).append(FILE_SEPARATOR).append(DB).append(FILE_SEPARATOR).toString();
-        mineotaurProperties.put("db_path", dbPath);
+        createDirs();
+        createRelationships(properties.getString("relationships"));
+        relKeySet = relationships.keySet();
+        toPrecompute = "true".equals(properties.getString("precompute"));
     }
 
     /**
@@ -133,6 +136,7 @@ public class DatabaseGenerator {
     protected void createDirs() {
         new File(name).mkdir();
         //System.out.println(new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).toString());
+
         new File(path).mkdir();
     }
 
@@ -190,18 +194,22 @@ public class DatabaseGenerator {
      * @throws NoSuchFieldException
      */
     public void generateDatabase(String dataFile, String labelFile) throws IllegalAccessException, IOException, InstantiationException, CannotCompileException, NotFoundException, NoSuchFieldException {
+        /*Mineotaur.LOGGER.info("Processing input data.");
         readInput(dataFile);
+        Mineotaur.LOGGER.info("Processing label data.");
         labelGenes(labelFile);
-        if ("true".equals(properties.getString("precompute"))) {
-            mineotaurProperties.put("query_relationship", "COLLECTED");
+        if (toPrecompute) {
+            Mineotaur.LOGGER.info("Precomputing nodes.");
             precompute(Integer.valueOf(properties.getString("precompute_limit")));
         }
         else {
             mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
-        }
+        }*/
+        Mineotaur.LOGGER.info("Generating property files.");
         storeFeatureNames(db);
         storeGroupnames(db);
         generatePropertyFile();
+        Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
     }
 
     /**
@@ -215,15 +223,16 @@ public class DatabaseGenerator {
      * @throws NoSuchFieldException
      */
     protected void readInput(String input) throws IOException, javassist.NotFoundException, CannotCompileException, IllegalAccessException, InstantiationException, NoSuchFieldException {
-        try (BufferedReader br = new BufferedReader(new FileReader(input)); Transaction tx = db.beginTx()) {
+        try (BufferedReader br = new BufferedReader(new FileReader(input))) {
+            Mineotaur.LOGGER.info("Processing metadata.");
             header = br.readLine().split(separator);
             nodeTypes = br.readLine().split(separator);
             dataTypes = br.readLine().split(separator);
             processHeader();
             keySet = signatures.keySet();
             generateClasses();
-            processData(br);
-            tx.success();
+            processData(br, Integer.valueOf(properties.getString("process_limit")));
+
         }
     }
 
@@ -328,46 +337,73 @@ public class DatabaseGenerator {
      * @throws InstantiationException
      * @throws NoSuchFieldException
      */
-    protected void processData(BufferedReader br) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
+    protected void processData(BufferedReader br, int limit) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
         String line;
-        while ((line = br.readLine()) != null) {
-            String[] terms = line.split(separator);
-            Map<String, Object> data = new HashMap<>();
-            for (String key : keySet) {
-                List<Integer> indices = signatures.get(key);
-                Class claz = classes.get(key);
-                Object o = claz.newInstance();
-                for (Integer i : indices) {
-                    if (!terms[i].isEmpty()) {
-                        Field field = claz.getDeclaredField(header[i]);
-                        if (numericData.contains(i)) {
-                            field.setDouble(o, Double.valueOf(terms[i]));
-                        } else {
-                            field.set(o, terms[i]);
+        Mineotaur.LOGGER.info("Processing data...");
+        int lineCount = 0, nodeCount = 0;
+        Transaction tx = null;
+        try {
+            tx = db.beginTx();
+            while ((line = br.readLine()) != null) {
+                System.out.println("Line #" + (lineCount++));
+                String[] terms = line.split(separator);
+                Map<String, Object> data = new HashMap<>();
+                for (String key : keySet) {
+                    List<Integer> indices = signatures.get(key);
+                    Class claz = classes.get(key);
+                    Object o = claz.newInstance();
+                    for (Integer i : indices) {
+                        if (!terms[i].isEmpty()) {
+                            Field field = claz.getDeclaredField(header[i]);
+                            if (numericData.contains(i)) {
+                                field.setDouble(o, Double.valueOf(terms[i]));
+                            } else {
+                                field.set(o, terms[i]);
+                            }
                         }
                     }
+                    data.put(key, o);
                 }
-                data.put(key, o);
-            }
-            Map<String, Node> newNodes = new HashMap<>();
-            for (String key : keySet) {
-                if (unique.contains(key)) {
-                    newNodes.put(key, createNode(data.get(key)));
-                } else {
-                    newNodes.put(key, lookupNode(data.get(key)));
+                Map<String, Node> newNodes = new HashMap<>();
+                for (String key : keySet) {
+                    nodeCount++;
+                    if (unique.contains(key)) {
+                        newNodes.put(key, createNode(data.get(key)));
+
+                    } else {
+                        newNodes.put(key, lookupNode(data.get(key)));
+                    }
                 }
-            }
-            keySet = relationships.keySet();
-            for (String key : keySet) {
-                Map<String, RelationshipType> rels = relationships.get(key);
-                Node n1 = newNodes.get(key);
-                Set<String> innerKeySet = rels.keySet();
-                for (String s : innerKeySet) {
-                    Node n2 = newNodes.get(s);
-                    n1.createRelationshipTo(n2, rels.get(s));
+
+                for (String key : relKeySet) {
+                    Map<String, RelationshipType> rels = relationships.get(key);
+                    nodeCount++;
+                    Node n1 = newNodes.get(key);
+                    Set<String> innerKeySet = rels.keySet();
+                    for (String s : innerKeySet) {
+                        Node n2 = newNodes.get(s);
+                        if (n2 == null) {
+                            System.out.println(s);
+                        }
+                        n1.createRelationshipTo(n2, rels.get(s));
+                    }
+                }
+                if (nodeCount > limit) {
+                    nodeCount = 0;
+                    tx.success();
+                    tx.close();
+                    tx = db.beginTx();
                 }
             }
         }
+        finally {
+            if (tx != null) {
+                tx.success();
+                tx.close();
+            }
+        }
+
+        Mineotaur.LOGGER.info(lineCount + " lines processed.");
     }
 
     /**
@@ -600,11 +636,28 @@ public class DatabaseGenerator {
      * @throws IOException
      */
     protected void generatePropertyFile() throws IOException {
-        if (filters.isEmpty()) {
+        if (filters == null || filters.isEmpty()) {
             mineotaurProperties.put("hasFilters", "false");
+        }
+        else {
+            mineotaurProperties.put("hasFilters", "true");
             storeFilters();
         }
+        if (toPrecompute) {
+            mineotaurProperties.put("query_relationship", "COLLECTED");
+        }
+        else {
+            mineotaurProperties.put("query_relationship", relationships.get(groupLabel).get(descriptiveLabel));
+        }
+        mineotaurProperties.put("group", group);
+        mineotaurProperties.put("groupName", groupName);
+        mineotaurProperties.put("total_memory", totalMemory);
+        mineotaurProperties.put("db_path", dbPath);
+
         mineotaurProperties.store(new FileWriter(new StringBuilder(path).append("mineotaur.properties").toString()), "Mineotaur configuration properties");
     }
+
+
+
 
 }

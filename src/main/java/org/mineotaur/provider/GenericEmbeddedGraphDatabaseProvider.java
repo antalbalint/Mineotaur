@@ -72,9 +72,10 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                     CONTEXT.put("hasFilter", true);
                     CONTEXT.put("filters", FileUtil.processTextFile(baseDir + "mineotaur.filters"));
                 }
-                GROUP_NAMES = FileUtil.processTextFile(baseDir + "mineotaur.groupNames");
-                CONTEXT.put("geneNames", GROUP_NAMES);
-                List<String> labels = FileUtil.processTextFile(baseDir + File.separator + PROPERTIES.getString("node_labels_path"));
+                String groupPath = baseDir + "mineotaur.groupNames";
+                GROUP_NAMES = FileUtil.processTextFile(groupPath);
+                CONTEXT.put("groupNames", GROUP_NAMES);
+                List<String> labels = FileUtil.processTextFile(groupPath);
                 Map<String, Label> labelMap = new HashMap<>();
                 for (String label: labels) {
                     labelMap.put(label, DynamicLabel.label(label));
@@ -93,8 +94,13 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 CONTEXT.put("hitsByLabel", labelMap3);
                 CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
                 CONTEXT.put("aggValues", getAggregationModes());
+                groupName = PROPERTIES.getString("groupName");
                 groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
-                groupName = PROPERTIES.getString("group_name");
+                GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
+                gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+                gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
+                DATABASE = gdb.newGraphDatabase();
+                GGO = GlobalGraphOperations.at(DATABASE);
                 Map<String, Node> groupByGroupName = new HashMap<>();
                 try (Transaction tx = DATABASE.beginTx()) {
                         for (String name: GROUP_NAMES) {

@@ -19,18 +19,25 @@
 package org.mineotaur.controller;
 
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+import org.mineotaur.application.Mineotaur;
 import org.mineotaur.provider.GenericEmbeddedGraphDatabaseProvider;
 import org.mineotaur.provider.GraphDatabaseProvider;
 import org.neo4j.graphdb.*;
+import org.neo4j.tooling.GlobalGraphOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 /**
  * Controller object for Mineotaur.
@@ -93,9 +100,9 @@ public class MineotaurController {
      * @param model The model.
      * @return The requested page.
      */
-    @RequestMapping("/mineotaur")
+    @RequestMapping("/")
     public String start(Model model) {
-        return "mineotaur";
+        return "index";
     }
 
 
@@ -291,22 +298,30 @@ public class MineotaurController {
     protected List<Map<String, Object>> getHitsDecoupled(String[] geneList, String prop1, String prop2, String aggProp1, List<String> mapValuesProp1, String aggProp2, List<String> mapValuesProp2, List<Label> hitLabels) {
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
+            Mineotaur.LOGGER.info(rt.toString());
             for (String geneName : geneList) {
 
-                Node strain = strainMap.get(geneName);
+//                Node strain = strainMap.get(geneName);
+                Node strain = db.findNodesByLabelAndProperty(DynamicLabel.label("GENE"),"GeneSymbol",geneName).iterator().next();
                 if (strain == null) {
                     continue;
                 }
+                Mineotaur.LOGGER.info(geneName);
                 List<String> actualLabels = getActualLabels(hitLabels, strain);
                 if (actualLabels.isEmpty()) {
                     continue;
                 }
-                Iterator<Relationship> smds = strain.getRelationships(rt).iterator();
+                Iterator<Relationship> smds = strain.getRelationships().iterator();
+                Mineotaur.LOGGER.info(String.valueOf(smds.hasNext()));
                 Object x = null, y = null;
                 DescriptiveStatistics statX = new DescriptiveStatistics();
                 DescriptiveStatistics statY = new DescriptiveStatistics();
                 while (smds.hasNext()) {
+
                     Relationship rel = smds.next();
+
+                    if (!rel.getType().name().equals(rt.name()))
+                        continue;
                     boolean in1, in2;
                     if (hasFilter) {
                         String stage = (String) rel.getProperty("stage", null);
@@ -345,6 +360,7 @@ public class MineotaurController {
             }
             tx.success();
         }
+        Mineotaur.LOGGER.info(dataPoints.toString());
         return dataPoints;
     }
 
@@ -493,9 +509,10 @@ public class MineotaurController {
      * @return The list of label names.
      */
     private List<String> getActualLabels(List<Label> hitLabels, Node strain) {
+        Mineotaur.LOGGER.info(strain.getLabels().toString());
         List<String> actualLabels = new ArrayList<>();
         for (Label label : hitLabels) {
-
+            Mineotaur.LOGGER.info(label.toString());
             if (strain.hasLabel(label)) {
                 actualLabels.add(hitsByLabel.get(label));
             }
@@ -522,15 +539,15 @@ public class MineotaurController {
      * @return allHitLabels.
      */
     @ModelAttribute("allLabels")
-    public List<Label> getAllHitLabels() {
-        return allHitLabels;
+    public List<String> getAllHitLabels() {
+        return hitNames;
     }
 
     /**
      * Getter method for filters;
      * @return filters.
      */
-    @ModelAttribute
+    @ModelAttribute("filters")
     public List<String> getFilters() {
         return filters;
     }
@@ -539,7 +556,7 @@ public class MineotaurController {
      * Getter method for menu1;
      * @return menu1.
      */
-    @ModelAttribute
+    @ModelAttribute("menu1")
     public Map<String, String> getMenu1() {
         return menu1;
     }
@@ -548,7 +565,7 @@ public class MineotaurController {
      * Getter method for menu2
      * @return menu2.
      */
-    @ModelAttribute
+    @ModelAttribute("menu2")
     public Map<String, String> getMenu2() {
         return menu2;
     }
@@ -557,7 +574,7 @@ public class MineotaurController {
      * Getter method for features;
      * @return features.
      */
-    @ModelAttribute
+    @ModelAttribute("features")
     public List<String> getFeatures() {
         return features;
     }
@@ -566,7 +583,7 @@ public class MineotaurController {
      * Getter method for groupNames;
      * @return groupNames.
      */
-    @ModelAttribute
+    @ModelAttribute("groupNames")
     public List<String> getGroupNames() {
         return groupNames;
     }
@@ -593,8 +610,249 @@ public class MineotaurController {
      * Getter method for aggValues;
      * @return aggValues.
      */
-    @ModelAttribute
+    @ModelAttribute("aggValues")
     public List<String> getAggValues() {
         return aggValues;
+    }
+
+    private String decompressString(String data) {
+        String decompressed = null;
+        byte[] byteData = Base64.getDecoder().decode(data);
+        //byte[] byteData = data.getBytes();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length);){
+
+            Inflater inflater = new Inflater();
+            inflater.setInput(byteData);
+
+            byte[] buffer = new byte[1024];
+            while (!inflater.finished()) {
+                int count = inflater.inflate(buffer);
+                baos.write(buffer, 0, count);
+            }
+            byte[] output = baos.toByteArray();
+            decompressed = new String(output);
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return decompressed;
+    }
+
+    private Model decodeURL(Model model, MultiValueMap<String, String> params) {
+
+        String data = params.get("content").get(0);
+        String decompressed = decompressString(data);
+        Mineotaur.LOGGER.info(decompressed);
+        /*byte[] byteData = Base64.getDecoder().decode(data);
+        //byte[] byteData = data.getBytes();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length);){
+
+            Inflater inflater = new Inflater();
+            inflater.setInput(byteData);
+
+            byte[] buffer = new byte[1024];
+            while (!inflater.finished()) {
+                int count = inflater.inflate(buffer);
+                baos.write(buffer, 0, count);
+            }
+            byte[] output = baos.toByteArray();
+            decompressed = new String(output);
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        String[] terms = decompressed.split(",");
+        for (String term: terms) {
+            String[] parts = term.split(":");
+            for (int i = 0; i < parts.length; ++i) {
+                parts[i] = parts[i].replaceAll("\"|\\{|\\}","");
+            }
+            String[] value = parts[1].split("\\|");
+            if ("geneList".equals(parts[0]) || "geneListDist".equals(parts[0])) {
+                String geneListString = decompressString(parts[1]);
+                List<String> geneList = new ArrayList<>();
+                char[] chars = geneListString.toCharArray();
+                for (int i = 0; i < chars.length; ++i) {
+                    if (chars[i] == '1') {
+                        geneList.add(groupNames.get(i));
+                    }
+                }
+                model.addAttribute(parts[0], geneList.toArray(new String[geneList.size()]));
+            }
+            else if (value.length == 1) {
+                model.addAttribute(parts[0], value[0]);
+            }
+            else {
+                model.addAttribute(parts[0], value);
+            }
+            /*if (parts[0].equals("type")) {
+                type = parts[1];
+            }*/
+        }
+        return model;
+    }
+
+    @RequestMapping("/decode")
+    public @ResponseBody List<Map<String, Object>> decodeQuery(Model model, @RequestParam MultiValueMap<String, String> params) {
+        model = decodeURL(model, params);
+        String type = (String) model.asMap().get("type");
+        /*String data = params.get("content").get(0);
+        String decompressed = decompressString(data);
+        *//*byte[] byteData = Base64.getDecoder().decode(data);
+        //byte[] byteData = data.getBytes();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length);){
+
+            Inflater inflater = new Inflater();
+            inflater.setInput(byteData);
+
+            byte[] buffer = new byte[1024];
+            while (!inflater.finished()) {
+                int count = inflater.inflate(buffer);
+                baos.write(buffer, 0, count);
+            }
+            byte[] output = baos.toByteArray();
+            decompressed = new String(output);
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*//*
+        Application.LOGGER.info(decompressed);
+        String[] terms = decompressed.split(",");
+        for (String term: terms) {
+            String[] parts = term.split(":");
+            for (int i = 0; i < parts.length; ++i) {
+                parts[i] = parts[i].replaceAll("\"|\\{|\\}","");
+            }
+            String[] value = parts[1].split("\\|");
+            if ("geneList".equals(parts[0]) || "geneListDist".equals(parts[0])) {
+                String geneListString = decompressString(parts[1]);
+                List<String> geneList = new ArrayList<>();
+                char[] chars = geneListString.toCharArray();
+                for (int i = 0; i < chars.length; ++i) {
+                    if (chars[i] == '1') {
+                        geneList.add(geneNames.get(i));
+                    }
+                }
+                model.addAttribute(parts[0], geneList.toArray(new String[geneList.size()]));
+            }
+            else if (value.length == 1) {
+                model.addAttribute(parts[0], value[0]);
+            }
+            else {
+                model.addAttribute(parts[0], value);
+            }
+            if (parts[0].equals("type")) {
+                type = parts[1];
+            }
+        }*/
+        switch (type) {
+            case "cellwiseScatter": return getScatterPlotDataCellJSONSeparate(model);
+            case "genewiseScatter": return getScatterPlotDataGeneJSONSeparate(model);
+            case "genewiseDistribution": return getDistributionDataGenewiseJSON(model);
+            case "cellwiseDistribution": return getDistributionDataCellwiseJSON(model);
+            default: throw new UnsupportedOperationException();
+        }
+
+    }
+
+    public @ResponseBody
+    List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model) {
+        Map<String, Object> map = model.asMap();
+        String[] mapValues = (String[]) map.get("mapValuesGWDist");
+        List<String> mapValuesProp1 = null;
+        if (mapValues != null) {
+            mapValuesProp1 = Arrays.asList(mapValues);
+        }
+        return getDistributionDataCellwiseJSON(model, (String) map.get("propCWDist"), (String) map.get("geneCWDist"), mapValuesProp1);
+    }
+
+    public @ResponseBody
+    List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model) {
+        Map<String, Object> map = model.asMap();
+        String[] mapValues = (String[]) map.get("mapValuesGWDist");
+        List<String> mapValuesProp1 = null;
+        if (mapValues != null) {
+            mapValuesProp1 = Arrays.asList(mapValues);
+        }
+        return getDistributionDataGenewiseJSON(model, (String[]) map.get("geneListDist"), (String) map.get("propGWDist"), (String) map.get("aggGWDist"), mapValuesProp1, (String[]) map.get("hitCheckboxGWDist"));
+    }
+
+    public @ResponseBody
+    List<Map<String, Object>> getScatterPlotDataCellJSONSeparate(Model model) {
+        Map<String, Object> map = model.asMap();
+        String[] mapValues = (String[]) map.get("mapValuesCellwiseProp1");
+        List<String> mapValuesProp1 = null;
+        if (mapValues != null) {
+            mapValuesProp1 = Arrays.asList(mapValues);
+        }
+        mapValues = (String[]) map.get("mapValuesCellwiseProp2");
+        List<String> mapValuesProp2 = null;
+        if (mapValues != null) {
+            mapValuesProp1 = Arrays.asList(mapValues);
+        }
+        return cellwiseScatterJSON(model, ((String) map.get("cellwiseProp1")), ((String) map.get("cellwiseProp2")), mapValuesProp1, mapValuesProp2, ((String) map.get("geneCWProp1")));
+    }
+
+    public @ResponseBody
+    List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model) {
+        Map<String, Object> map = model.asMap();
+        String[] geneList = ((String[]) map.get("geneList"));
+        String prop1 = (String) map.get("prop1");
+        String prop2 = (String) map.get("prop2");
+        String aggProp1 = (String) map.get("aggProp1");
+        String aggProp2 = (String) map.get("aggProp2");
+        String[] mapValues = (String[]) map.get("mapValuesProp1");
+        List<String> mapValuesProp1 = null;
+        if (mapValues != null) {
+            mapValuesProp1 = Arrays.asList(mapValues);
+        }
+        String[] hitCheckbox = ((String[]) map.get("hitCheckbox"));
+        mapValues = (String[]) map.get("mapValuesProp2");
+        List<String> mapValuesProp2 = null;
+        if (mapValues != null) {
+            mapValuesProp2 = Arrays.asList(mapValues);
+        }
+        return getScatterPlotDataGeneJSONSeparate(model, geneList, prop1, prop2, aggProp1, aggProp2, mapValuesProp1, hitCheckbox, mapValuesProp2);
+    }
+
+    @RequestMapping("/share")
+    public String query(Model model, @RequestParam MultiValueMap<String, String> params) {
+        /*String type = params.get("type").get(0);
+        model.addAllAttributes(params);*/
+        model = decodeURL(model, params);
+        String type = (String) model.asMap().get("type");
+        List<Map<String, Object>> dataPoints;
+        switch (type) {
+            case "cellwiseScatter": dataPoints = getScatterPlotDataCellJSONSeparate(model); break;
+            case "genewiseScatter": dataPoints = getScatterPlotDataGeneJSONSeparate(model); break;
+            case "genewiseDistribution": dataPoints = getDistributionDataGenewiseJSON(model); break;
+            case "cellwiseDistribution": dataPoints = getDistributionDataCellwiseJSON(model); break;
+            default: throw new UnsupportedOperationException();
+        }
+        model.addAttribute("dataPoints", dataPoints);
+        model.addAttribute("sharedLink", true);
+        /*return "redirect:/" + type;*/
+        return "index";
+    }
+
+    @RequestMapping("/embed")
+    public String embed(Model model, @RequestParam MultiValueMap<String, String> params) {
+        model = decodeURL(model, params);
+        String type = (String) model.asMap().get("type");
+        List<Map<String, Object>> dataPoints;
+        switch (type) {
+            case "cellwiseScatter": dataPoints = getScatterPlotDataCellJSONSeparate(model); break;
+            case "genewiseScatter": dataPoints = getScatterPlotDataGeneJSONSeparate(model); break;
+            case "genewiseDistribution": dataPoints = getDistributionDataGenewiseJSON(model); break;
+            case "cellwiseDistribution": dataPoints = getDistributionDataCellwiseJSON(model); break;
+            default: throw new UnsupportedOperationException();
+        }
+        model.addAttribute("dataPoints", dataPoints);
+        model.addAttribute("sharedLink", true);
+        return "embeddedcontent";
     }
 }

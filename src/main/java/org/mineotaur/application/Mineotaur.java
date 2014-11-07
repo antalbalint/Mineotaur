@@ -55,37 +55,25 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
     private static void parseArguments(String[] args) {
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
-        options.addOption("start", true, "Starts Mineotaur with the specified database.");
-        options.addOption("import", true, "Generates the database from the specified file.");
+        options.addOption("start", true, "Starts Mineotaur with the specified database. Parameters: name of the folder containing the Mineotaur data.");
+        options.addOption("import", true, "Generates the database from the specified file. Parameters: input file, label file.");
         options.addOption("help", false, "Prints this help message.");
         HelpFormatter formatter = new HelpFormatter();
         try {
             CommandLine line = parser.parse(options, args);
             if (line.hasOption("start")) {
-                name = args[2];
+                name = args[1];
                 SpringApplication.run(Mineotaur.class, args);
             }
             else if (line.hasOption("import")) {
                 DatabaseGenerator gen = new DatabaseGenerator(args[1]);
                 gen.generateDatabase(args[2], args[3]);
             }
-            else if (line.hasOption("help")) {
+            else {
                 formatter.printHelp("Mineotaur", options);
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
-            formatter.printHelp("Mineotaur", options);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
+        } catch (Exception e) {
+            System.err.println("For the current usage use the -help handle.");
             e.printStackTrace();
         }
     }

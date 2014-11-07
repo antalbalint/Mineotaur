@@ -1,5 +1,5 @@
-define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'ZeroClipboard',  'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap'],
-function (events, ui, context, plots, util, ZeroClipboard, $) {
+define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'pako',    'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap'],
+function (events, ui, context, plots, util, pako, $) {
 
     /*console.log(util);
     console.log(ui);
@@ -39,7 +39,54 @@ function (events, ui, context, plots, util, ZeroClipboard, $) {
     $.blockUI.defaults.message = null;
     $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
     var keyisdown = false;
+        var sep = '|';
 
+        function processArray(array) {
+            var string = array[0];
+            for (i=1; i < array.length; ++i) {
+                string = string + sep + array[i];
+            }
+            return string;
+        }
+
+        function transformFormData(form, type) {
+            var formData = $(form).serializeArray();
+                                    	    var result = {};
+                                    	    for (i = 0; i < formData.length; ++i) {
+
+                                    	        if (typeof(result[formData[i].name]) === 'undefined') {
+
+                                    	            result[formData[i].name] = [];
+                                    	        }
+                                    	        result[formData[i].name].push(formData[i].value);
+                                    	    }
+                                    	    console.log(result);
+                                    	    var data = {};
+                                    	    for (key in result) {
+                                    	        var array = result[key];
+                                    	        if (key === 'geneList' || key === 'geneListDist') {
+                                    	            console.log(array);
+                                    	            data[key] = context.getCompressedGeneList(array);
+                                    	        }
+                                    	        //console.log(key);
+
+                                    	        //console.log(array);
+                                    	        else if (array.length === 1) {
+                                    	            data[key] = array[0];
+                                    	        }
+                                    	        else {
+                                    	            data[key] = processArray(array);
+                                    	        }
+                                    	    }
+            data['type'] = type;
+            console.log(data);
+            var compressed = pako.deflate(JSON.stringify(data), {level: 9 , to: 'string'});
+            /*var compressed = pako.deflate(JSON.stringify(data), {level: 9 , to: 'string'});
+            console.log(JSON.stringify(data).length)
+            console.log(compressed.length);
+            console.log(btoa(compressed).length);*/
+            return btoa(compressed);
+        }
     $(document).ready(function () {
 
 
@@ -179,28 +226,183 @@ function (events, ui, context, plots, util, ZeroClipboard, $) {
                     	$("#geneFilt").multiselect({
                     		noneSelectedText: "Genes"
                     	}).multiselectfilter();
-                        $('#graphForm').ajaxForm({
-                        		// dataType identifies the expected content type of the server response
-                        		dataType: 'json',
-                        		beforeSend: function (arr, $form, options) {
-                        		console.log("button hit");
-                        		ui.showSpinner('spin');
-                                    //ui.spinner.spin(document.getElementById('spin'));
-                        			$('#graphFormSubmit').attr("disabled", "disabled");
-                        			$('#graphFormReset').attr("disabled", "disabled");
-                        			queryString = $('#graphForm').formSerialize();
-                                    context.setURL(queryString);
-                        		},
-                        		// success identifies the function to invoke when the server response
-                        		// has been received
-                        		success: function(data) {events.genewiseScatterSuccess(data)},
-                        		error: function () {
+//                        $('#graphForm').ajaxForm({
+//                        		// dataType identifies the expected content type of the server response
+//                        		dataType: 'json',
+//                        		beforeSend: function (arr, $form, options) {
+//                        		console.log("button hit");
+//                        		ui.showSpinner('spin');
+//                                    //ui.spinner.spin(document.getElementById('spin'));
+//                        			$('#graphFormSubmit').attr("disabled", "disabled");
+//                        			$('#graphFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#graphForm').formSerialize();
+//                                    context.setURL(queryString);
+//                        		},
+//                        		// success identifies the function to invoke when the server response
+//                        		// has been received
+//                        		success: function(data) {events.genewiseScatterSuccess(data)},
+//                        		error: function () {
+//
+//                        				ui.formError('spin');
+//                        			}
+//
+//                        	});
+//                        	$('#cellwiseGraphForm').ajaxForm({
+//                        		// dataType identifies the expected content type of the server response
+//                        		dataType: 'json',
+//                        		beforeSend: function () {
+//                        			ui.showSpinner('spin');
+//                        			$('#cellwiseGraphFormSubmit').attr("disabled", "disabled");
+//                        			$('#cellwiseGraphFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#cellwiseGraphForm').formSerialize();
+//                        			context.setURL(queryString);
+//                        		},
+//                        		// success identifies the function to invoke when the server response
+//                        		// has been received
+//                        		success: function(data) {events.cellwiseScatterSuccess(data)},
+//                        		error: function () {
+//                        			ui.formError('spin');
+//                        		}
+//                        	});
+//                        	$('#genewiseDistributionForm').ajaxForm({
+//                        		// dataType identifies the expected content type of the server response
+//                        		dataType: 'json',
+//                        		beforeSend: function () {
+//                        			ui.showSpinner('spin');
+//                        			$('#genewiseDistributionFormSubmit').attr("disabled", "disabled");
+//                        			$('#genewiseDistributionFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#genewiseDistributionForm').formSerialize();
+//                        			context.setURL(queryString);
+//                        		},
+//                        		// success identifies the function to invoke when the server response
+//                        		// has been received
+//                        		success: function(data) {events.genewiseDistributionSuccess(data)},
+//                        		error: function () {
+//                        			ui.formError('spin');
+//                        		}
+//                        	});
+//                        	$('#cellwiseDistributionForm').ajaxForm({
+//                        		// dataType identifies the expected content type of the server response
+//                        		dataType: 'json',
+//                        		beforeSend: function () {
+//                        			ui.showSpinner('spin');
+//                        			$('#cellwiseDistributionFormSubmit').attr("disabled", "disabled");
+//                        			$('#cellwiseDistributionFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#cellwiseDistributionForm').formSerialize();
+//                        			context.setURL(queryString);
+//                        		},
+//                        		// success identifies the function to invoke when the server response
+//                        		// has been received
+//                        		success: function(data) {events.cellwiseDistributionSuccess(data)},
+//                        		error: function () {
+//                        			ui.formError('spin');
+//                        		}
+//                        	});
+$('#graphForm').submit(function(event){
+                        	    data = {};
+                                                        	    data['content'] = transformFormData(this,'genewiseScatter');
+                                                                context.setURL("content="+data['content']);
+                                                        	    /*context.setType('genewiseScatter');
+                                                        	    queryString = $(this).formSerialize();
+                                                                context.setURL(queryString);
+                                                        	    console.log(data);*/
+                                                        	    $.ajax({
+                                                                                                    url: "/decode",
+                                                                                                    data: data,
+                                                                                                    dataType: "json",
+                                                                                                    type:"GET",
+                                                                                                    beforeSend: function () {
+                                                                                                                            			ui.showSpinner('spin');
+                                                                                                                            			$('#graphFormSubmit').attr("disabled", "disabled");
+                                                                                                                            			$('#graphFormReset').attr("disabled", "disabled");
 
-                        				ui.formError('spin');
-                        			}
+                                                                                                                            		},
+                                                                                                                            		// success identifies the function to invoke when the server response
+                                                                                                                            		// has been received
+                                                                                                                            		success: function(data) {events.genewiseScatterSuccess(data)},
+                                                                                                                            		error: function () {
+                                                                                                                            			ui.formError('spin');
+                                                                                                                            		}
+                                                                                                    }
+                                                                                                )
 
+                                                                event.preventDefault();
                         	});
-                        	$('#cellwiseGraphForm').ajaxForm({
+                        	$('#cellwiseGraphForm').submit(function(event){
+                        	    data = {};
+                        	    data['content'] = transformFormData(this, 'cellwiseScatter');
+                        	    context.setURL("content="+data['content']);
+                        	    console.log(data);
+                        	    $.ajax({
+                                                                    url: "/decode",
+                                                                    data: data,
+                                                                    dataType: "json",
+                                                                    type:"POST",
+                                                                    beforeSend: function () {
+                                                                                            			ui.showSpinner('spin');
+                                                                                            			$('#cellwiseGraphFormSubmit').attr("disabled", "disabled");
+                                                                                            			$('#cellwiseGraphFormReset').attr("disabled", "disabled");
+
+                                                                                            		},
+                                                                                            		// success identifies the function to invoke when the server response
+                                                                                            		// has been received
+                                                                                            		success: function(data) {
+                                                                                            		/*queryString = this.url;
+                                                                                                    context.setURL(queryString);*/
+
+                                                                                            		events.cellwiseScatterSuccess(data)},
+
+                                                                                            		error: function () {
+                                                                                            			ui.formError('spin');
+                                                                                            		}
+                                                                    }
+
+                                                                )
+                        	    /*console.log($('#mapValuesCellwiseProp1 option:selected').val());
+                        	    var filterString = processArray($('#mapValuesCellwiseProp1 option:selected').val());
+
+                        	    console.log(filterString);
+                                */
+                                event.preventDefault();
+                        	});
+                        	$('#genewiseDistributionForm').submit(function(event){
+                                                    	    data = {};
+                                                    	    data['content'] = transformFormData(this, 'genewiseDistribution');
+                                                    	    context.setURL("content="+data['content']);
+                                                    	    console.log(data);
+                                                    	    $.ajax({
+                                                                                                url: "/decode",
+                                                                                                data: data,
+                                                                                                dataType: "json",
+                                                                                                type:"POST",
+                                                                                                beforeSend: function () {
+                                                                                                                        			ui.showSpinner('spin');
+                                                                                                                        			$('#genewiseDistributionFormSubmit').attr("disabled", "disabled");
+                                                                                                                        			$('#genewiseDistributionhFormReset').attr("disabled", "disabled");
+
+                                                                                                                        		},
+                                                                                                                        		// success identifies the function to invoke when the server response
+                                                                                                                        		// has been received
+                                                                                                                        		success: function(data) {
+                                                                                                                        		/*queryString = this.url;
+                                                                                                                                context.setURL(queryString);*/
+
+                                                                                                                        		events.genewiseDistributionSuccess(data)},
+
+                                                                                                                        		error: function () {
+                                                                                                                        			ui.formError('spin');
+                                                                                                                        		}
+                                                                                                }
+
+                                                                                            )
+                                                    	    /*console.log($('#mapValuesCellwiseProp1 option:selected').val());
+                                                    	    var filterString = processArray($('#mapValuesCellwiseProp1 option:selected').val());
+
+                                                    	    console.log(filterString);
+                                                            */
+                                                            event.preventDefault();
+                                                    	});
+                        	/*$('#cellwiseGraphForm').ajaxForm({
                         		// dataType identifies the expected content type of the server response
                         		dataType: 'json',
                         		beforeSend: function () {
@@ -216,41 +418,44 @@ function (events, ui, context, plots, util, ZeroClipboard, $) {
                         		error: function () {
                         			ui.formError('spin');
                         		}
-                        	});
-                        	$('#genewiseDistributionForm').ajaxForm({
-                        		// dataType identifies the expected content type of the server response
-                        		dataType: 'json',
-                        		beforeSend: function () {
-                        			ui.showSpinner('spin');
-                        			$('#genewiseDistributionFormSubmit').attr("disabled", "disabled");
-                        			$('#genewiseDistributionFormReset').attr("disabled", "disabled");
-                        			queryString = $('#genewiseDistributionForm').formSerialize();
-                        			context.setURL(queryString);
-                        		},
-                        		// success identifies the function to invoke when the server response
-                        		// has been received
-                        		success: function(data) {events.genewiseDistributionSuccess(data)},
-                        		error: function () {
-                        			ui.formError('spin');
-                        		}
-                        	});
-                        	$('#cellwiseDistributionForm').ajaxForm({
-                        		// dataType identifies the expected content type of the server response
-                        		dataType: 'json',
-                        		beforeSend: function () {
-                        			ui.showSpinner('spin');
-                        			$('#cellwiseDistributionFormSubmit').attr("disabled", "disabled");
-                        			$('#cellwiseDistributionFormReset').attr("disabled", "disabled");
-                        			queryString = $('#cellwiseDistributionForm').formSerialize();
-                        			context.setURL(queryString);
-                        		},
-                        		// success identifies the function to invoke when the server response
-                        		// has been received
-                        		success: function(data) {events.cellwiseDistributionSuccess(data)},
-                        		error: function () {
-                        			ui.formError('spin');
-                        		}
-                        	});
+                        	});*/
+                        	$('#cellwiseDistributionForm').submit(function(event){
+                                                    	    data = {};
+                                                    	    data['content'] = transformFormData(this, 'cellwiseDistribution');
+                                                    	    context.setURL("content="+data['content']);
+                                                    	    console.log(data);
+                                                    	    $.ajax({
+                                                                                                url: "/decode",
+                                                                                                data: data,
+                                                                                                dataType: "json",
+                                                                                                type:"POST",
+                                                                                                beforeSend: function () {
+                                                                                                                        			ui.showSpinner('spin');
+                                                                                                                        			$('#cellwiseDistributionFormSubmit').attr("disabled", "disabled");
+                                                                                                                        			$('#cellwiseDistributionFormReset').attr("disabled", "disabled");
+
+                                                                                                                        		},
+                                                                                                                        		// success identifies the function to invoke when the server response
+                                                                                                                        		// has been received
+                                                                                                                        		success: function(data) {
+                                                                                                                        		/*queryString = this.url;
+                                                                                                                                context.setURL(queryString);*/
+
+                                                                                                                        		events.cellwiseDistributionSuccess(data)},
+
+                                                                                                                        		error: function () {
+                                                                                                                        			ui.formError('spin');
+                                                                                                                        		}
+                                                                                                }
+
+                                                                                            )
+                                                    	    /*console.log($('#mapValuesCellwiseProp1 option:selected').val());
+                                                    	    var filterString = processArray($('#mapValuesCellwiseProp1 option:selected').val());
+
+                                                    	    console.log(filterString);
+                                                            */
+                                                            event.preventDefault();
+                                                    	});
                         	$('#log').bind('change', function () {
                             		if ($(this).is(':checked')) {
                             		    context.log();
@@ -354,7 +559,7 @@ function (events, ui, context, plots, util, ZeroClipboard, $) {
                         		util.downloadCSV.call(this, 'data.csv');
                         	});
                         	$('#share').on('click', function (event) {
-                        	    var string = window.location.href + "query?type=" + context.getType() + "&" + context.getURL();
+                        	    var string = window.location.href + "share?type=" + context.getType() + "&" + context.getURL();
                                 $('#shareTextArea').val(string);
                                 $('#shareTextArea').attr('readonly', true);
                                 $('#shareModal').modal('show');

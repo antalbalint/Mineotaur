@@ -15,6 +15,7 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         util.shuffle(data);
         ui.resetTools();
         currentData = JSON.parse(JSON.stringify(data));
+        console.log(currentData)
         context.setData(currentData);
         xRange = d3.extent(data, function (d) {
                 return d.x;

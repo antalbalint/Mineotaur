@@ -65,6 +65,13 @@
     &lt;!&ndash;<small>Use it, please.</small>&ndash;&gt;
         </h1>
     </div>-->
+    <div class="pull-right padding-top">
+        <!--<h1>-->
+        <a href="http://www.mineotaur.org>"><img src="img/logo_tr.png" alt="Powered by Mineotaur" height="75px"/></a><!-- Mineotaur-->
+        <!--<span class="glyphicon glyphicon-wrench"/> The tool
+<small>Use it, please.</small>
+    </h1>-->
+    </div>
     <ul class="nav navbar-nav" id="navigation">
 
         <li class="active">
@@ -163,7 +170,14 @@ require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur
     context.setLabels(/*[[${allLabels}]]*/null);
     var sharedLink = /*[[${sharedLink}]]*/false;
             console.log(sharedLink);
-            geneNames = /*[[${geneNames}]]*/null;
+            groupNames = /*[[${groupNames}]]*/null;
+            cellProperties = /*[[${features}]]*/null;
+            aggValues = /*[[${aggValues}]]*/null;
+            stages = /*[[${filters}]]*/null;
+            hits = /*[[${hits}]]*/null;
+            parameters = {'gene': groupNames, 'props': cellProperties, 'aggValues': aggValues, 'stages': stages, 'hits': hits};
+
+            context.setParameters(parameters);
             if (sharedLink) {
 
                 prop1 = /*[[${prop1}]]*/null;

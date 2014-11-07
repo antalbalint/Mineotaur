@@ -86,7 +86,7 @@
         </div>
         <div class="tab-content container">
             <div id="genewise" class="tab-pane active">
-                <form id="graphForm" action="/genewiseScatterJSON">
+                <form id="graphForm">
                     <div class="row clearfix">
                         <div class="col-md-8 column">
                             <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
@@ -117,7 +117,7 @@
 
 
             <div id="genewiseDistribution" class="tab-pane">
-                <form id="genewiseDistributionForm" action="/genewiseDistributionJSON">
+                <form id="genewiseDistributionForm">
                     <div class="row clearfix">
                         <div class="col-md-4 column" style="padding-right:0px; border-right: 1px solid #ccc;">
                             <div class="col-md-6 column"
@@ -145,7 +145,7 @@
             </div>
 
             <div id="cellwise" class="tab-pane">
-                <form id="cellwiseGraphForm" action="/cellwiseScatterJSON">
+                <form id="cellwiseGraphForm">
                     <div class="row clearfix">
                         <div class="col-md-12 column">
                             <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
@@ -166,7 +166,7 @@
                 </form>
             </div>
             <div id="cellwiseDistribution" class="tab-pane">
-                <form id="cellwiseDistributionForm" action="/cellwiseDistributionJSON">
+                <form id="cellwiseDistributionForm">
                     <div class="row clearfix">
                         <div class="col-md-6 column">
                             <div class="col-md-4 column"
@@ -222,11 +222,11 @@
 <div th:include="fragments/core::contextMenu('menu_1',${menu1})"/>
 <div th:include="fragments/core::contextMenu('menu_2',${menu2})"/>
 <div th:include="fragments/core::startupScript"/>
-<div class="footer">
-    <div class="container">
+<!--<div class="footer">-->
+    <!--<div class="container">-->
 
-        <p class="text-muted"><img src = "img/logo.png" alt="Powered by Mineotaur" height="45px"/>Place sticky footer content here.</p>
-    </div>
-</div>
+        <!--<p class="text-muted">Place sticky footer content here.</p>-->
+    <!--</div>-->
+<!--</div>-->
 </body>
 </html>
