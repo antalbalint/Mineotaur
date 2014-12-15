@@ -12,7 +12,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>application.Mineotaur</mainClass>
+                            <mainClass>org.mineotaur.application.Mineotaur</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

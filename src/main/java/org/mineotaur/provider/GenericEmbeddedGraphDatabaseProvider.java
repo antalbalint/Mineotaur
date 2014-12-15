@@ -70,7 +70,19 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 }
                 else {
                     CONTEXT.put("hasFilter", true);
-                    CONTEXT.put("filters", FileUtil.processTextFile(baseDir + "mineotaur.filters"));
+                    List<String> filterList = FileUtil.processTextFile(baseDir + "mineotaur.filters");
+                    Map<String, String> filters = new HashMap<>();
+                    for (String filter: filterList) {
+                        if (filter.contains("/")) {
+                            String[] terms = filter.split("/");
+                            filters.put(terms[0], terms[1]);
+                        }
+                        else {
+                            filters.put(filter, filter);
+                        }
+                    }
+                    CONTEXT.put("filters", filters);
+                    CONTEXT.put("filterName", PROPERTIES.getString("filterName"));
                 }
                 String groupPath = baseDir + "mineotaur.groupNames";
                 GROUP_NAMES = FileUtil.processTextFile(groupPath);
@@ -95,7 +107,9 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
                 CONTEXT.put("aggValues", getAggregationModes());
                 groupName = PROPERTIES.getString("groupName");
+                CONTEXT.put("groupName", groupName);
                 groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
+                CONTEXT.put("groupLabel", groupLabel);
                 GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
                 gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
                 gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));

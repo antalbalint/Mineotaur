@@ -58,11 +58,14 @@ public class MineotaurController {
     private List<Label> allHitLabels = null;
     private RelationshipType rt = null;
     private boolean hasFilter;
-    private List<String> filters;
+    private Map<String, String> filters;
     private Map<String, String> menu1;
     private Map<String, String> menu2;
     private List<String> features;
     private List<String> groupNames;
+    private Label groupLabel;
+    private String groupName;
+    private String filterName;
 
     /**
      * Method to initalize the controller. The database provider is injected by Spring.
@@ -90,9 +93,16 @@ public class MineotaurController {
         menu2 = new HashMap<>();
         menu2.put("analyze", "Analyze");
         features = (List<String>) context.get("features");
-        filters = (List<String>) context.get("filters");
+        filters = (Map<String, String>) context.get("filters");
         groupNames = (List<String>) context.get("groupNames");
         hasFilter = (boolean) context.get("hasFilter");
+        groupLabel = (Label) context.get("groupLabel");
+        groupName = (String) context.get("groupName");
+        filterName = (String) context.get("filterName");
+    }
+
+    private void processFilters() {
+
     }
 
     /**
@@ -233,12 +243,13 @@ public class MineotaurController {
                 Relationship rel = smds.next();
                 boolean in1, in2;
                 if (hasFilter) {
-                    String stage = (String) rel.getProperty("stage", null);
+                    /*String stage = (String) rel.getProperty("stage", null);
                     in1 = mapValuesProp1.contains(stage);
                     in2 = mapValuesProp2.contains(stage);
                     if (stage == null || (!in1 && !in2))  {
                         continue;
-                    }
+                    }*/
+                    in1 = in2 = true;
                 }
                 else {
                     in1 = in2 = true;
@@ -299,43 +310,53 @@ public class MineotaurController {
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
             Mineotaur.LOGGER.info(rt.toString());
+            Mineotaur.LOGGER.info(groupLabel.toString());
+            Mineotaur.LOGGER.info(groupName);
+            Mineotaur.LOGGER.info(Arrays.toString(geneList));
+            Mineotaur.LOGGER.info(prop1);
+            Mineotaur.LOGGER.info(prop2);
             for (String geneName : geneList) {
 
 //                Node strain = strainMap.get(geneName);
-                Node strain = db.findNodesByLabelAndProperty(DynamicLabel.label("GENE"),"GeneSymbol",geneName).iterator().next();
+                Node strain = db.findNodesByLabelAndProperty(groupLabel,groupName,geneName).iterator().next();
                 if (strain == null) {
                     continue;
                 }
-                Mineotaur.LOGGER.info(geneName);
+//                Mineotaur.LOGGER.info(geneName);
                 List<String> actualLabels = getActualLabels(hitLabels, strain);
                 if (actualLabels.isEmpty()) {
                     continue;
                 }
-                Iterator<Relationship> smds = strain.getRelationships().iterator();
-                Mineotaur.LOGGER.info(String.valueOf(smds.hasNext()));
+                Iterator<Relationship> smds = strain.getRelationships(rt).iterator();
+//                Mineotaur.LOGGER.info(String.valueOf(smds.hasNext()));
                 Object x = null, y = null;
                 DescriptiveStatistics statX = new DescriptiveStatistics();
                 DescriptiveStatistics statY = new DescriptiveStatistics();
                 while (smds.hasNext()) {
 
                     Relationship rel = smds.next();
-
+                   /* Mineotaur.LOGGER.info(rel.getType().name());
                     if (!rel.getType().name().equals(rt.name()))
-                        continue;
+                        continue;*/
                     boolean in1, in2;
                     if (hasFilter) {
-                        String stage = (String) rel.getProperty("stage", null);
+                        /*String stage = (String) rel.getProperty(filterName, null);
                         in1 = mapValuesProp1.contains(stage);
                         in2 = mapValuesProp2.contains(stage);
                         if (stage == null || (!in1 && !in2)) {
                             continue;
-                        }
+                        }*/
+                        in1 = in2 = true;
                     }
                     else {
                         in1 = in2 = true;
                     }
 
                     Node smd = rel.getOtherNode(strain);
+                    /*Mineotaur.LOGGER.info(smd.getLabels().toString());
+                    Mineotaur.LOGGER.info(smd.getPropertyKeys().toString());*/
+
+
                     if (in1) {
                         x = smd.getProperty(prop1, null);
                         addValuesToDS(x, statX);
@@ -389,7 +410,7 @@ public class MineotaurController {
                 DescriptiveStatistics statX = new DescriptiveStatistics();
                 while (smds.hasNext()) {
                     Relationship rel = smds.next();
-                    if (hasFilter) {
+                    /*if (hasFilter) {
                         String stage = (String) rel.getProperty("stage", null);
                         if (stage == null || !mapValues.contains(stage)) {
                             continue;
@@ -397,7 +418,7 @@ public class MineotaurController {
                         if (stage.isEmpty()) {
                             continue;
                         }
-                    }
+                    }*/
                     Node smd = rel.getOtherNode(strain);
 
                     x = smd.getProperty(prop1, null);
@@ -446,12 +467,12 @@ public class MineotaurController {
             Object x;
             while (smds.hasNext()) {
                 Relationship rel = smds.next();
-                if (hasFilter) {
+                /*if (hasFilter) {
                     String stage = (String) rel.getProperty("stage", null);
                     if (stage == null || !mapValues.contains(stage)) {
                         continue;
                     }
-                }
+                }*/
                 Node smd = rel.getOtherNode(strain);
                 x = smd.getProperty(prop1, null);
                 if (x != null) {
@@ -509,10 +530,10 @@ public class MineotaurController {
      * @return The list of label names.
      */
     private List<String> getActualLabels(List<Label> hitLabels, Node strain) {
-        Mineotaur.LOGGER.info(strain.getLabels().toString());
+//        Mineotaur.LOGGER.info(strain.getLabels().toString());
         List<String> actualLabels = new ArrayList<>();
         for (Label label : hitLabels) {
-            Mineotaur.LOGGER.info(label.toString());
+//            Mineotaur.LOGGER.info(label.toString());
             if (strain.hasLabel(label)) {
                 actualLabels.add(hitsByLabel.get(label));
             }
@@ -548,7 +569,7 @@ public class MineotaurController {
      * @return filters.
      */
     @ModelAttribute("filters")
-    public List<String> getFilters() {
+    public Map<String, String> getFilters() {
         return filters;
     }
 

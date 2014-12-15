@@ -56,7 +56,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
         options.addOption("start", true, "Starts Mineotaur with the specified database. Parameters: name of the folder containing the Mineotaur data.");
-        options.addOption("import", true, "Generates the database from the specified file. Parameters: input file, label file.");
+        options.addOption("import", true, "Generates the database from the specified file. Parameters: property file input file label file.");
         options.addOption("help", false, "Prints this help message.");
         HelpFormatter formatter = new HelpFormatter();
         try {
@@ -72,10 +72,33 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
             else {
                 formatter.printHelp("Mineotaur", options);
             }
-        } catch (Exception e) {
+        } catch (IllegalAccessException e) {
             System.err.println("For the current usage use the -help handle.");
             e.printStackTrace();
+        } catch (ParseException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (CannotCompileException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (NotFoundException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            System.err.println("For the current usage use the -help handle.");
+            e.printStackTrace();
+        } catch (Exception e) {
+
+            e.printStackTrace();
         }
+
+
     }
 
     /**

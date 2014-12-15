@@ -68,7 +68,7 @@ public class DatabaseGenerator {
     private String[] header;
     private String[] nodeTypes;
     private String[] dataTypes;
-    private List<Integer> filters;
+    private List<Integer> filters = new ArrayList<>();
     private Map<String, List<Integer>> signatures;
     private Map<String, Label> hits;
     private List<Integer> numericData;
@@ -194,7 +194,7 @@ public class DatabaseGenerator {
      * @throws NoSuchFieldException
      */
     public void generateDatabase(String dataFile, String labelFile) throws IllegalAccessException, IOException, InstantiationException, CannotCompileException, NotFoundException, NoSuchFieldException {
-        /*Mineotaur.LOGGER.info("Processing input data.");
+        Mineotaur.LOGGER.info("Processing input data.");
         readInput(dataFile);
         Mineotaur.LOGGER.info("Processing label data.");
         labelGenes(labelFile);
@@ -204,7 +204,7 @@ public class DatabaseGenerator {
         }
         else {
             mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
-        }*/
+        }
         Mineotaur.LOGGER.info("Generating property files.");
         storeFeatureNames(db);
         storeGroupnames(db);
@@ -472,7 +472,7 @@ public class DatabaseGenerator {
             list.addAll(Arrays.asList(header).subList(1, header.length));
             FileUtil.saveList(new StringBuilder(path).append("mineotaur.hitLabels").toString(), list);
             while ((line = br.readLine()) != null) {
-                String[] terms = line.split("\t");
+                String[] terms = line.split(separator);
                 Iterator<Node> nodes = db.findNodesByLabelAndProperty(groupLabel, header[0], terms[0]).iterator();
                 if (!nodes.hasNext()) {
                     throw new IllegalArgumentException("No such gene.");
@@ -591,6 +591,7 @@ public class DatabaseGenerator {
                     }
                 }
             }
+            System.out.println(labels.toString());
             FileUtil.saveList(new StringBuilder(path).append("mineotaur.features").toString(), labels);
             tx.success();
         }
@@ -625,10 +626,32 @@ public class DatabaseGenerator {
      */
     protected void storeFilters() {
         List<String> filterNames = new ArrayList<>();
-        for (Integer i : filters) {
+        /*for (Integer i : filters) {
             filterNames.add(header[i]);
+        }*/
+        filterNames.add("GrowthStage");
+        try (Transaction tx = db.beginTx()) {
+            GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
+            Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
+            List<String> filterValues = new ArrayList<>();
+            while (iterator.hasNext()) {
+                Node node = iterator.next();
+                Iterator<String> props = node.getPropertyKeys().iterator();
+                while (props.hasNext()) {
+                    String prop = props.next();
+                    if (filterNames.contains(prop)) {
+                        String value = (String) node.getProperty(prop);
+                        if (!filterValues.contains(value)) {
+                            filterValues.add((String) node.getProperty(prop));
+                        }
+
+                    }
+                }
+            }
+            FileUtil.saveList(new StringBuilder(path).append("mineotaur.filters").toString(), filterValues);
+            tx.success();
         }
-        FileUtil.saveList(new StringBuilder(path).append("mineotaur.filters").toString(), filterNames);
+        //FileUtil.saveList(new StringBuilder(path).append("mineotaur.filters").toString(), filterNames);
     }
 
     /**
@@ -641,6 +664,7 @@ public class DatabaseGenerator {
         }
         else {
             mineotaurProperties.put("hasFilters", "true");
+            mineotaurProperties.put("filterName", filters.get(0));
             storeFilters();
         }
         if (toPrecompute) {
@@ -653,8 +677,20 @@ public class DatabaseGenerator {
         mineotaurProperties.put("groupName", groupName);
         mineotaurProperties.put("total_memory", totalMemory);
         mineotaurProperties.put("db_path", dbPath);
-
+        mineotaurProperties.put("cache", "soft");
         mineotaurProperties.store(new FileWriter(new StringBuilder(path).append("mineotaur.properties").toString()), "Mineotaur configuration properties");
+    }
+
+    public static void main(String[] args) {
+        DatabaseGenerator databaseGenerator = new DatabaseGenerator("input/merovingian.input");
+        /*databaseGenerator.descriptiveLabel = DynamicLabel.label("CELL");
+        databaseGenerator.storeFeatureNames(databaseGenerator.db);
+        databaseGenerator.storeFilters();*/
+        try {
+            databaseGenerator.generatePropertyFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

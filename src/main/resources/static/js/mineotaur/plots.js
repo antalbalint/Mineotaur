@@ -4,7 +4,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	// Maximum opacity value for the circles. 1 = not opaque, 0 = completely opaque.
 	var maxOpacity = 0.8;
 	// Colorblind safe palette for labels. From colorbrewer2.org.
-	var colors = ["#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#e41a1c", "#ffff33", "#9467bd"];
+//	var colors = ["#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999", "#e41a1c", "#ffff33", "#9467bd"];
     //var colors = ['rgb(165,0,38)','rgb(215,48,39)','rgb(244,109,67)','rgb(253,174,97)','rgb(254,224,144)','rgb(224,243,248)','rgb(171,217,233)','rgb(116,173,209)','rgb(69,117,180)','rgb(49,54,149)']
 	// NOT USED. Old color palette, not colorblind safe.
 	var oldColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd"];
@@ -17,9 +17,13 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		left: 40
 	};
 	var selected = [];
+	var colors = d3.scale.category20();
 
 	function getColor(label) {
-	    if (allLabels === null) {
+
+	    return colors(label);
+	}
+	    /*if (allLabels === null) {
 	        allLabels = context.getLabels();
 	    }
 	    console.log(allLabels)
@@ -28,7 +32,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 					return colors[i];
 				}
 			}
-		}
+		}*/
 		/* Function to add legend on charts.
             id: id of the chart in jQuery-style. E.g. '#chart'.
         */
