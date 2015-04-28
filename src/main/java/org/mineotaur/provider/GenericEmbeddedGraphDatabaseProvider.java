@@ -111,14 +111,15 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
                 CONTEXT.put("groupLabel", groupLabel);
                 GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-                gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+//                gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+                gdb.setConfig(GraphDatabaseSettings.allow_store_upgrade, "true");
                 gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
                 DATABASE = gdb.newGraphDatabase();
                 GGO = GlobalGraphOperations.at(DATABASE);
                 Map<String, Node> groupByGroupName = new HashMap<>();
                 try (Transaction tx = DATABASE.beginTx()) {
                         for (String name: GROUP_NAMES) {
-                            Iterator<Node> nodes = DATABASE.findNodesByLabelAndProperty(groupLabel, groupName, name).iterator();
+                            Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
                             Node node = nodes.next();
                             if (nodes.hasNext()) {
                                 throw new IllegalStateException("There are more group objects in the database with the same name.");
@@ -159,7 +160,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         }
         if (DATABASE ==  null) {
             GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+//            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
             gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
             DATABASE = gdb.newGraphDatabase();
 

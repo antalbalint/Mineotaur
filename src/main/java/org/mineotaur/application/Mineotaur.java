@@ -47,7 +47,6 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
      * Name of the current Mineotaur instance.
      */
     public static String name;
-
     /**
      * Method to parse command line arguments using Apache Commons CLI.
      * @param args command-line arguments.

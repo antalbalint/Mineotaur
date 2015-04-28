@@ -27,6 +27,7 @@ import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletCon
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.web.servlet.mvc.Controller;
 
 /**
  * Spring Config for Mineotaur.
@@ -63,5 +64,6 @@ public class MineotaurConfig {
         });
         return factory;
     }
+
 
 }

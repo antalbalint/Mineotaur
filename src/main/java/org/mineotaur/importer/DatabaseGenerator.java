@@ -20,17 +20,21 @@ package org.mineotaur.importer;
 
 import javassist.*;
 import javassist.NotFoundException;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.FileUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
+import org.neo4j.graphdb.schema.IndexDefinition;
+import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class containing fields and methods to generate a graph database from the input provided by the user.
@@ -82,7 +86,8 @@ public class DatabaseGenerator {
     private String cache;
     private Set<String> relKeySet;
     private boolean toPrecompute;
-
+    private List<String> filterProps = new ArrayList<>();
+    private int limit;
 
     public DatabaseGenerator(String prop) {
         this.prop = prop;
@@ -134,6 +139,7 @@ public class DatabaseGenerator {
      * Method for creating a directory for the configuration files.
      */
     protected void createDirs() {
+        // TODO delete if exist?
         new File(name).mkdir();
         //System.out.println(new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).toString());
 
@@ -162,7 +168,7 @@ public class DatabaseGenerator {
      */
     protected void startDB() {
         GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(dbPath);
-        gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, totalMemory);
+//        gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, totalMemory);
         gdb.setConfig(GraphDatabaseSettings.cache_type, cache);
         db = gdb.newGraphDatabase();
         registerShutdownHook(db);
@@ -198,17 +204,22 @@ public class DatabaseGenerator {
         readInput(dataFile);
         Mineotaur.LOGGER.info("Processing label data.");
         labelGenes(labelFile);
+        filters.add(6);
+        if (filters != null && !filters.isEmpty()) {
+            createFilters();
+        }
         if (toPrecompute) {
             Mineotaur.LOGGER.info("Precomputing nodes.");
-            precompute(Integer.valueOf(properties.getString("precompute_limit")));
+            precomputeOptimized(Integer.valueOf(properties.getString("precompute_limit")));
         }
         else {
             mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
         }
         Mineotaur.LOGGER.info("Generating property files.");
-        storeFeatureNames(db);
+        storeFeatureNames();
         storeGroupnames(db);
         generatePropertyFile();
+        createIndex(db);
         Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
     }
 
@@ -231,7 +242,8 @@ public class DatabaseGenerator {
             processHeader();
             keySet = signatures.keySet();
             generateClasses();
-            processData(br, Integer.valueOf(properties.getString("process_limit")));
+            limit = Integer.valueOf(properties.getString("process_limit"));
+            processData(br);
 
         }
     }
@@ -265,6 +277,7 @@ public class DatabaseGenerator {
             }
             if (FILTER.equals(dataTypes[i])) {
                 filters.add(i);
+                filterProps.add(header[i]);
             }
             if (ID.equals(dataTypes[i])) {
                 List<String> idList = ids.get(nodeTypes[i]);
@@ -318,9 +331,7 @@ public class DatabaseGenerator {
     protected String buildEquals(String name, List<String> idFields) {
         StringBuilder sb = new StringBuilder();
         sb.append("public boolean equals(Object o) {\n");
-        sb.append("if (this == o) return true;\n" +
-                "        if (o == null || getClass() != o.getClass()) return false;\n" +
-                name + " obj = (" + name + ") o;\n");
+        sb.append("if (this == o) return true;\n" + "        if (o == null || getClass() != o.getClass()) return false;\n").append(name).append(" obj = (").append(name).append(") o;\n");
         for (String id : idFields) {
             sb.append("if (!this.").append(id).append(".equals(obj.").append(id).append(")) return false;\n");
         }
@@ -337,7 +348,7 @@ public class DatabaseGenerator {
      * @throws InstantiationException
      * @throws NoSuchFieldException
      */
-    protected void processData(BufferedReader br, int limit) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
+    protected void processData(BufferedReader br) throws IOException, IllegalAccessException, InstantiationException, NoSuchFieldException {
         String line;
         Mineotaur.LOGGER.info("Processing data...");
         int lineCount = 0, nodeCount = 0;
@@ -404,6 +415,43 @@ public class DatabaseGenerator {
         }
 
         Mineotaur.LOGGER.info(lineCount + " lines processed.");
+    }
+
+    protected void createFilters() {
+        Mineotaur.LOGGER.info("Creating filters...");
+        int nodeCount = 0;
+        Transaction tx = null;
+        try {
+            tx = db.beginTx();
+            Iterator<Node> groups = ggo.getAllNodesWithLabel(groupLabel).iterator();
+            while (groups.hasNext()) {
+                Node group = groups.next();
+                nodeCount++;
+                Iterator<Relationship> rels = group.getRelationships(relationships.get(groupLabel.name()).get(descriptiveLabel.name())).iterator();
+                while (rels.hasNext()) {
+                    Relationship rel = rels.next();
+                    Node descriptive = rel.getOtherNode(group);
+                    nodeCount++;
+                    for (String f: filterProps) {
+                        Object val = descriptive.getProperty(f);
+                        rel.setProperty(f, val);
+                    }
+                }
+                if (nodeCount > limit) {
+                    nodeCount = 0;
+                    tx.success();
+                    tx.close();
+                    tx = db.beginTx();
+                }
+            }
+
+        }
+        finally {
+            if (tx != null) {
+                tx.success();
+                tx.close();
+            }
+        }
     }
 
     /**
@@ -572,12 +620,161 @@ public class DatabaseGenerator {
         }
     }
 
+    protected void precomputeOptimized(int limit) throws IOException {
+        int count = 0;
+        Transaction tx = null;
+        try {
+            tx = db.beginTx();
+            Label precomputed = DynamicLabel.label(group + "_" + COLLECTED);
+//            RelationshipType preRT = DynamicRelationshipType.withName("COLLECTED_OPTIMIZED");
+            RelationshipType rt = relationships.get(group).get(descriptive);
+            Iterator<Node> nodes = ggo.getAllNodesWithLabel(groupLabel).iterator();
+            while (nodes.hasNext()) {
+                count++;
+                Node node = nodes.next();
+                Iterator<Relationship> rels = node.getRelationships(rt).iterator();
+                Map<String, List<Double>> features = new HashMap<>();
+//                if (node.hasRelationship(preRT)) {
+//                    continue;
+//                }
+                Map<String, List<String>> innerfilter = new HashMap<>();
+                while (rels.hasNext()) {
+                    Relationship rel = rels.next();
+                    Node other = rel.getOtherNode(node);
+                    if (!other.hasLabel(descriptiveLabel)) {
+                        continue;
+                    }
+                    Iterator<String> properties = other.getPropertyKeys().iterator();
+                    while (properties.hasNext()) {
+                        String key = properties.next();
+                        Object o = other.getProperty(key);
+                        if (o instanceof Number) {
+                            List<Double> values = features.get(key);
+                            if (values == null) {
+                                values = new ArrayList<>();
+                                features.put(key, values);
+                            }
+                            values.add((Double) o);
+                        }
+                    }
+                    for (String name: filterProps) {
+                        List<String> filtValues = innerfilter.get(name);
+                        if (filtValues == null) {
+                            filtValues = new ArrayList<>();
+                            innerfilter.put(name, filtValues);
+                        }
+                        filtValues.add((String) rel.getProperty(name));
+
+                    }
+
+                    count++;
+                    if (count % limit == 0) {
+                        tx.success();
+                        tx.close();
+                        tx = db.beginTx();
+                    }
+                }
+                String[] filterArr = null;
+                if (!filterProps.isEmpty()) {
+                    List<String> filterList = innerfilter.get(filterProps.get(0));
+                    filterArr = filterList.toArray(new String[filterList.size()]);
+
+                }
+                Set<String> keySet = features.keySet();
+                Map<String, List<Double>> valuesByFilter = new HashMap<>();
+                for (String s : keySet) {
+                    Node pre = db.createNode(precomputed);
+                    Relationship rel = pre.createRelationshipTo(node, DynamicRelationshipType.withName(s));
+                    List<Double> values = features.get(s);
+                    int size = values.size();
+                    double[] arr = new double[size];
+/*
+                    DescriptiveStatistics stat = new DescriptiveStatistics();
+*/
+                    for (int i = 0; i < size; ++i) {
+                        double value = values.get(i);
+                        arr[i] = value;
+                        if (filterArr != null) {
+                            List<Double> vals = valuesByFilter.get(filterArr[i]);
+                            if (vals == null) {
+                                vals = new ArrayList<>();
+                                valuesByFilter.put(filterArr[i], vals);
+                            }
+                            vals.add(arr[i]);
+                        }
+                        /*stat.addValue(value);*/
+                    }
+                    if (filterArr != null) {
+                        pre.setProperty("filter", filterArr);
+                    }
+                    pre.setProperty(s, arr);
+                    rel.setProperty("aggregated", false);
+                    Set<String> uniqueFilters = valuesByFilter.keySet();
+                    String[] uniqueArr = uniqueFilters.toArray(new String[uniqueFilters.size()]);
+                    int filterSize = uniqueArr.length;
+                    double maxSize = Math.pow(2,filterSize);
+                    int set = 1;
+                    while (set < maxSize) {
+//                        System.out.println("set: " + Integer.toBinaryString(set));
+//                        int mask = 1;
+                        DescriptiveStatistics stat = new DescriptiveStatistics();
+                        Node precomputedAgg = db.createNode(precomputed);
+                        Relationship aggRel = precomputedAgg.createRelationshipTo(node, DynamicRelationshipType.withName(s));
+                        aggRel.setProperty("aggregated", true);
+                        List<String> actualFilters = new ArrayList<>();
+                        for (int i = 0; i < filterSize; ++i) {
+//                System.out.println("mask: "+ Integer.toBinaryString(mask));
+//                System.out.println("and: "+Integer.toBinaryString((set >> i) & 1));
+
+                            if (((set >> i) & 1)  == 1) {
+                                List<Double> v = valuesByFilter.get(uniqueArr[i]);
+                                actualFilters.add(uniqueArr[i]);
+//                                aggRel.setProperty(uniqueArr[i], true);
+                                for (Double d: v) {
+                                    stat.addValue(d);
+                                }
+//                                System.out.println(uniqueArr[i]);
+                            }
+//                mask <<= 1;
+                        }
+
+                        precomputedAgg.setProperty("filter", actualFilters.toArray(new String[actualFilters.size()]));
+                        precomputedAgg.setProperty("Average", stat.getMean());
+                        precomputedAgg.setProperty("Minimum", stat.getMin());
+                        precomputedAgg.setProperty("Maximum", stat.getMax());
+                        precomputedAgg.setProperty("Standard deviation", stat.getStandardDeviation());
+                        precomputedAgg.setProperty("Median", stat.getPercentile(50));
+                        precomputedAgg.setProperty("Count", stat.getN());
+                        set += 1;
+                    }
+                    /*pre.setProperty("Average", stat.getMean());
+                    pre.setProperty("Minimum", stat.getMin());
+                    pre.setProperty("Maximum", stat.getMax());
+                    pre.setProperty("Standard deviation", stat.getStandardDeviation());
+                    pre.setProperty("Median", stat.getPercentile(50));
+                    pre.setProperty("Count", stat.getN());*/
+                }
+            }
+        } finally {
+            if (tx != null) {
+                tx.success();
+                tx.close();
+            }
+
+        }
+    }
+
     /**
      * Method to store feature names in an external file.
-     * @param db The GraphDatabaseService instance.
      */
-    protected void storeFeatureNames(GraphDatabaseService db) {
-        try (Transaction tx = db.beginTx()) {
+    protected void storeFeatureNames() {
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < numericData.size(); ++i) {
+            labels.add(header[numericData.get(i)]);
+        }
+        FileUtil.saveList(new StringBuilder(path).append("mineotaur.features").toString(), labels);
+
+        /*try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
             List<String> labels = new ArrayList<>();
@@ -594,7 +791,7 @@ public class DatabaseGenerator {
             System.out.println(labels.toString());
             FileUtil.saveList(new StringBuilder(path).append("mineotaur.features").toString(), labels);
             tx.success();
-        }
+        }*/
     }
 
     /**
@@ -626,10 +823,10 @@ public class DatabaseGenerator {
      */
     protected void storeFilters() {
         List<String> filterNames = new ArrayList<>();
-        /*for (Integer i : filters) {
+        for (Integer i : filters) {
             filterNames.add(header[i]);
-        }*/
-        filterNames.add("GrowthStage");
+        }
+//        filterNames.add("GrowthStage");
         try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
@@ -664,33 +861,73 @@ public class DatabaseGenerator {
         }
         else {
             mineotaurProperties.put("hasFilters", "true");
-            mineotaurProperties.put("filterName", filters.get(0));
+            mineotaurProperties.put("filterName", header[filters.get(0)]);
             storeFilters();
         }
         if (toPrecompute) {
             mineotaurProperties.put("query_relationship", "COLLECTED");
         }
         else {
-            mineotaurProperties.put("query_relationship", relationships.get(groupLabel).get(descriptiveLabel));
+            mineotaurProperties.put("query_relationship", relationships.get(groupLabel.name()).get(descriptiveLabel.name()));
         }
         mineotaurProperties.put("group", group);
         mineotaurProperties.put("groupName", groupName);
         mineotaurProperties.put("total_memory", totalMemory);
         mineotaurProperties.put("db_path", dbPath);
         mineotaurProperties.put("cache", "soft");
+        Mineotaur.LOGGER.info(mineotaurProperties.toString());
         mineotaurProperties.store(new FileWriter(new StringBuilder(path).append("mineotaur.properties").toString()), "Mineotaur configuration properties");
     }
 
+    public void createIndex(GraphDatabaseService db) {
+        IndexDefinition indexDefinition;
+        try ( Transaction tx = db.beginTx() )
+        {
+            Schema schema = db.schema();
+            indexDefinition = schema.indexFor( groupLabel )
+                    .on(groupName )
+                    .create();
+            tx.success();
+        }
+
+        try ( Transaction tx = db.beginTx() )
+        {
+            Schema schema = db.schema();
+            schema.awaitIndexOnline( indexDefinition, 10, TimeUnit.SECONDS );
+        }
+    }
+
     public static void main(String[] args) {
-        DatabaseGenerator databaseGenerator = new DatabaseGenerator("input/merovingian.input");
-        /*databaseGenerator.descriptiveLabel = DynamicLabel.label("CELL");
+        String[] uniqueArr = {"B", "S", "U", "N"};
+        int filterSize = uniqueArr.length;
+        double maxSize = Math.pow(2,filterSize);
+        int set = 1;
+        while (set < maxSize) {
+            System.out.println("set: " + Integer.toBinaryString(set));
+            int mask = 1;
+            for (int i = 0; i < filterSize; ++i) {
+//                System.out.println("mask: "+ Integer.toBinaryString(mask));
+//                System.out.println("and: "+Integer.toBinaryString((set >> i) & 1));
+
+                if (((set >> i) & 1)  == 1) {
+                    System.out.println(uniqueArr[i]);
+                }
+//                mask <<= 1;
+            }
+            set += 1;
+        }
+        /*DatabaseGenerator databaseGenerator = new DatabaseGenerator("input/Pravda.input");
+
+        *//*databaseGenerator.descriptiveLabel = DynamicLabel.label("CELL");
         databaseGenerator.storeFeatureNames(databaseGenerator.db);
-        databaseGenerator.storeFilters();*/
-        try {
-            databaseGenerator.generatePropertyFile();
+        databaseGenerator.storeFilters();*//*
+        databaseGenerator.createIndex(databaseGenerator.db);
+*/
+        /*try {
+           databaseGenerator.generatePropertyFile();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
 

@@ -82,7 +82,7 @@ public class MineotaurController {
         this.hitNames = (List<String>) context.get("hitNames");
         this.allHitLabels = new ArrayList<>();
         allHitLabels.addAll(hitsByLabel.keySet());
-        this.strainMap = (Map<String, Node>) context.get("groupByGroupName");;
+        this.strainMap = (Map<String, Node>) context.get("groupByGroupName");
         this.rt = (RelationshipType) context.get("rel");
         menu1 = new HashMap<>();
         menu1.put("cellwiseScatter", "Cell-wise scatter plot");
@@ -139,7 +139,10 @@ public class MineotaurController {
                                                                                       @RequestParam String[] hitCheckbox,
                                                                                       @RequestParam(required = false) List<String> mapValuesProp2) {
         List<Label> hitLabels = manageHitCheckbox(hitCheckbox);
-        List<Map<String, Object>> dataPoints = getHitsDecoupled(geneList, prop1, prop2, aggProp1, mapValuesProp1, aggProp2, mapValuesProp2, hitLabels);
+        Mineotaur.LOGGER.info(String.valueOf(model.containsAttribute("mapValuesProp1")));
+        Map<String, Object> map = model.asMap();
+        // TODO: fix it!
+        List<Map<String, Object>> dataPoints = getHitsDecoupledOptimized(geneList, prop1, prop2, aggProp1, (List<String>) map.get("mapValuesProp1"), aggProp2, (List<String>) map.get("mapValuesProp2"), hitLabels);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("prop1", prop1);
         model.addAttribute("prop2", prop2);
@@ -166,7 +169,8 @@ public class MineotaurController {
                                                                                    @RequestParam(required = false) List<String> mapValuesGWDist,
                                                                                    @RequestParam String[] hitCheckboxGWDist) {
         List<Label> hitLabels = manageHitCheckbox(hitCheckboxGWDist);
-        List<Map<String, Object>> dataPoints = getHitsDecoupledMap(geneListDist, propGWDist, aggGWDist, mapValuesGWDist, hitLabels);
+        //TODO: fix it!
+        List<Map<String, Object>> dataPoints = getHitsDecoupledMapOptimized(geneListDist, propGWDist, aggGWDist, mapValuesGWDist, hitLabels);
         model.addAttribute("prop1", propGWDist);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("selectedGenes", geneListDist);
@@ -192,7 +196,8 @@ public class MineotaurController {
                                                                        @RequestParam String geneCWProp1) {
 
         Node strain1 = strainMap.get(geneCWProp1);
-        List<Map<String, Object>> dataPoints = getHitsDecoupled(cellwiseProp1, cellwiseProp2, mapValuesCellwiseProp1, mapValuesCellwiseProp2, strain1, geneCWProp1);
+        Mineotaur.LOGGER.info(mapValuesCellwiseProp1.toString());
+        List<Map<String, Object>> dataPoints = getHitsDecoupledOptimized(cellwiseProp1, cellwiseProp2, mapValuesCellwiseProp1, mapValuesCellwiseProp2, strain1, geneCWProp1);
         model.addAttribute("genename", geneCWProp1);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("prop1", cellwiseProp1);
@@ -214,7 +219,7 @@ public class MineotaurController {
                                                                                    @RequestParam String geneCWDist,
                                                                                    @RequestParam(required = false) List<String> mapValuesCWDist) {
         Node strain = strainMap.get(geneCWDist);
-        List<Map<String, Object>> dataPoints = getHitsDecoupled(propCWDist, mapValuesCWDist, strain);
+        List<Map<String, Object>> dataPoints = getHitsDecoupledOptimized(propCWDist, (List<String>) model.asMap().get("mapValuesCWDist"), strain);
         model.addAttribute("genename", geneCWDist);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("prop1", propCWDist);
@@ -229,8 +234,9 @@ public class MineotaurController {
      * @param mapValuesProp2 Checked filters for the second property.
      * @param strain Node for the selected gene.
      * @param genename The selected gene.
-     * @return
+     * @return A list of datapoints.
      */
+    @Deprecated
     protected List<Map<String, Object>> getHitsDecoupled(String prop1, String prop2, List<String> mapValuesProp1, List<String> mapValuesProp2, Node strain, String genename) {
         List<Map<String, Object>> dataPoints = new ArrayList<>();
 
@@ -294,6 +300,148 @@ public class MineotaurController {
         return dataPoints;
     }
 
+    protected double[] getArrayData(Node strain, String prop1, String genename) {
+        Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
+        if (!prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
+        }
+        Relationship rel = prop1Iterator.next();
+        if (prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There are multiple nodes stored for strain " + genename + " for property " + prop1);
+        }
+        Node node = rel.getOtherNode(strain);
+        double[] prop1Arr = (double[]) node.getProperty(prop1);
+        return prop1Arr;
+    }
+
+    protected double[] getFilteredArrayData(Node strain, String prop1, String genename, List<String> filter) {
+        Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
+        Node node = null;
+        while (prop1Iterator.hasNext()) {
+            Relationship rel = prop1Iterator.next();
+            if ((Boolean)rel.getProperty("aggregated",false)) {
+                continue;
+            }
+            node = rel.getOtherNode(strain);
+        }
+        if (node == null) {
+            throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
+        }
+        /*Relationship rel = prop1Iterator.next();
+        if (prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There are multiple nodes stored for strain " + genename + " for property " + prop1);
+        }
+        Node node = rel.getOtherNode(strain);*/
+        double[] prop1Arr = (double[]) node.getProperty(prop1);
+        String[] filterArr = (String[]) node.getProperty("filter");
+
+        Mineotaur.LOGGER.info(filter.toString());
+        List<Double> results = new ArrayList<>();
+        for (int i = 0; i < prop1Arr.length; ++i) {
+            if (filter.contains(filterArr[i])) {
+                results.add(prop1Arr[i]);
+            }
+        }
+        double[] resultArr = new double[results.size()];
+        for (int i = 0; i < resultArr.length; ++i) {
+            resultArr[i] = results.remove(0);
+        }
+        return resultArr;
+    }
+
+    protected double getFilteredAggregatedData(Node strain, String prop1, String genename, String aggregate, List<String> filter) {
+        Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
+        Node node = null;
+        while (prop1Iterator.hasNext()) {
+            Relationship rel = prop1Iterator.next();
+            if (!(Boolean)rel.getProperty("aggregated",false)) {
+                continue;
+            }
+            node = rel.getOtherNode(strain);
+            String[] filterArr = (String[]) node.getProperty("filter");
+            Mineotaur.LOGGER.info(Boolean.toString((Boolean)rel.getProperty("aggregated")));
+            Mineotaur.LOGGER.info(Arrays.toString(filterArr));
+            Mineotaur.LOGGER.info(filter.toString());
+
+            if (filterArr.length != filter.size()) {
+                continue;
+            }
+            for (String f: filterArr) {
+                if (!filter.contains(f)) {
+                    node = null;
+                    break;
+                }
+            }
+            if (node != null) {
+                break;
+            }
+        }
+        if (node == null) {
+            throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
+        }
+        /*Relationship rel = prop1Iterator.next();
+        if (prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There are multiple nodes stored for strain " + genename + " for property " + prop1);
+        }
+        Node node = rel.getOtherNode(strain);*/
+
+        /*double prop1Arr = (double) node.getProperty(aggregate);
+
+        Mineotaur.LOGGER.info(filter.toString());
+        List<Double> results = new ArrayList<>();*/
+        /*for (int i = 0; i < prop1Arr.length; ++i) {
+            results.add(prop1Arr[i]);
+            *//*if (filter.contains(filterArr[i])) {
+                results.add(prop1Arr[i]);
+            }*//*
+        }
+        double[] resultArr = new double[results.size()];
+        for (int i = 0; i < resultArr.length; ++i) {
+            resultArr[i] = results.remove(0);
+        }*/
+        return (double) node.getProperty(aggregate);
+    }
+
+    protected double getAggregatedData(Node strain, String prop1, String genename, String aggProp1) {
+        Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
+        if (!prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
+        }
+        Relationship rel = prop1Iterator.next();
+        if (prop1Iterator.hasNext()) {
+            throw new IllegalStateException("There are multiple nodes stored for strain " + genename + " for property " + prop1);
+        }
+        Node node = rel.getOtherNode(strain);
+//        double prop1Agg = (double) node.getProperty(aggProp1);
+        return (double) node.getProperty(aggProp1);
+    }
+
+    protected List<Map<String, Object>> getHitsDecoupledOptimized(String prop1, String prop2, List<String> mapValuesProp1, List<String> mapValuesProp2, Node strain, String genename) {
+        List<Map<String, Object>> dataPoints = new ArrayList<>();
+
+        try (Transaction tx = db.beginTx()) {
+            List<String> actualLabels = getActualLabels(allHitLabels, strain);
+            double[] xArr = getFilteredArrayData(strain, prop1, genename, mapValuesProp1);
+            double[] yArr = getFilteredArrayData(strain, prop2, genename, mapValuesProp2);
+            int length = Math.min(xArr.length, yArr.length);
+
+            for (int i = 0; i < length; ++i) {
+                Map map = new HashMap<>();
+                map.put("x", xArr[i]);
+                map.put("y", yArr[i]);
+                map.put("logX", Math.log(xArr[i]));
+                map.put("logY", Math.log(yArr[i]));
+                map.put("name", genename);
+                map.put("labels", actualLabels);
+                dataPoints.add(map);
+            }
+
+
+            tx.success();
+        }
+        return dataPoints;
+    }
+
     /**
      * Method to query data for a genewise scatterplot.
      * @param geneList The list of genes.
@@ -318,7 +466,7 @@ public class MineotaurController {
             for (String geneName : geneList) {
 
 //                Node strain = strainMap.get(geneName);
-                Node strain = db.findNodesByLabelAndProperty(groupLabel,groupName,geneName).iterator().next();
+                Node strain = db.findNodes(groupLabel,groupName,geneName).next();
                 if (strain == null) {
                     continue;
                 }
@@ -383,6 +531,178 @@ public class MineotaurController {
         }
         Mineotaur.LOGGER.info(dataPoints.toString());
         return dataPoints;
+    }
+
+
+    protected List<Map<String, Object>> getHitsDecoupledOptimized(String[] geneList, String prop1, String prop2, String aggProp1, List<String> mapValuesProp1, String aggProp2, List<String> mapValuesProp2, List<Label> hitLabels) {
+        List<Map<String, Object>> dataPoints = new ArrayList<>();
+
+        try (Transaction tx = db.beginTx()) {
+            for (String geneName : geneList) {
+
+//                Node strain = strainMap.get(geneName);
+                Node strain = db.findNodes(groupLabel, groupName, geneName).next();
+                if (strain == null) {
+                    continue;
+                }
+//                Mineotaur.LOGGER.info(geneName);
+                List<String> actualLabels = getActualLabels(hitLabels, strain);
+                if (actualLabels.isEmpty()) {
+                    continue;
+                }
+                Mineotaur.LOGGER.info(mapValuesProp1.toString());
+                double xAgg = getFilteredAggregatedData(strain, prop1, geneName, aggProp1,mapValuesProp1);
+                double yAgg = getFilteredAggregatedData(strain, prop2, geneName, aggProp2,mapValuesProp2);
+                Map map = new HashMap<>();
+                map.put("x", xAgg);
+                map.put("y", yAgg);
+                map.put("logX", Math.log(xAgg));
+                map.put("logY", Math.log(yAgg));
+                map.put("name", geneName);
+                map.put("labels", actualLabels);
+                dataPoints.add(map);
+//                double[] xArr = getArrayData(strain, prop1, geneName);
+//                double[] yArr = getArrayData(strain, prop2, geneName);
+//                int length = Math.min(xArr.length, yArr.length);
+//
+//                for (int i = 0; i < length; ++i) {
+//
+//                }
+                /*Iterator<Relationship> smds = strain.getRelationships(rt).iterator();
+                Object x, y;
+                List<double[]> xList = new ArrayList<>(), yList = new ArrayList<>();
+                while (smds.hasNext()) {
+                    Relationship rel = smds.next();
+                    boolean in1, in2;
+                    if (hasFilter) {
+                        *//*String stage = (String) rel.getProperty("stage", null);
+                        in1 = mapValuesProp1.contains(stage);
+                        in2 = mapValuesProp2.contains(stage);
+                        if (stage == null || (!in1 && !in2))  {
+                            continue;
+                        }*//*
+                        in1 = in2 = true;
+                    }
+                    else {
+                        in1 = in2 = true;
+                    }
+
+                    Node smd = rel.getOtherNode(strain);
+                    if (in1) {
+                        x = smd.getProperty(prop1, null);
+                        if (x != null) {
+                            xList.add((double[]) x);
+                        }
+                    }
+                    if (in2) {
+                        y = smd.getProperty(prop2, null);
+                        if (y != null) {
+                            yList.add((double[]) y);
+                        }
+                    }
+                }
+                int idx = 0;
+                int size = Math.min(xList.size(), yList.size());
+                while (idx < size) {
+                    double[] xArr = xList.get(idx);
+                    double[] yArr = yList.get(idx);
+                    idx++;
+                    int length = Math.min(xArr.length, yArr.length);
+
+                    for (int i = 0; i < length; ++i) {
+                        Map map = new HashMap<>();
+                        map.put("x", xArr[i]);
+                        map.put("y", yArr[i]);
+                        map.put("logX", Math.log(xArr[i]));
+                        map.put("logY", Math.log(yArr[i]));
+                        map.put("name", geneName);
+                        map.put("labels", actualLabels);
+                        dataPoints.add(map);
+                    }
+                }*/
+            }
+            tx.success();
+        }
+        catch (IllegalStateException ie) {
+            Mineotaur.LOGGER.info(ie.toString());
+        }
+        return dataPoints;
+        /*List<Map<String, Object>> dataPoints = new ArrayList<>();
+        try (Transaction tx = db.beginTx()) {
+            Mineotaur.LOGGER.info(rt.toString());
+            Mineotaur.LOGGER.info(groupLabel.toString());
+            Mineotaur.LOGGER.info(groupName);
+            Mineotaur.LOGGER.info(Arrays.toString(geneList));
+            Mineotaur.LOGGER.info(prop1);
+            Mineotaur.LOGGER.info(prop2);
+            for (String geneName : geneList) {
+
+//                Node strain = strainMap.get(geneName);
+                Node strain = db.findNodesByLabelAndProperty(groupLabel,groupName,geneName).iterator().next();
+                if (strain == null) {
+                    continue;
+                }
+//                Mineotaur.LOGGER.info(geneName);
+                List<String> actualLabels = getActualLabels(hitLabels, strain);
+                if (actualLabels.isEmpty()) {
+                    continue;
+                }
+                Iterator<Relationship> smds = strain.getRelationships(rt).iterator();
+//                Mineotaur.LOGGER.info(String.valueOf(smds.hasNext()));
+                Object x = null, y = null;
+                DescriptiveStatistics statX = new DescriptiveStatistics();
+                DescriptiveStatistics statY = new DescriptiveStatistics();
+                while (smds.hasNext()) {
+
+                    Relationship rel = smds.next();
+                   *//* Mineotaur.LOGGER.info(rel.getType().name());
+                    if (!rel.getType().name().equals(rt.name()))
+                        continue;*//*
+                    boolean in1, in2;
+                    if (hasFilter) {
+                        *//*String stage = (String) rel.getProperty(filterName, null);
+                        in1 = mapValuesProp1.contains(stage);
+                        in2 = mapValuesProp2.contains(stage);
+                        if (stage == null || (!in1 && !in2)) {
+                            continue;
+                        }*//*
+                        in1 = in2 = true;
+                    }
+                    else {
+                        in1 = in2 = true;
+                    }
+
+                    Node smd = rel.getOtherNode(strain);
+                    *//*Mineotaur.LOGGER.info(smd.getLabels().toString());
+                    Mineotaur.LOGGER.info(smd.getPropertyKeys().toString());*//*
+
+
+                    if (in1) {
+                        x = smd.getProperty(prop1, null);
+                        addValuesToDS(x, statX);
+                    }
+                    if (in2) {
+                        y = smd.getProperty(prop2, null);
+                        addValuesToDS(y, statY);
+                    }
+                }
+                if (x == null || y == null) {
+                    continue;
+                }
+                double xAgg = aggregate(statX, aggProp1), yAgg = aggregate(statY, aggProp2);
+                Map<String, Object> map = new HashMap<>();
+                map.put("x", xAgg);
+                map.put("y", yAgg);
+                map.put("logX", Math.log(xAgg));
+                map.put("logY", Math.log(yAgg));
+                map.put("name", geneName);
+                map.put("labels", actualLabels);
+                dataPoints.add(map);
+            }
+            tx.success();
+        }
+        Mineotaur.LOGGER.info(dataPoints.toString());
+        return dataPoints;*/
     }
 
 
@@ -451,6 +771,36 @@ public class MineotaurController {
         return dataPoints;
     }
 
+    protected List<Map<String, Object>> getHitsDecoupledMapOptimized(String[] geneListDist, String prop1, String agg, List<String> mapValues, List<Label> hitLabels) {
+        List<Map<String, Object>> dataPoints = new ArrayList<>();
+        try (Transaction tx = db.beginTx()) {
+            for (String geneName : geneListDist) {
+
+//                Node strain = strainMap.get(geneName);
+                Node strain = db.findNodes(groupLabel, groupName, geneName).next();
+                if (strain == null) {
+                    continue;
+                }
+//                Mineotaur.LOGGER.info(geneName);
+                List<String> actualLabels = getActualLabels(hitLabels, strain);
+                if (actualLabels.isEmpty()) {
+                    continue;
+                }
+                double xAgg = getFilteredAggregatedData(strain, prop1, geneName, agg, mapValues);
+                Map map = new HashMap<>();
+                map.put("x", xAgg);
+                map.put("logX", Math.log(xAgg));
+                map.put("name", geneName);
+                map.put("labels", actualLabels);
+                dataPoints.add(map);
+            }
+            tx.success();
+        }
+        catch (IllegalStateException ie) {
+            Mineotaur.LOGGER.info(ie.toString());
+        }
+        return dataPoints;
+    }
 
     /**
      * Method to query data for a cellwise distribution plot.
@@ -487,6 +837,28 @@ public class MineotaurController {
 
                 }
             }
+            tx.success();
+        }
+        return dataPoints;
+    }
+
+    protected List<Map<String, Object>> getHitsDecoupledOptimized(String prop1, List<String> mapValues, Node strain) {
+        List<Map<String, Object>> dataPoints = new ArrayList<>();
+
+        try (Transaction tx = db.beginTx()) {
+            List<String> actualLabels = getActualLabels(allHitLabels, strain);
+            double[] xArr = getFilteredArrayData(strain, prop1, "", mapValues);
+            int length = xArr.length;
+
+            for (int i = 0; i < length; ++i) {
+                Map map = new HashMap<>();
+                map.put("x", xArr[i]);
+                map.put("logX", Math.log(xArr[i]));
+                map.put("labels", actualLabels);
+                dataPoints.add(map);
+            }
+
+
             tx.success();
         }
         return dataPoints;
@@ -640,7 +1012,7 @@ public class MineotaurController {
         String decompressed = null;
         byte[] byteData = Base64.getDecoder().decode(data);
         //byte[] byteData = data.getBytes();
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length);){
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length)){
 
             Inflater inflater = new Inflater();
             inflater.setInput(byteData);
@@ -703,11 +1075,15 @@ public class MineotaurController {
                 }
                 model.addAttribute(parts[0], geneList.toArray(new String[geneList.size()]));
             }
-            else if (value.length == 1) {
+            else if (parts[0].startsWith("mapValues")) {
+                model.addAttribute(parts[0], Arrays.asList(value));
+            }
+            else if (value.length == 1){
                 model.addAttribute(parts[0], value[0]);
             }
             else {
                 model.addAttribute(parts[0], value);
+
             }
             /*if (parts[0].equals("type")) {
                 type = parts[1];
@@ -720,6 +1096,7 @@ public class MineotaurController {
     public @ResponseBody List<Map<String, Object>> decodeQuery(Model model, @RequestParam MultiValueMap<String, String> params) {
         model = decodeURL(model, params);
         String type = (String) model.asMap().get("type");
+//        Mineotaur.LOGGER.info(((List<String>) model.asMap().get("mapValuesGWDist")).toString());
         /*String data = params.get("content").get(0);
         String decompressed = decompressString(data);
         *//*byte[] byteData = Base64.getDecoder().decode(data);
@@ -783,29 +1160,44 @@ public class MineotaurController {
     public @ResponseBody
     List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model) {
         Map<String, Object> map = model.asMap();
-        String[] mapValues = (String[]) map.get("mapValuesGWDist");
+        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesCWDist"));
+
+        /*String[] mapValues = (String[]) map.get("mapValuesGWDist");
         List<String> mapValuesProp1 = null;
         if (mapValues != null) {
             mapValuesProp1 = Arrays.asList(mapValues);
-        }
+        }*/
         return getDistributionDataCellwiseJSON(model, (String) map.get("propCWDist"), (String) map.get("geneCWDist"), mapValuesProp1);
     }
 
     public @ResponseBody
     List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model) {
         Map<String, Object> map = model.asMap();
-        String[] mapValues = (String[]) map.get("mapValuesGWDist");
+//        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesGWDist"));
+//        Mineotaur.LOGGER.info(mapValuesProp1.toString());
+        /*String[] mapValues = (String[]) map.get("mapValuesGWDist");
         List<String> mapValuesProp1 = null;
         if (mapValues != null) {
             mapValuesProp1 = Arrays.asList(mapValues);
+        }*/
+        String[] hitCheckbox;
+        Object hit = map.get("hitCheckboxGWDist");
+        if (hit instanceof String) {
+            hitCheckbox = new String[]{((String) hit)};
         }
-        return getDistributionDataGenewiseJSON(model, (String[]) map.get("geneListDist"), (String) map.get("propGWDist"), (String) map.get("aggGWDist"), mapValuesProp1, (String[]) map.get("hitCheckboxGWDist"));
+        else {
+            hitCheckbox = ((String[]) hit);
+        }
+        return getDistributionDataGenewiseJSON(model, (String[]) map.get("geneListDist"), (String) map.get("propGWDist"), (String) map.get("aggGWDist"), (List<String>) map.get("mapValuesGWDist"), hitCheckbox);
     }
 
     public @ResponseBody
     List<Map<String, Object>> getScatterPlotDataCellJSONSeparate(Model model) {
         Map<String, Object> map = model.asMap();
-        String[] mapValues = (String[]) map.get("mapValuesCellwiseProp1");
+//        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesProp1"));
+//        List<String> mapValuesProp2 = getMapValues(map.get("mapValuesProp2"));
+
+        /*String[] mapValues = (String[]) map.get("mapValuesCellwiseProp1");
         List<String> mapValuesProp1 = null;
         if (mapValues != null) {
             mapValuesProp1 = Arrays.asList(mapValues);
@@ -814,29 +1206,52 @@ public class MineotaurController {
         List<String> mapValuesProp2 = null;
         if (mapValues != null) {
             mapValuesProp1 = Arrays.asList(mapValues);
+        }*/
+        return cellwiseScatterJSON(model, ((String) map.get("cellwiseProp1")), ((String) map.get("cellwiseProp2")), ((List<String>) map.get("mapValuesCellwiseProp1")), ((List<String>) map.get("mapValuesCellwiseProp2")), ((String) map.get("geneCWProp1")));
+    }
+
+    private List<String> getMapValues(Object o) {
+        List mapValues = null;
+        if (o instanceof String[]) {
+            mapValues = Arrays.asList((String[])o);
         }
-        return cellwiseScatterJSON(model, ((String) map.get("cellwiseProp1")), ((String) map.get("cellwiseProp2")), mapValuesProp1, mapValuesProp2, ((String) map.get("geneCWProp1")));
+        else if (o instanceof String) {
+            mapValues = new ArrayList<>();
+            mapValues.add(o);
+        }
+        return mapValues;
     }
 
     public @ResponseBody
     List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model) {
         Map<String, Object> map = model.asMap();
+        System.out.println(map.toString());
         String[] geneList = ((String[]) map.get("geneList"));
         String prop1 = (String) map.get("prop1");
         String prop2 = (String) map.get("prop2");
         String aggProp1 = (String) map.get("aggProp1");
         String aggProp2 = (String) map.get("aggProp2");
-        String[] mapValues = (String[]) map.get("mapValuesProp1");
-        List<String> mapValuesProp1 = null;
+//        String[] mapValues = (String[]) map.get("mapValuesProp1");
+        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesProp1"));
+        /*null;
         if (mapValues != null) {
             mapValuesProp1 = Arrays.asList(mapValues);
+        }*/
+        Object hit =  map.get("hitCheckbox");
+        String[] hitCheckbox;
+        if (hit instanceof String) {
+            hitCheckbox = new String[]{((String) hit)};
         }
-        String[] hitCheckbox = ((String[]) map.get("hitCheckbox"));
-        mapValues = (String[]) map.get("mapValuesProp2");
+        else {
+            hitCheckbox = ((String[]) hit);
+        }
+        List<String> mapValuesProp2 = getMapValues(map.get("mapValuesProp2"));
+
+        /*mapValues = (String[]) map.get("mapValuesProp2");
         List<String> mapValuesProp2 = null;
         if (mapValues != null) {
             mapValuesProp2 = Arrays.asList(mapValues);
-        }
+        }*/
         return getScatterPlotDataGeneJSONSeparate(model, geneList, prop1, prop2, aggProp1, aggProp2, mapValuesProp1, hitCheckbox, mapValuesProp2);
     }
 
