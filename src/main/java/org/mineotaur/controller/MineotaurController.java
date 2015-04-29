@@ -335,7 +335,7 @@ public class MineotaurController {
         double[] prop1Arr = (double[]) node.getProperty(prop1);
         String[] filterArr = (String[]) node.getProperty("filter");
 
-        Mineotaur.LOGGER.info(filter.toString());
+//        Mineotaur.LOGGER.info(filter.toString());
         List<Double> results = new ArrayList<>();
         for (int i = 0; i < prop1Arr.length; ++i) {
             if (filter.contains(filterArr[i])) {
@@ -359,9 +359,9 @@ public class MineotaurController {
             }
             node = rel.getOtherNode(strain);
             String[] filterArr = (String[]) node.getProperty("filter");
-            Mineotaur.LOGGER.info(Boolean.toString((Boolean)rel.getProperty("aggregated")));
-            Mineotaur.LOGGER.info(Arrays.toString(filterArr));
-            Mineotaur.LOGGER.info(filter.toString());
+//            Mineotaur.LOGGER.info(Boolean.toString((Boolean)rel.getProperty("aggregated")));
+//            Mineotaur.LOGGER.info(Arrays.toString(filterArr));
+//            Mineotaur.LOGGER.info(filter.toString());
 
             if (filterArr.length != filter.size()) {
                 continue;
@@ -550,7 +550,7 @@ public class MineotaurController {
                 if (actualLabels.isEmpty()) {
                     continue;
                 }
-                Mineotaur.LOGGER.info(mapValuesProp1.toString());
+//                Mineotaur.LOGGER.info(mapValuesProp1.toString());
                 double xAgg = getFilteredAggregatedData(strain, prop1, geneName, aggProp1,mapValuesProp1);
                 double yAgg = getFilteredAggregatedData(strain, prop2, geneName, aggProp2,mapValuesProp2);
                 Map map = new HashMap<>();

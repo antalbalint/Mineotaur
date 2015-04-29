@@ -142,7 +142,7 @@
     <script th:inline="javascript">
 
         /*<![CDATA[*/
-         require.config({
+         /*require.config({
     baseUrl: 'js/lib',
     paths: {
         mineotaur: '../mineotaur'
@@ -165,6 +165,10 @@
                 },
     }
 });
+require.config({
+         main: "mineotaur-built"
+
+});*/
 
 require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur/events', 'pako', 'jquery', 'jquery.blockUI'], function(controller, context, ui, events, $) {
         context.setLabels(/*[[${allLabels}]]*/null);
