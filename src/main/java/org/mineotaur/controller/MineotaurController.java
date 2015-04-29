@@ -1256,10 +1256,10 @@ public class MineotaurController {
     }
 
     @RequestMapping("/share")
-    public String query(Model model, @RequestParam MultiValueMap<String, String> params) {
+    public String query(Model model, @RequestParam String type, @RequestParam String content) {
         /*String type = params.get("type").get(0);
         model.addAllAttributes(params);*/
-        model = decodeURL(model, params);
+        /*model = decodeURL(model, params);
         String type = (String) model.asMap().get("type");
         List<Map<String, Object>> dataPoints;
         switch (type) {
@@ -1269,7 +1269,10 @@ public class MineotaurController {
             case "cellwiseDistribution": dataPoints = getDistributionDataCellwiseJSON(model); break;
             default: throw new UnsupportedOperationException();
         }
-        model.addAttribute("dataPoints", dataPoints);
+        model.addAttribute("dataPoints", dataPoints);     */
+        model.addAttribute("content", content);
+        model.addAttribute("type", type);
+        model.addAttribute("toDecode", true);
         model.addAttribute("sharedLink", true);
         /*return "redirect:/" + type;*/
         return "index";

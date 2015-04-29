@@ -919,8 +919,53 @@ $('#graphForm').submit(function(event){
                 return {
                     isKeyDown: function() {
                         return keyisdown;
-                    }
-                }
+                    },
+
+					sendAjaxRequest: function(data) {
+						context.setURL("content=" + data['content']);
+						console.log(data);
+						$.ajax({
+							url: "/decode",
+							data: data,
+							dataType: "json",
+							type: "GET",
+							beforeSend: function() {
+								ui.showSpinner('spin');
+								//                                                                                                                                            			$('#' + prefix + 'FormSubmit').attr("disabled", "disabled");
+								//                                                                                                                                            			$('#' + prefix + 'FormReset').attr("disabled", "disabled");
+
+							},
+							// success identifies the function to invoke when the server response
+							// has been received
+							success: function(data) {
+								switch (type) {
+									case 'genewiseScatter':
+										events.genewiseScatterSuccess(data);
+										break;
+									case 'cellwiseScatter':
+										events.cellwiseScatterSuccess(data);
+										break;
+									case 'genewiseHistogram':
+									case 'genewiseKDE':
+									case 'genewiseMultihistogram':
+										events.genewiseDistributionSuccess(data);
+										break;
+
+									case 'cellwiseHistogram':
+									case 'cellwiseKDE':
+										events.cellwiseDistributionSuccess(data);
+										break;
+								}
+							},
+							error: function() {
+								ui.formError('spin');
+							}
+						})
+
+						event.preventDefault();
+					}
+}
+
 
 
 
