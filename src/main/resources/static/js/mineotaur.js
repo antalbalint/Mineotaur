@@ -3,7 +3,6 @@ require.config({
     paths: {
         mineotaur: '../mineotaur'
     },
-    urlArgs: "bust=" + (new Date()).getTime(),
     shim: {
             'jquery.blockUI': ['jquery'],
             'jquery.form': ['jquery'],
@@ -23,6 +22,7 @@ require.config({
 });
 
 define(['mineotaur/controller' /*,'jquery', 'jquery.multiselect', 'jquery.multiselect.filter', ,'mineotaur/main',*/], function(controller /*,$, main*/) {
+    //    urlArgs: "bust=" + (new Date()).getTime(),
 
     //require(['jquery', 'jquery-ui', 'jquery.multiselect', 'jquery.multiselect.filter']);
 });
