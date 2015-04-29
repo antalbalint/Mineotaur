@@ -17,9 +17,9 @@ GNU General Public License for more details.
 1.	Download the latest jar file from http://www.mineotaur.org.
 2.	Create a property file, a data file and a label file (see documentation and example input data)
 3.	Start the data import with the following command:
-java -jar <path_to_jar file> -import mineotaur.input chia_sample.tsv chia_labels.ts
+java -jar &lt;path_to_jar file&gt; -import mineotaur.input chia_sample.tsv chia_labels.ts
 4.	After the database creation is completed you can start your Mineotaur instance with the following command:
-java –jar <path_to_jar file> -start <instance_name>
+java –jar &lt;path_to_jar file&gt; -start <instance_name>
 5.	You can start querying at http://127.0.0.1:8080 in your browser.
 
 <h3>Import data</h3>
@@ -38,7 +38,7 @@ To provide annotation for the grouping objects, an additional input file providi
 <!--
 REST access
 The server side can be accessed programmatically from any programming language or framework capable of handling HTTP requests and responses and JSON (i.e. Java, Python, Matlab, Bash, etc.). The REST service can be accessed in the following way:
-http://<server_url>/query?type={scatter|distribution}&level={group|descriptive}&action={json|embed|share}&property1=<property>&[property2=<property>]&[filter={filter_property}]*&[groupObjects={group_objects}]*&[hits={hits}]
+http://&lt;server_url&gt;/query?type={scatter|distribution}&level={group|descriptive}&action={json|embed|share}&property1=<property>&[property2=<property>]&[filter={filter_property}]*&[groupObjects={group_objects}]*&[hits={hits}]
 Parameters:
 Type: Type of the query.
 Level: whether the grouping (e.g. gene) or descriptive (e.g. cell) level information is queried
