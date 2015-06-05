@@ -18,6 +18,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	};
 	var selected = [];
 	var colors = d3.scale.category20();
+	var usedColors = {};
 
 	function getColor(label) {
 
@@ -311,9 +312,13 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 				d.labels.forEach(function (l) {
 					color = addHexColor(color, getColor(l).replace("#", "0x"));
 				});
-				color = divideHexColor(color, d.labels.length);
+				color = '#'.concat(divideHexColor(color, d.labels.length));
+				if (!(color in usedColors)) {
+					usedColors[color] = d.labels;
+				}
+				return color;
 				//console.log(color);
-				return '#'.concat(color); /*return getColor(d.label);*/
+//				return '#'.concat(color); /*return getColor(d.label);*/
 			})
 			// Adds tooltip if the mouse is over the circle.
 			.on("mouseover", function (d) {
@@ -335,6 +340,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 				context.setCurrentItem(d);
 				//currentItem = d;
 			});
+			console.log(usedColors);
 	},
 	drawKDEPlot: function (input, target, prop, geneName) {
 			if (typeof (input) === 'undefined') {
@@ -562,9 +568,11 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		addLegend: function (id) {
 			// Width of the chart.
 			width = $(id).attr('width') - margin.left - margin.right;
+			console.log(usedColors);
 			// Adds legend.
 			var legend = svg.selectAll(".legend")
-				.data(labels)
+			//  .data(labels)
+				.data(Object.keys(usedColors))
 				.enter()
 				.append("g")
 				.attr("class", "legend")
@@ -576,8 +584,11 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 				.attr("x", width - 18)
 				.attr("width", 18)
 				.attr("height", 18)
-				.style("fill", function (label) {
-					return getColor(label);
+//				.style("fill", function (label) {
+//					return getColor(label);
+//				});
+                .style("fill", function (d) {
+						return d;
 				});
 			// Adds text containg the labels shown in the chart.
 			legend.append("text")
@@ -585,8 +596,8 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 				.attr("y", 9)
 				.attr("dy", ".35em")
 				.style("text-anchor", "end")
-				.text(function (label) {
-					return label;
+				.text(function (d) {
+					return usedColors[d];
 				});
 		},
 		addSelectionTool: function (id) {

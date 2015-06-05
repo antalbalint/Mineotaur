@@ -357,7 +357,9 @@ public class DatabaseGenerator {
             tx = db.beginTx();
             while ((line = br.readLine()) != null) {
                 System.out.println("Line #" + (lineCount++));
+                //System.out.println(line);
                 String[] terms = line.split(separator);
+                //System.out.println(terms.length);
                 Map<String, Object> data = new HashMap<>();
                 for (String key : keySet) {
                     List<Integer> indices = signatures.get(key);
@@ -385,7 +387,6 @@ public class DatabaseGenerator {
                         newNodes.put(key, lookupNode(data.get(key)));
                     }
                 }
-
                 for (String key : relKeySet) {
                     Map<String, RelationshipType> rels = relationships.get(key);
                     nodeCount++;
@@ -406,6 +407,9 @@ public class DatabaseGenerator {
                     tx = db.beginTx();
                 }
             }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
         finally {
             if (tx != null) {
@@ -466,7 +470,10 @@ public class DatabaseGenerator {
         Node node = db.createNode(label);
         Field[] fields = claz.getDeclaredFields();
         for (Field f : fields) {
-            node.setProperty(f.getName(), f.get(o));
+            if (f.get(o) != null) {
+                node.setProperty(f.getName(), f.get(o));
+            }
+
         }
         return node;
     }
@@ -492,7 +499,7 @@ public class DatabaseGenerator {
                 String key = f.getName();
                 Object nodeValue = node.getProperty(key, null);
                 Object storedValue = f.get(o);
-                if (!storedValue.equals(nodeValue)) {
+                if (nodeValue == null || !storedValue.equals(nodeValue)) {
                     same = false;
                     break;
                 }

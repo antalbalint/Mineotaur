@@ -40,7 +40,7 @@ define(['underscore', 'pako'], function (_, pako) {
                             };
     var URL;
     var include;
-        var keyisdown = false;
+    var keyisdown = false;
     var labels;
 
 
