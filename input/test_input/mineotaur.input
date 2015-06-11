@@ -1,0 +1,30 @@
+# Name of the database
+name = Test
+# Relationships to be generated. Each relationship has the form <NODE_TYPE_1>-<NODE_TYPE_2>
+relationships = GENE-CELL,GENE-EXPERIMENT
+# Node type on which the aggregation should be performed.
+aggregate = CELL
+# List of node types, where each node contains unique information
+unique = CELL
+# Group object node type
+group = GENE
+# Name property of the group object 
+groupName = GeneSymbol
+# Descriptive object node type
+descriptive = CELL
+# To precompute data or not 
+precompute = true
+# Technical parameter for pre computation (don’t change it by default)
+precompute_limit = 100
+# Technical parameter for data processing (don’t change it by default)
+process_limit = 5000
+# Total memory to be used for generating the database
+total_memory = 3G
+# Caching to be used for generating the database (see Neo4j documentation)
+cache = none
+# Separator used in input files
+separator = \t
+# Name of the relationship used for group level querying
+query_relationship = COLLECTED
+# Whether to overwrite the Mineotaur instance with the same name. Recommended if the generation was interrupted.
+overwrite = true

@@ -87,12 +87,12 @@ public class DatabaseGeneratorTest {
 
     @Test
     public void testGenerateDatabase() throws Exception {
-//        dg.generateDatabase("input/test_input/chia_sample.txt", "input/test_input/chia_labels.txt");
+//        dg.generateDatabase("input/test_input/test_sample.txt", "input/test_input/test_labels.txt");
     }
 
     @Test(dependsOnMethods = {"testStartDB"})
     public void testProcessMetadata() throws Exception {
-        dg.processMetadata("input/test_input/chia_sample.txt");
+        dg.processMetadata("input/test_input/test_sample.txt");
         assertEquals(630, dg.header.length);
         assertEquals(630, dg.nodeTypes.length);
         assertEquals(630, dg.dataTypes.length);
@@ -369,7 +369,7 @@ public class DatabaseGeneratorTest {
 
     @Test(dependsOnMethods = {"testProcessData"})
     public void testLabelGenes() throws Exception {
-        dg.labelGenes("input/test_input/chia_labels.txt");
+        dg.labelGenes("input/test_input/test_labels.txt");
         assertTrue(new File(dg.confDir + "mineotaur.hitLabels").exists());
         assertEquals(countObjects(dg.wildTypeLabel), 1);
         assertEquals(countObjects(DynamicLabel.label("CisDiffuse")), 0);

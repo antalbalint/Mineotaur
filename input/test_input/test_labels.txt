@@ -1,0 +1,1 @@
+GeneID	CisDiffuse	CisFragmented	CisCondensed	MedialDiffuse	MedialFragmented	MedialCondensed	TransDiffuse	TransFragmented	TransCondensed-1	0	0	0	0	0	0	0	0	01455	0	0	1	0	0	1	0	0	09451	0	1	0	0	0	0	0	1	0
