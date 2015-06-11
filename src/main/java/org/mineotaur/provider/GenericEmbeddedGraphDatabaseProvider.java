@@ -46,7 +46,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
     public static final String MEDIAN = "Median";
     public static final String STANDARD_DEVIATION = "Standard deviation";
     public static final String COUNT = "Count";
-
+    protected String baseDir;
     private static ResourceBundle PROPERTIES;
     private static GraphDatabaseService DATABASE;
     private static GlobalGraphOperations GGO;
@@ -57,78 +57,131 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
     private Label groupLabel;
     private String groupName;
 
+    protected void loadFeatures() {
+        if (PROPERTIES == null) {
+            throw new IllegalStateException("Property file has not been loaded yet.");
+        }
+        CONTEXT.put("features", FileUtil.processTextFile(baseDir + "mineotaur.features"));
+    }
+
+    protected void loadFilters() {
+        if (PROPERTIES == null) {
+            throw new IllegalStateException("Property file has not been loaded yet.");
+        }
+        if (PROPERTIES.getString("hasFilters").equals("false")) {
+            CONTEXT.put("hasFilter", false);
+        }
+        else {
+            CONTEXT.put("hasFilter", true);
+            List<String> filterList = FileUtil.processTextFile(baseDir + "mineotaur.filters");
+            Map<String, String> filters = new HashMap<>();
+            for (String filter: filterList) {
+                if (filter.contains("/")) {
+                    String[] terms = filter.split("/");
+                    filters.put(terms[0], terms[1]);
+                }
+                else {
+                    filters.put(filter, filter);
+                }
+            }
+            CONTEXT.put("filters", filters);
+            CONTEXT.put("filterName", PROPERTIES.getString("filterName"));
+        }
+    }
+
+    protected void loadGroupNames() {
+        if (PROPERTIES == null) {
+            throw new IllegalStateException("Property file has not been loaded yet.");
+        }
+        String groupPath = baseDir + "mineotaur.groupNames";
+        GROUP_NAMES = FileUtil.processTextFile(groupPath);
+        CONTEXT.put("groupNames", GROUP_NAMES);
+        List<String> labels = FileUtil.processTextFile(groupPath);
+        Map<String, Label> labelMap = new HashMap<>();
+        for (String label: labels) {
+            labelMap.put(label, DynamicLabel.label(label));
+        }
+        CONTEXT.put("nodeLabels", labelMap);
+        groupName = PROPERTIES.getString("groupName");
+        CONTEXT.put("groupName", groupName);
+        groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
+        CONTEXT.put("groupLabel", groupLabel);
+    }
+
+    protected void loadHitLabels() {
+        if (PROPERTIES == null) {
+            throw new IllegalStateException("Property file has not been loaded yet.");
+        }
+        HIT_LABELS = FileUtil.processTextFile(baseDir + "mineotaur.hitLabels");
+        CONTEXT.put("hitNames", HIT_LABELS);
+        Map<String, Label> labelMap2 = new HashMap<>();
+        Map<Label, String> labelMap3 = new HashMap<>();
+        for (String label: HIT_LABELS) {
+            Label l = DynamicLabel.label(label);
+            labelMap2.put(label, l);
+            labelMap3.put(l, label);
+        }
+        CONTEXT.put("hitLabels", labelMap2);
+        CONTEXT.put("hitsByLabel", labelMap3);
+    }
+
+    protected void preFecthGroupNames() {
+        if (PROPERTIES == null) {
+            throw new IllegalStateException("Property file has not been loaded yet.");
+        }
+        if (DATABASE == null) {
+            throw new IllegalStateException("The database has not been started yet.");
+
+        }
+        Map<String, Node> groupByGroupName = new HashMap<>();
+        try (Transaction tx = DATABASE.beginTx()) {
+            for (String name: GROUP_NAMES) {
+                Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
+                Node node = nodes.next();
+                if (nodes.hasNext()) {
+                    throw new IllegalStateException("There are more group objects in the database with the same name.");
+                }
+                groupByGroupName.put(name, node);
+            }
+            tx.success();
+        }
+        CONTEXT.put("groupByGroupName", groupByGroupName);
+    }
+
+    protected void loadQueryRelationship() {
+        CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
+
+    }
+
+    protected void loadAggregationModes() {
+        CONTEXT.put("aggValues", getAggregationModes());
+    }
+
     /**
      * Method to load initial properties from.
      */
     protected void initProperties() {
             try {
-                String baseDir = Mineotaur.name + File.separator + "conf" + File.separator;
+                if (baseDir == null) {
+                    baseDir = Mineotaur.name + File.separator + "conf" + File.separator;
+                }
                 PROPERTIES = new PropertyResourceBundle(new FileReader(baseDir + "mineotaur.properties"));
-                CONTEXT.put("features", FileUtil.processTextFile(baseDir + "mineotaur.features"));
-                if (PROPERTIES.getString("hasFilters").equals("false")) {
-                    CONTEXT.put("hasFilter", false);
-                }
-                else {
-                    CONTEXT.put("hasFilter", true);
-                    List<String> filterList = FileUtil.processTextFile(baseDir + "mineotaur.filters");
-                    Map<String, String> filters = new HashMap<>();
-                    for (String filter: filterList) {
-                        if (filter.contains("/")) {
-                            String[] terms = filter.split("/");
-                            filters.put(terms[0], terms[1]);
-                        }
-                        else {
-                            filters.put(filter, filter);
-                        }
-                    }
-                    CONTEXT.put("filters", filters);
-                    CONTEXT.put("filterName", PROPERTIES.getString("filterName"));
-                }
-                String groupPath = baseDir + "mineotaur.groupNames";
-                GROUP_NAMES = FileUtil.processTextFile(groupPath);
-                CONTEXT.put("groupNames", GROUP_NAMES);
-                List<String> labels = FileUtil.processTextFile(groupPath);
-                Map<String, Label> labelMap = new HashMap<>();
-                for (String label: labels) {
-                    labelMap.put(label, DynamicLabel.label(label));
-                }
-                CONTEXT.put("nodeLabels", labelMap);
-                HIT_LABELS = FileUtil.processTextFile(baseDir + "mineotaur.hitLabels");
-                CONTEXT.put("hitNames", HIT_LABELS);
-                Map<String, Label> labelMap2 = new HashMap<>();
-                Map<Label, String> labelMap3 = new HashMap<>();
-                for (String label: HIT_LABELS) {
-                    Label l = DynamicLabel.label(label);
-                    labelMap2.put(label, l);
-                    labelMap3.put(l, label);
-                }
-                CONTEXT.put("hitLabels", labelMap2);
-                CONTEXT.put("hitsByLabel", labelMap3);
-                CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
-                CONTEXT.put("aggValues", getAggregationModes());
-                groupName = PROPERTIES.getString("groupName");
-                CONTEXT.put("groupName", groupName);
-                groupLabel = DynamicLabel.label(PROPERTIES.getString("group"));
-                CONTEXT.put("groupLabel", groupLabel);
-                GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
+                loadFeatures();
+                loadFilters();
+                loadGroupNames();
+                loadHitLabels();
+                loadQueryRelationship();
+                loadAggregationModes();
+//                DATABASE = newDatabaseService();
+                initDatabase();
+                preFecthGroupNames();
+                /*GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
 //                gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
                 gdb.setConfig(GraphDatabaseSettings.allow_store_upgrade, "true");
                 gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-                DATABASE = gdb.newGraphDatabase();
-                GGO = GlobalGraphOperations.at(DATABASE);
-                Map<String, Node> groupByGroupName = new HashMap<>();
-                try (Transaction tx = DATABASE.beginTx()) {
-                        for (String name: GROUP_NAMES) {
-                            Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
-                            Node node = nodes.next();
-                            if (nodes.hasNext()) {
-                                throw new IllegalStateException("There are more group objects in the database with the same name.");
-                            }
-                            groupByGroupName.put(name, node);
-                        }
-                    tx.success();
-                }
-                CONTEXT.put("groupByGroupName", groupByGroupName);
+                DATABASE = gdb.newGraphDatabase();*/
+//                GGO = GlobalGraphOperations.at(DATABASE);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -151,6 +204,13 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         return AGGREGATION_MODES;
     }
 
+    protected GraphDatabaseService newDatabaseService() {
+        GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
+//            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+        gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
+        return gdb.newGraphDatabase();
+    }
+
     /**
      * Method to start the database.
      */
@@ -159,10 +219,8 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
             initProperties();
         }
         if (DATABASE ==  null) {
-            GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-//            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
-            gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-            DATABASE = gdb.newGraphDatabase();
+
+            DATABASE = newDatabaseService();
 
         }
         if (GGO == null) {
