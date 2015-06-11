@@ -20,7 +20,7 @@ import static org.testng.Assert.*;
  */
 public class MineotaurControllerTest {
 
-    private GraphDatabaseProvider provider;
+    /*private GraphDatabaseProvider provider;
     private MineotaurController mineotaurController;
     private Model model = new ExtendedModelMap();
 
@@ -41,7 +41,7 @@ public class MineotaurControllerTest {
     @Test
     public void testStart() throws Exception {
         assertEquals("index",mineotaurController.start(model));
-    }
+    }*/
 
     @Test
     public void testGetScatterPlotDataGeneJSONSeparate() throws Exception {
