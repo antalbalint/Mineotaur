@@ -29,7 +29,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.schema.IndexDefinition;
 import org.neo4j.graphdb.schema.Schema;
-import org.testng.Reporter;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -448,7 +447,7 @@ public class DatabaseGenerator {
             tx = db.beginTx();
             while ((line = br.readLine()) != null) {
                 Mineotaur.LOGGER.info("Line #" + (lineCount++));
-                Mineotaur.LOGGER.info(line);
+                //Mineotaur.LOGGER.info(line);
                 //System.out.println(line);
                 String[] terms = line.split(separator);
                 //System.out.println(terms.length);
