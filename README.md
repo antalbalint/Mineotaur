@@ -1,6 +1,8 @@
 Mineotaur is a visual analytics tool for high-throughput / high-content microscopy screens developed at the Univeristy of Cambridge, UK at the 
 <a href="http://www.gen.cam.ac.uk/research-groups/carazo-salas" target="_blank">Carazo Salas group</a> of the Department of Genetics by <a href="http://www.inf.unideb.hu/~antal.balint" target="_blank">Bálint Antal</a>.
-You can find more information on Mineotaur at http://www.mineotaur.org where you can try out our <a href="http://demo.mineotaur.org" target="_blank">demo</a> or download the latest binary version.
+<!--You can find more information on Mineotaur at http://www.mineotaur.org where you can try out our <a href="http://demo.mineotaur.org" target="_blank">demo</a> or download the latest binary version.
+-->
+You can find more information on Mineotaur at http://www.mineotaur.org where you can download the latest binary version.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
