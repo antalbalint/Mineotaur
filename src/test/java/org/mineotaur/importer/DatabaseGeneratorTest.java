@@ -21,6 +21,7 @@ import static org.testng.Assert.*;
  * Created by balintantal on 05/06/2015.
  */
 public class DatabaseGeneratorTest {
+/*
 
     private DatabaseGenerator dg = new MockDatabaseGenerator("input/test_input/mineotaur.input");;
 
@@ -124,8 +125,10 @@ public class DatabaseGeneratorTest {
 
     @Test
     public void testCreateClass() throws Exception {
-        /*L
-        Class claz = dg.createClass(ClassPool.getDefault(), "test", indices, header, dataTypes, idFields);*/
+        */
+/*L
+        Class claz = dg.createClass(ClassPool.getDefault(), "test", indices, header, dataTypes, idFields);*//*
+
         if (testClass == null) {
             testClass = createTestClass();
         }
@@ -267,13 +270,15 @@ public class DatabaseGeneratorTest {
             dg.startDB();
         }
         int count = 0;
-        try (Transaction tx = dg.db.beginTx()) {
+        */
+/*try (Transaction tx = dg.db.beginTx()) {
             Iterator<Node> nodes = dg.db.findNodes(label);
             while (nodes.hasNext()) {
                 nodes.next();
                 count++;
             }
-        }
+        }*//*
+
         return count;
     }
 
@@ -282,7 +287,8 @@ public class DatabaseGeneratorTest {
             dg.startDB();
         }
         try (Transaction tx = dg.db.beginTx()) {
-            Iterator<Node> nodes = dg.db.findNodes(label);
+            */
+/*Iterator<Node> nodes = dg.db.findNodes(label);
             while (nodes.hasNext()) {
                 Node node = nodes.next();
                 Iterator<Relationship> rels = node.getRelationships().iterator();
@@ -290,7 +296,8 @@ public class DatabaseGeneratorTest {
                     rels.next().delete();
                 }
                 node.delete();
-            }
+            }*//*
+
             tx.success();
         }
     }
@@ -298,12 +305,14 @@ public class DatabaseGeneratorTest {
 //    @Test(dependsOnMethods = {"testProcessMetadata","testGenerateObjectsFromLine","testGetNodesForObjects","testConnectNodes"})
     @Test(dependsOnMethods = {"testProcessMetadata"})
     public void testProcessData() throws Exception {
-       /* deleteObjects(dg.labels.get("GENE"));
+       */
+/* deleteObjects(dg.labels.get("GENE"));
         deleteObjects(dg.labels.get("EXPERIMENT"));
         deleteObjects(dg.labels.get("CELL"));
         assertEquals(countObjects(dg.labels.get("GENE")), 0);
         assertEquals(countObjects(dg.labels.get("EXPERIMENT")),0);
-        assertEquals(countObjects(dg.labels.get("CELL")),0);*/
+        assertEquals(countObjects(dg.labels.get("CELL")),0);*//*
+
         dg.processData();
         assertEquals(countObjects(dg.labels.get("GENE")), 3);
         assertEquals(countObjects(dg.labels.get("EXPERIMENT")),3);
@@ -421,4 +430,5 @@ public class DatabaseGeneratorTest {
             assertTrue(schema.getIndexes().iterator().hasNext());
         }
     }
+*/
 }

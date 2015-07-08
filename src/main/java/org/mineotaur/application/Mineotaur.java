@@ -22,6 +22,7 @@ import javassist.CannotCompileException;
 import javassist.NotFoundException;
 import org.apache.commons.cli.*;
 import org.mineotaur.importer.DatabaseGenerator;
+import org.mineotaur.importer.ImportFromFile;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -65,7 +66,8 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
                 SpringApplication.run(Mineotaur.class, args);
             }
             else if (line.hasOption("import")) {
-                DatabaseGenerator gen = new DatabaseGenerator(args[1]);
+//                DatabaseGenerator gen = new DatabaseGenerator(args[1]);
+                ImportFromFile gen = new ImportFromFile(args[1]);
                 gen.generateDatabase(args[2], args[3]);
             }
             else {

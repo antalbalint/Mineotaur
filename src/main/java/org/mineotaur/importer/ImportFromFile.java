@@ -1,29 +1,11 @@
-/*
- * Mineotaur: a visual analytics tool for high-throughput microscopy screens
- * Copyright (C) 2014  Bálint Antal (University of Cambridge)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.mineotaur.importer;
 
 import javassist.*;
-import javassist.NotFoundException;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.FileUtil;
 import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
@@ -37,12 +19,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Class containing fields and methods to generate a graph database from the input provided by the user.
- * @author Bálint Antal
- * @version 0.5b
+ * Created by balintantal on 07/07/2015.
  */
-public abstract class DatabaseGenerator {
-
+public class ImportFromFile {
     //protected static final String HIT = "HIT";
     protected static final String NUMBER = "NUMBER";
     protected static final String ID = "ID";
@@ -54,7 +33,7 @@ public abstract class DatabaseGenerator {
     protected static final String ARRAY = "_ARRAY";
     protected static final String DB = "db";
     protected ResourceBundle properties;
-//    protected final String prop;
+    protected final String prop;
     protected String name;
     protected String separator;
     protected String confDir;
@@ -98,14 +77,14 @@ public abstract class DatabaseGenerator {
 
 
 
-    /*public DatabaseGenerator(String prop) {
+    public ImportFromFile(String prop) {
         this.prop = prop;
         init();
     }
 
-    *//**
+    /**
      *  Method for processing of environment variables and creating and starting an empty database.
-     *//*
+     */
     protected void init() {
         try {
             Mineotaur.LOGGER.info("Reading properties...");
@@ -116,13 +95,13 @@ public abstract class DatabaseGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     /**
      * Processing input properties and creating a directory to store configuration files.
      * @throws IOException if there is an error with the input property file
      */
-    /*protected void processProperties() throws IOException {
+    protected void processProperties() throws IOException {
         properties = new PropertyResourceBundle(new FileReader(prop));
         name = properties.getString("name");
         group = properties.getString("group");
@@ -147,7 +126,7 @@ public abstract class DatabaseGenerator {
         limit = Integer.valueOf(properties.getString("process_limit"));
         overwrite = "true".equals(properties.getString("overwrite").trim());
         Mineotaur.LOGGER.info(String.valueOf(overwrite));
-    }*/
+    }
 
 
     protected void createDir(String name) {
@@ -211,10 +190,6 @@ public abstract class DatabaseGenerator {
         });
     }
 
-    public abstract void generateDatabase();
-    public abstract void processData();
-    public abstract void labelGenes();
-
     /**
      * Public method to generate the database from the inputs provided.
      * @param dataFile A ?SV file containing the data to be processed.
@@ -223,10 +198,10 @@ public abstract class DatabaseGenerator {
      * @throws IOException
      * @throws InstantiationException
      * @throws CannotCompileException
-     * @throws NotFoundException
+     * @throws javassist.NotFoundException
      * @throws NoSuchFieldException
      */
-    /*public void generateDatabase(String dataFile, String labelFile) throws IllegalAccessException, IOException, InstantiationException, CannotCompileException, NotFoundException, NoSuchFieldException {
+    public void generateDatabase(String dataFile, String labelFile) throws IllegalAccessException, IOException, InstantiationException, CannotCompileException, javassist.NotFoundException, NoSuchFieldException {
         Mineotaur.LOGGER.info("Processing metadata.");
         processMetadata(dataFile);
         Mineotaur.LOGGER.info("Generating classes.");
@@ -254,7 +229,7 @@ public abstract class DatabaseGenerator {
         generatePropertyFile();
 
         Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
-    }*/
+    }
 
     /**
      * Method for processing the input provided.
@@ -274,7 +249,7 @@ public abstract class DatabaseGenerator {
      * Method for processing the header information provided in the input.
      * @param input Path to the input file.
      */
-    /*protected void processMetadata(String input) throws IOException {
+    protected void processMetadata(String input) throws IOException {
         br = new BufferedReader(new FileReader(input));
         header = br.readLine().split(separator);
         nodeTypes = br.readLine().split(separator);
@@ -287,12 +262,12 @@ public abstract class DatabaseGenerator {
 //        ids = new HashMap<>();
 
         for (int i = 0; i < lineSize; ++i) {
-            *//*if (nodeTypes[i].equals(HIT)) {
+            /*if (nodeTypes[i].equals(HIT)) {
                 if (!hits.containsKey(header[i])) {
                     hits.put(header[i], DynamicLabel.label(header[i]));
                 }
                 continue;
-            }*//*
+            }*/
             List<Integer> indices = signatures.get(nodeTypes[i]);
             if (indices == null) {
                 indices = new ArrayList<>();
@@ -319,9 +294,9 @@ public abstract class DatabaseGenerator {
         }
         keySet = signatures.keySet();
         classCount = keySet.size();
-    }*/
+    }
 
-    /*protected Class createClass(ClassPool pool, String className, List<Integer> indices, String[] header, String[] dataTypes, List<String> idFields) throws NotFoundException, CannotCompileException {
+    protected Class createClass(ClassPool pool, String className, List<Integer> indices, String[] header, String[] dataTypes, List<String> idFields) throws javassist.NotFoundException, CannotCompileException {
         CtClass claz = pool.makeClass(className);
         for (Integer i : indices) {
             CtClass type;
@@ -343,19 +318,19 @@ public abstract class DatabaseGenerator {
         return claz.toClass();
     }
 
-    *//**
+    /**
      * Method for generating classes for the object types defined in the input file.
-     * @throws NotFoundException
+     * @throws javassist.NotFoundException
      * @throws CannotCompileException
-     *//*
-    protected void generateClasses() throws NotFoundException, CannotCompileException {
+     */
+    protected void generateClasses() throws javassist.NotFoundException, CannotCompileException {
         ClassPool pool = ClassPool.getDefault();
         for (String key : keySet) {
             //CtClass claz = pool.makeClass(key);
             List<Integer> indices = signatures.get(key);
             List<String> idFields = ids.get(key);
             classes.put(key, createClass(pool, key, indices, header, dataTypes, idFields));
-            *//*for (Integer i : indices) {
+            /*for (Integer i : indices) {
                 CtClass type;
                 if (dataTypes[i].equals(NUMBER)) {
                     type = CtClass.doubleType;
@@ -373,17 +348,17 @@ public abstract class DatabaseGenerator {
                 claz.addMethod(method);
             }
             classes.put(key, claz.toClass());
-            *//*
+            */
 
         }
     }
 
-    *//**
+    /**
      * Method to symbolicly build equals method for a generated Java class.
      * @param name The name of the class.
      * @param idFields The names of the fields act as identifiers for the class.
      * @return The text of the equals method.
-     *//*
+     */
     protected String buildEquals(String name, List<String> idFields) {
         StringBuilder sb = new StringBuilder();
         sb.append("public boolean equals(Object o) {\n");
@@ -431,7 +406,7 @@ public abstract class DatabaseGenerator {
         }
         return newNodes;
     }
-*/
+
     protected void connectNodes(Map<String, Node> newNodes) {
         for (String key : relKeySet) {
             Map<String, RelationshipType> rels = relationships.get(key);
@@ -450,7 +425,7 @@ public abstract class DatabaseGenerator {
      * @throws InstantiationException
      * @throws NoSuchFieldException
      */
-    /*protected void processData() throws IOException, NoSuchFieldException, IllegalAccessException, InstantiationException {
+    protected void processData() throws IOException, NoSuchFieldException, IllegalAccessException, InstantiationException {
         String line;
         Mineotaur.LOGGER.info("Processing data...");
         int lineCount = 0, nodeCount = 0;
@@ -468,7 +443,7 @@ public abstract class DatabaseGenerator {
                 tx.success();
                 connectNodes(newNodes);
                 nodeCount += classCount + relationshipCount;
-                *//*Map<String, Object> data = new HashMap<>();
+                /*Map<String, Object> data = new HashMap<>();
                 for (String key : keySet) {
                     List<Integer> indices = signatures.get(key);
                     Class claz = classes.get(key);
@@ -506,7 +481,7 @@ public abstract class DatabaseGenerator {
                         }
                         n1.createRelationshipTo(n2, rels.get(s));
                     }
-                }*//*
+                }*/
                 if (nodeCount > limit) {
                     nodeCount = 0;
                     tx.success();
@@ -526,7 +501,7 @@ public abstract class DatabaseGenerator {
         }
 
         Mineotaur.LOGGER.info(lineCount + " lines processed.");
-    }*/
+    }
 
     protected void createFilters() {
         Mineotaur.LOGGER.info("Creating filters...");
@@ -576,7 +551,7 @@ public abstract class DatabaseGenerator {
      * @return The Node created from the object.
      * @throws IllegalAccessException
      */
-    /*protected Node createNode(Object o) throws IllegalAccessException {
+    protected Node createNode(Object o) throws IllegalAccessException {
         Class claz = o.getClass();
         Label label = labels.get(claz.getName());
         Node node = db.createNode(label);
@@ -588,7 +563,7 @@ public abstract class DatabaseGenerator {
 
         }
         return node;
-    }*/
+    }
 
     /**
      * Looks up whether a Node with the same identifiers as the object provided has been already created.
@@ -596,7 +571,7 @@ public abstract class DatabaseGenerator {
      * @return The retireved Node object or if not exists, a new one created by createNode.
      * @throws IllegalAccessException
      */
-    /*protected Node lookupObject(Object o) throws IllegalAccessException {
+    protected Node lookupObject(Object o) throws IllegalAccessException {
         Class claz = o.getClass();
         String className = claz.getName();
         List<Node> storedNodes = nonUniqueNodes.get(className);
@@ -624,18 +599,18 @@ public abstract class DatabaseGenerator {
             }
         }
         Node node = createNode(o);
-        *//*if (node.hasLabel(groupLabel)) {
+        /*if (node.hasLabel(groupLabel)) {
             Mineotaur.LOGGER.info("New gene: " + node.getProperty(groupName, node.getProperty("reference","")));
-        }*//*
+        }*/
         storedNodes.add(node);
         return node;
-    }*/
+    }
 
     /**
      * Method to label group objects.
      * @param file The ?SV file containing the labels.
      */
-    /*protected void labelGenes(String file) {
+    protected void labelGenes(String file) {
         try (Transaction tx = db.beginTx(); BufferedReader br = new BufferedReader(new FileReader(file))) {
             String[] header = br.readLine().split(separator);
             //System.out.println(Arrays.toString(header));
@@ -646,7 +621,7 @@ public abstract class DatabaseGenerator {
             FileUtil.saveList(confDir + "mineotaur.hitLabels", list);
             while ((line = br.readLine()) != null) {
                 String[] terms = line.split(separator);
-                *//*Iterator<Node> nodes = db.findNodes(groupLabel);
+                /*Iterator<Node> nodes = db.findNodes(groupLabel);
                 while (nodes.hasNext()) {
                     Node node = nodes.next();
                     Iterator<String> props = node.getPropertyKeys().iterator();
@@ -654,39 +629,39 @@ public abstract class DatabaseGenerator {
                         System.out.println(props.next());
                     }
                     System.out.println(nodes.next().getProperty("geneName"));
-                }*//*
+                }*/
                 Iterator<Node> nodes = db.findNodesByLabelAndProperty(groupLabel, header[0], terms[0]).iterator();
 //                Iterator<Node> nodes = db.findNodes(groupLabel, header[0], terms[0]);
 
-                *//*Node node = db.findNode(groupLabel, header[0], terms[0]);
+                /*Node node = db.findNode(groupLabel, header[0], terms[0]);
                 if (node == null) {
                     throw new IllegalArgumentException("No such gene:" + terms[0]);
-                }*//*
+                }*/
                 if (!nodes.hasNext()) {
-                  Mineotaur.LOGGER.warning("No such gene: " + terms[0]);
+                    Mineotaur.LOGGER.warning("No such gene: " + terms[0]);
                     continue;
-                    *//*
+                    /*
                     nodes = db.findNodes(groupLabel, "reference", terms[0]);
-                    if (!nodes.hasNext()) {*//*
+                    if (!nodes.hasNext()) {*/
                     //throw new IllegalStateException("No such gene: " + terms[0]);
                     //}
 
-                    *//*Mineotaur.LOGGER.info(String.valueOf(nodes.hasNext()));
-                    continue;*//*
+                    /*Mineotaur.LOGGER.info(String.valueOf(nodes.hasNext()));
+                    continue;*/
                 }
                 Node node = nodes.next();
-                *//*if (!node.hasProperty(header[0])) {
+                /*if (!node.hasProperty(header[0])) {
                     node.setProperty(header[0], node.getProperty("reference"));
-                }*//*
+                }*/
                 if (nodes.hasNext()) {
                     //Mineotaur.LOGGER.info("Id is not unique: " + terms[0]);
                     throw new IllegalStateException("Id is not unique: " + terms[0]);
-                    *//*int count= 0;
+                    /*int count= 0;
                     while (nodes.hasNext()) {
                         nodes.next();
                         count++;
                     }
-                    Mineotaur.LOGGER.info(String.valueOf(count));*//*
+                    Mineotaur.LOGGER.info(String.valueOf(count));*/
                 }
                 boolean hasLabel = false;
                 for (int i = 1; i < terms.length; ++i) {
@@ -708,7 +683,7 @@ public abstract class DatabaseGenerator {
         }
 
     }
-*/
+
     /**
      * Method to create precomputated Nodes.
      * @param limit The maximum number of fetched Nodes per transactions.
@@ -845,8 +820,7 @@ public abstract class DatabaseGenerator {
 
             Iterator<Node> nodes = ggo.getAllNodesWithLabel(groupLabel).iterator();
             while (nodes.hasNext()) {
-                Mineotaur.LOGGER.info("Precomputing: " + (count++));
-//                count++;
+                count++;
                 Node node = nodes.next();
                 //Map<String, List<Double>> features = collectData(node, rt);
                 Iterator<Relationship> rels = node.getRelationships(rt).iterator();
@@ -895,10 +869,7 @@ public abstract class DatabaseGenerator {
                         }
                         Object val =  rel.getProperty(name,null);
                         if (val != null) {
-                            String value = String.valueOf(val);
-                            if (!val.equals("NaN")) {
-                                filtValues.add(value);
-                            }
+                            filtValues.add((String) rel.getProperty(name));
                         }
 
                     }
@@ -921,7 +892,6 @@ public abstract class DatabaseGenerator {
                 for (String s : keySet) {
                     Node pre = db.createNode(precomputed);
                     pre.createRelationshipTo(node, DynamicRelationshipType.withName(s + ARRAY));
-                    Mineotaur.LOGGER.info("Created array node for property " + s);
                     List<Double> values = features.get(s);
                     int size = values.size();
                     double[] arr = new double[size];
@@ -968,10 +938,7 @@ public abstract class DatabaseGenerator {
                                 actualFilters.add(uniqueArr[i]);
 //                                aggRel.setProperty(uniqueArr[i], true);
                                 for (Double d: v) {
-                                    if (!Double.isNaN(d)) {
-                                        stat.addValue(d);
-                                    }
-
+                                    stat.addValue(d);
                                 }
 //                                System.out.println(uniqueArr[i]);
                             }
@@ -985,7 +952,6 @@ public abstract class DatabaseGenerator {
                         precomputedAgg.setProperty("Standard deviation", stat.getStandardDeviation());
                         precomputedAgg.setProperty("Median", stat.getPercentile(50));
                         precomputedAgg.setProperty("Count", stat.getN());
-                        Mineotaur.LOGGER.info("Created aggregated node for property " + s);
                         set += 1;
                     }
                     /*pre.setProperty("Average", stat.getMean());
@@ -1008,15 +974,14 @@ public abstract class DatabaseGenerator {
     /**
      * Method to store feature names in an external file.
      */
-    protected abstract void storeFeatureNames();
-    /*protected void storeFeatureNames() {
+    protected void storeFeatureNames() {
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < numericData.size(); ++i) {
             labels.add(header[numericData.get(i)]);
         }
         FileUtil.saveList(confDir + "mineotaur.features", labels);
 
-        *//*try (Transaction tx = db.beginTx()) {
+        /*try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
             List<String> labels = new ArrayList<>();
@@ -1033,8 +998,8 @@ public abstract class DatabaseGenerator {
             System.out.println(labels.toString());
             FileUtil.saveList(new StringBuilder(confDir).append("mineotaur.features").toString(), labels);
             tx.success();
-        }*//*
-    }*/
+        }*/
+    }
 
     /**
      * Method to store the names of the group objects in an external file.
@@ -1065,7 +1030,6 @@ public abstract class DatabaseGenerator {
                 //labels.add(node.getProperty("GFP","") + ", " + node.getProperty("Deletion",""));
             }
             //System.out.println(labels.toString());
-            Collections.sort(names);
             FileUtil.saveList(confDir + "mineotaur.groupNames", names);
             tx.success();
         }
@@ -1092,10 +1056,9 @@ public abstract class DatabaseGenerator {
                 while (props.hasNext()) {
                     String prop = props.next();
                     if (filterProps.contains(prop)) {
-                        String value = String.valueOf(node.getProperty(prop));
-
-                        if (!value.equals("NaN") && !filterValues.contains(value)) {
-                            filterValues.add(value);
+                        String value = (String) node.getProperty(prop);
+                        if (!filterValues.contains(value)) {
+                            filterValues.add((String) node.getProperty(prop));
                         }
 
                     }
@@ -1192,3 +1155,5 @@ public abstract class DatabaseGenerator {
 
 
 }
+
+

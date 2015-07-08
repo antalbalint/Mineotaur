@@ -25,6 +25,9 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
+import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.schema.IndexDefinition;
+import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 
@@ -32,6 +35,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of GraphDatabaseProvider interface.
@@ -136,11 +140,12 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         Map<String, Node> groupByGroupName = new HashMap<>();
         try (Transaction tx = DATABASE.beginTx()) {
             for (String name: GROUP_NAMES) {
-                Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
+                Iterator<Node> nodes = DATABASE.findNodesByLabelAndProperty(groupLabel, groupName, name).iterator();
+//                Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
                 Node node = nodes.next();
-                if (nodes.hasNext()) {
+                /*if (nodes.hasNext()) {
                     throw new IllegalStateException("There are more group objects in the database with the same name.");
-                }
+                }*/
                 groupByGroupName.put(name, node);
             }
             tx.success();
@@ -206,8 +211,10 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
 
     protected GraphDatabaseService newDatabaseService() {
         GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
+        //gdb.setConfig(GraphDatabaseSettings.pagecache_memory, PROPERTIES.getString("total_memory"));
 //            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
-        gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
+                gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
+//        gdb.setConfig(GraphDatabaseSettings.dump_configuration, "true");
         return gdb.newGraphDatabase();
     }
 
@@ -219,15 +226,55 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
             initProperties();
         }
         if (DATABASE ==  null) {
-
             DATABASE = newDatabaseService();
-
         }
         if (GGO == null) {
             GGO = GlobalGraphOperations.at(DATABASE);
         }
+        /*IndexDefinition indexDefinition;
+        try (Transaction tx = DATABASE.beginTx()) {
+            Iterator<IndexDefinition> ids = DATABASE.schema().getIndexes().iterator();
+            Schema schema = DATABASE.schema();
+            while (ids.hasNext()) {
+                IndexDefinition id = ids.next();
+                Schema.IndexState is = schema.getIndexState(id);
+                Mineotaur.LOGGER.info(id.toString());
+                Label label = id.getLabel();
+                Iterator<String> propertyKeys = id.getPropertyKeys().iterator();
+                if (is == Schema.IndexState.FAILED) {
+                    //id.drop();
+                    Mineotaur.LOGGER.info(schema.getIndexFailure(id));
+                    schema.indexFor(label).on(propertyKeys.next()).create();
+                }
+                *//*while (schema.getIndexState(id)!= Schema.IndexState.ONLINE) {
+                    schema.awaitIndexOnline( id, 10, TimeUnit.SECONDS );
+                }*//*
+                Mineotaur.LOGGER.info(id.toString());
+                Mineotaur.LOGGER.info(DATABASE.schema().getIndexState(id).toString());
+                //id.drop();
+            }
+            tx.success();
+            *//*String[] props = {"filter", "Average", "Minimum", "Maximum", "Standard deviation", "Median", "Count"};
+            Label precomputed = DynamicLabel.label(groupLabel.name() + "_COLLECTED");
+            for (String prop: props) {
+                Schema schema = DATABASE.schema();
+                indexDefinition = schema.indexFor( precomputed )
+                        .on(prop )
+                        .create();
+                tx.success();
+            }*//*
+            *//**//*
+        }*/
+
+        /*try ( Transaction tx = DATABASE.beginTx() ) {
+                Schema schema = DATABASE.schema();
+                schema.awaitIndexOnline( indexDefinition, 10, TimeUnit.SECONDS );
+                tx.success();
+            }*/
 
     }
+
+
 
     /**
      * Method to access the database instance started.
