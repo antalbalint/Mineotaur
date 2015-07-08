@@ -1,4 +1,4 @@
-/*
+
 package org.mineotaur.importer;
 
 import Glacier2.CannotCreateSessionException;
@@ -23,10 +23,10 @@ import pojos.*;
 import java.io.*;
 import java.util.*;
 
-*/
+
 /**
  * Created by balintantal on 06/07/2015.
- *//*
+ */
 
 public class ImportFromOmero extends DatabaseGenerator{
 
@@ -52,19 +52,6 @@ public class ImportFromOmero extends DatabaseGenerator{
     protected void establishConnection() throws CannotCreateSessionException, PermissionDeniedException, ServerError {
         client = new client(hostName);
         entry = client.createSession(userName, password);
-// if you want to have the data transfer encrypted then you can
-// use the entry variable otherwise use the following
-//        client unsecureClient = client.createClient(false);
-//        ServiceFactoryPrx entryUnencrypted = unsecureClient.getSession();
-
-//Retrieve the user id.
-        */
-/*long userId = entry.getAdminService().getEventContext().userId;
-
-        long groupId = entry.getAdminService().getEventContext().groupId;
-        System.out.println(userId);
-        System.out.println(groupId);*//*
-
     }
 
     protected void closeConnection() {
@@ -113,20 +100,17 @@ public class ImportFromOmero extends DatabaseGenerator{
         IContainerPrx proxy = entry.getContainerService();
         ParametersI param = new ParametersI();
         long userId = entry.getAdminService().getEventContext().userId;
-//        param.exp(omero.rtypes.rlong(userId));
-//        param.addId(151L);
+
         List<Long> screenIds = new ArrayList<>();
         screenIds.add(screenId);
         List<IObject> results = proxy.loadContainerHierarchy(Screen.class.getName(), screenIds, param);
-//        IMetadataPrx metadataPrx = entry.getMetadataService();
-        //You can directly interact with the IObject or the Pojos object.
-        //Follow interaction with the Pojos.
+
         Iterator<IObject> i = results.iterator();
 //        ScreenData screen;
 
-        */
+
 /*Iterator<PlateData> j;
-        PlateData plate;*//*
+        PlateData plate;*/
 
         while (i.hasNext()) {
             screen = new ScreenData((Screen) i.next());
@@ -141,36 +125,14 @@ public class ImportFromOmero extends DatabaseGenerator{
 
     protected void getPlates() {
         plates = screen.getPlates();
-        */
-/*Iterator<PlateData>j = plates.iterator();
-        while (j.hasNext()) {
-            PlateData plate = j.next();
-            System.out.println(plate.getName());
-            Set<PlateAcquisitionData> pads = plate.getPlateAcquisitions();
-            *//*
-*/
-/*getAnnotations("plateID",plate.getId());
-            for (PlateAcquisitionData pad: pads) {
-                System.out.println(pad.getName() + " " + pad.getId());
-                //getAnnotations("acquisitionID", pad.getId());
-                //getWellData(plate.getId(), pad.getId());
-            }*//*
-*/
-/*
-
-        } *//*
-
     }
 
     protected void getAnnotations(String name, Long Id) throws ServerError {
-//        long userId = entry.getAdminService().getEventContext().userId;
         List<String> nsToInclude = new ArrayList<String>();
         List<String> nsToExclude = new ArrayList<String>();
         ParametersI param = new ParametersI();
         param.addLong(name, Id);
-//        param.exp(omero.rtypes.rlong(userId)); //load the annotation for a given user.
         IMetadataPrx proxy = entry.getMetadataService();
-// retrieve the annotations linked to images, for datasets use: omero.model.Dataset.class
         List<Annotation> annotations = proxy.loadSpecifiedAnnotations(FileAnnotation.class.getName(), nsToInclude, nsToExclude, param);
         Iterator<Annotation> j = annotations.iterator();
         while (j.hasNext()) {
@@ -224,10 +186,6 @@ public class ImportFromOmero extends DatabaseGenerator{
                 }
             }
         }
-        Mineotaur.LOGGER.info(Arrays.toString(descriptiveHeader));
-        Mineotaur.LOGGER.info(experimentIDs.toString());
-        Mineotaur.LOGGER.info(strainIDs.toString());
-        Mineotaur.LOGGER.info(filter.toString());
 
 // Depending on size of table, you may only want to read some blocks.
         long[] columnsToRead = new long[cols.length];
@@ -306,46 +264,25 @@ public class ImportFromOmero extends DatabaseGenerator{
             if (claz.equals(PlateColumn.class)) {
                 long[] plateIDs = ((PlateColumn)c).values;
                 value = plateIDs[i];
-//                Mineotaur.LOGGER.info(Arrays.toString(plateIDs));
             }
             else if (claz.equals(WellColumn.class)) {
                 long[] wellIDs = ((WellColumn)c).values;
                 value = wellIDs[i];
-//                Mineotaur.LOGGER.info(Arrays.toString(wellIDs));
-//                System.out.println(Arrays.toString(((WellColumn)c).values));
             }
             else if (claz.equals(ImageColumn.class)) {
                 long[] imageIDs = ((ImageColumn)c).values;
                 value = imageIDs[i];
-//                Mineotaur.LOGGER.info(Arrays.toString(imageIDs));
-
-                //System.out.println(Arrays.toString(((ImageColumn)c).values));
             }
             else if (claz.equals(StringColumn.class)) {
                 String[] stringValues = ((StringColumn)c).values;
                 value = stringValues[i];
-//                Mineotaur.LOGGER.info(Arrays.toString(stringValues));
-//                System.out.println(Arrays.toString(((StringColumn)c).values));
+
             }
             if (value == null) {
                 continue;
             }
             node.setProperty(c.name, value);
-//            else if (claz.equals(DoubleArrayColumn.class)) {
-//                double[][] doubleArrays = ((DoubleArrayColumn)c).values;
-//                */
-/*for (double[] array: doubleArrays) {
-//                    Mineotaur.LOGGER.info(Arrays.toString(array));
-//                }*//*
 
-//                //System.out.println(Arrays.toString(((DoubleArrayColumn)c).values));
-//            }
-//            PlateColumn lc = (PlateColumn)c;
-//            System.out.println(lc.values);
-//            for (int i = 0; i < rowSubset.length; ++i) {
-//                Data d = table.readCoordinates(new long[]{j, i});
-//                System.out.println(d.rowNumbers);
-//            }
         }
     }
 
@@ -361,7 +298,6 @@ public class ImportFromOmero extends DatabaseGenerator{
             processData();
             Mineotaur.LOGGER.info("Processing label data.");
             labelGenes();
-            //filters.add(6);
             if (filterProps != null && !filterProps.isEmpty()) {
                 createFilters();
             }
@@ -391,46 +327,16 @@ public class ImportFromOmero extends DatabaseGenerator{
         Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
     }
 
-    */
-/*protected void createNodes() {
-        Node screenNode = db.createNode(DefaultLabels.SCREEN.getLabel());
-        screenNode.setProperty("screenID", screen.getId());
-        screenNode.setProperty("screenName", screen.getName());
 
-    }*//*
 
 
     @Override
     protected void storeFeatureNames() {
-        */
-/*List<String> labels = new ArrayList<>();
-        for (int i = 0; i < descriptiveHeader.length; ++i) {
-            labels.add(d);
-        }*//*
-
-        FileUtil.saveList(confDir + "mineotaur.features", Arrays.asList(descriptiveHeader));
-
-        */
-/*try (Transaction tx = db.beginTx()) {
-            GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
-            Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
-            List<String> labels = new ArrayList<>();
-            while (iterator.hasNext()) {
-                Node node = iterator.next();
-                Iterator<String> props = node.getPropertyKeys().iterator();
-                while (props.hasNext()) {
-                    String prop = props.next();
-                    if (!labels.contains(prop)) {
-                        labels.add(prop);
-                    }
-                }
-            }
-            System.out.println(labels.toString());
-            FileUtil.saveList(new StringBuilder(confDir).append("mineotaur.features").toString(), labels);
-            tx.success();
-        }*//*
-
+        List features = Arrays.asList(descriptiveHeader);
+        Collections.sort(features);
+        FileUtil.saveList(confDir + "mineotaur.features", features);
     }
+
 
     @Override
     public void processData() {
@@ -482,76 +388,31 @@ public class ImportFromOmero extends DatabaseGenerator{
         labelGenes("Input/sysgro_labels.tsv");
     }
 
-    public void labelGenes(String file) {
-
+    protected void labelGenes(String file) {
         try (Transaction tx = db.beginTx(); BufferedReader br = new BufferedReader(new FileReader(file))) {
             String[] header = br.readLine().split(separator);
-            //System.out.println(Arrays.toString(header));
             String line;
-            //int count = 0;
             List<String> list = new ArrayList<>(Arrays.asList(header).subList(1, header.length));
-            //list.add(wildTypeLabel.name());
             FileUtil.saveList(confDir + "mineotaur.hitLabels", list);
             while ((line = br.readLine()) != null) {
                 String[] terms = line.split(separator);
-                */
-/*Iterator<Node> nodes = db.findNodes(groupLabel);
-                while (nodes.hasNext()) {
-                    Node node = nodes.next();
-                    Iterator<String> props = node.getPropertyKeys().iterator();
-                    while (props.hasNext()) {
-                        System.out.println(props.next());
-                    }
-                    System.out.println(nodes.next().getProperty("geneName"));
-                }*//*
 
                 Iterator<Node> nodes = db.findNodesByLabelAndProperty(groupLabel, header[0], terms[0]).iterator();
-//                Iterator<Node> nodes = db.findNodes(groupLabel, header[0], terms[0]);
-
-                */
-/*Node node = db.findNode(groupLabel, header[0], terms[0]);
-                if (node == null) {
-                    throw new IllegalArgumentException("No such gene:" + terms[0]);
-                }*//*
 
                 if (!nodes.hasNext()) {
                     Mineotaur.LOGGER.warning("No such gene: " + terms[0]);
                     continue;
-                    */
-/*
-                    nodes = db.findNodes(groupLabel, "reference", terms[0]);
-                    if (!nodes.hasNext()) {*//*
-
-                    //throw new IllegalStateException("No such gene: " + terms[0]);
-                    //}
-
-                    */
-/*Mineotaur.LOGGER.info(String.valueOf(nodes.hasNext()));
-                    continue;*//*
 
                 }
                 Node node = nodes.next();
-                */
-/*if (!node.hasProperty(header[0])) {
-                    node.setProperty(header[0], node.getProperty("reference"));
-                }*//*
 
                 if (nodes.hasNext()) {
-                    //Mineotaur.LOGGER.info("Id is not unique: " + terms[0]);
                     throw new IllegalStateException("Id is not unique: " + terms[0]);
-                    */
-/*int count= 0;
-                    while (nodes.hasNext()) {
-                        nodes.next();
-                        count++;
-                    }
-                    Mineotaur.LOGGER.info(String.valueOf(count));*//*
 
                 }
                 boolean hasLabel = false;
                 for (int i = 1; i < terms.length; ++i) {
                     if (terms[i].equals("1")) {
-                        //count++;
                         node.addLabel(DynamicLabel.label(header[i]));
                         hasLabel = true;
                     }
@@ -566,6 +427,7 @@ public class ImportFromOmero extends DatabaseGenerator{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     protected void generatePropertyFile() throws IOException {
@@ -585,17 +447,14 @@ public class ImportFromOmero extends DatabaseGenerator{
         }
         mineotaurProperties.put("group", "GROUP");
         mineotaurProperties.put("groupName", "reference");
-//        mineotaurProperties.put("total_memory", totalMemory);
         mineotaurProperties.put("db_path", dbPath);
         mineotaurProperties.put("cache", "soft");
         mineotaurProperties.put("omero", hostName);
-        //Mineotaur.LOGGER.info(mineotaurProperties.toString());
         mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
     }
 
-    *//*
 
-    }
+
 
 }
-*/
+
