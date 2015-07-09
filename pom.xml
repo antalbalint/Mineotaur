@@ -92,23 +92,23 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>omero</groupId>
             <artifactId>blitz</artifactId>
             <version>5.1.2-ice35-b45</version>
-            &lt;!&ndash;<exclusions>
+            <!--<exclusions>
             <exclusion>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
             </exclusion>
-        </exclusions>&ndash;&gt;
+        </exclusions>-->
         </dependency>
         <dependency>
             <groupId>ome</groupId>
             <artifactId>bioformats_package</artifactId>
             <version>5.1.2</version>
 
-        </dependency>-->
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>org.neo4j</groupId>-->
             <!--<artifactId>neo4j-io</artifactId>-->
