@@ -293,6 +293,11 @@ public class ImportFromOmero extends DatabaseGenerator{
             establishConnection();
             Mineotaur.LOGGER.info("Processing metadata.");
             processMetadata();
+            getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+            /*
+            Mineotaur.LOGGER.info("Creating directories.");
+            createDirs();
+            Mineotaur.LOGGER.info("Creating indices.");
             createIndex(db);
             Mineotaur.LOGGER.info("Processing input data.");
             processData();
@@ -314,7 +319,7 @@ public class ImportFromOmero extends DatabaseGenerator{
             storeGroupnames(db);
             generatePropertyFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); */
         } catch (CannotCreateSessionException e) {
             e.printStackTrace();
         } catch (PermissionDeniedException e) {
@@ -354,7 +359,7 @@ public class ImportFromOmero extends DatabaseGenerator{
             name = screen.getName().replaceAll("\\P{Alnum}", "");
             Mineotaur.LOGGER.info("Screen name:" + name);
             confDir = name + FILE_SEPARATOR + CONF + FILE_SEPARATOR;
-            createDirs();
+
             dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
             addDummyValues();
             startDB();
@@ -449,6 +454,7 @@ public class ImportFromOmero extends DatabaseGenerator{
         mineotaurProperties.put("groupName", "reference");
         mineotaurProperties.put("db_path", dbPath);
         mineotaurProperties.put("cache", "soft");
+        mineotaurProperties.put("total_memory", "4G");
         mineotaurProperties.put("omero", hostName);
         mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
     }

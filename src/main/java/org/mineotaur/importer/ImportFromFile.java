@@ -1091,7 +1091,7 @@ public class ImportFromFile {
         }
         mineotaurProperties.put("group", group);
         mineotaurProperties.put("groupName", groupName);
-//        mineotaurProperties.put("total_memory", totalMemory);
+        mineotaurProperties.put("total_memory", totalMemory);
         mineotaurProperties.put("db_path", dbPath);
         mineotaurProperties.put("cache", "soft");
         mineotaurProperties.put("omero", properties.getString("omero_server"));

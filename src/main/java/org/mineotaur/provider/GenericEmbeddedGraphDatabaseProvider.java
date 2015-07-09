@@ -141,11 +141,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         try (Transaction tx = DATABASE.beginTx()) {
             for (String name: GROUP_NAMES) {
                 Iterator<Node> nodes = DATABASE.findNodesByLabelAndProperty(groupLabel, groupName, name).iterator();
-//                Iterator<Node> nodes = DATABASE.findNodes(groupLabel, groupName, name);
                 Node node = nodes.next();
-                /*if (nodes.hasNext()) {
-                    throw new IllegalStateException("There are more group objects in the database with the same name.");
-                }*/
                 groupByGroupName.put(name, node);
             }
             tx.success();
@@ -156,6 +152,12 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
     protected void loadQueryRelationship() {
         CONTEXT.put("rel", DynamicRelationshipType.withName(PROPERTIES.getString("query_relationship")));
 
+    }
+
+    protected void loadIntegrations() {
+        if (PROPERTIES.containsKey("omero")) {
+            CONTEXT.put("omeroURL", PROPERTIES.getString("omero"));
+        }
     }
 
     protected void loadAggregationModes() {
@@ -177,15 +179,9 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 loadHitLabels();
                 loadQueryRelationship();
                 loadAggregationModes();
-//                DATABASE = newDatabaseService();
                 initDatabase();
                 preFecthGroupNames();
-                /*GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-//                gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
-                gdb.setConfig(GraphDatabaseSettings.allow_store_upgrade, "true");
-                gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-                DATABASE = gdb.newGraphDatabase();*/
-//                GGO = GlobalGraphOperations.at(DATABASE);
+                loadIntegrations();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -211,10 +207,8 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
 
     protected GraphDatabaseService newDatabaseService() {
         GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-        //gdb.setConfig(GraphDatabaseSettings.pagecache_memory, PROPERTIES.getString("total_memory"));
-//            gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
-                gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-//        gdb.setConfig(GraphDatabaseSettings.dump_configuration, "true");
+        gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
+        gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
         return gdb.newGraphDatabase();
     }
 
@@ -231,47 +225,6 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         if (GGO == null) {
             GGO = GlobalGraphOperations.at(DATABASE);
         }
-        /*IndexDefinition indexDefinition;
-        try (Transaction tx = DATABASE.beginTx()) {
-            Iterator<IndexDefinition> ids = DATABASE.schema().getIndexes().iterator();
-            Schema schema = DATABASE.schema();
-            while (ids.hasNext()) {
-                IndexDefinition id = ids.next();
-                Schema.IndexState is = schema.getIndexState(id);
-                Mineotaur.LOGGER.info(id.toString());
-                Label label = id.getLabel();
-                Iterator<String> propertyKeys = id.getPropertyKeys().iterator();
-                if (is == Schema.IndexState.FAILED) {
-                    //id.drop();
-                    Mineotaur.LOGGER.info(schema.getIndexFailure(id));
-                    schema.indexFor(label).on(propertyKeys.next()).create();
-                }
-                *//*while (schema.getIndexState(id)!= Schema.IndexState.ONLINE) {
-                    schema.awaitIndexOnline( id, 10, TimeUnit.SECONDS );
-                }*//*
-                Mineotaur.LOGGER.info(id.toString());
-                Mineotaur.LOGGER.info(DATABASE.schema().getIndexState(id).toString());
-                //id.drop();
-            }
-            tx.success();
-            *//*String[] props = {"filter", "Average", "Minimum", "Maximum", "Standard deviation", "Median", "Count"};
-            Label precomputed = DynamicLabel.label(groupLabel.name() + "_COLLECTED");
-            for (String prop: props) {
-                Schema schema = DATABASE.schema();
-                indexDefinition = schema.indexFor( precomputed )
-                        .on(prop )
-                        .create();
-                tx.success();
-            }*//*
-            *//**//*
-        }*/
-
-        /*try ( Transaction tx = DATABASE.beginTx() ) {
-                Schema schema = DATABASE.schema();
-                schema.awaitIndexOnline( indexDefinition, 10, TimeUnit.SECONDS );
-                tx.success();
-            }*/
-
     }
 
 

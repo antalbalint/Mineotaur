@@ -27,6 +27,7 @@
 -->
 
     <link href="css/style.min.css" rel="stylesheet" type="text/css"/>
+
     <!--<link href="css/jquery.multiselect.css" rel="stylesheet" type="text/css"/>-->
     <!--<link href="css/jquery.multiselect.filter.css" rel="stylesheet" type="text/css"/>-->
     <!--<link href="css/jquery.contextMenu.css" rel="stylesheet" type="text/css"/>
@@ -74,6 +75,8 @@
 <div id="spin"/>-->
 <div th:include="fragments/core::modal ('noDataModal','No data returned', 'The query did not return any data.')"/>
 <div th:include="fragments/core::modal ('sheetFullModal','The comparison sheet is full', 'The maximum number of plots to be compares is 4. Please remove one before to add a new one.')"/>
+<div th:include="fragments/core::galleryModal ('galleryModal')"/>
+
 <div th:include="fragments/core::geneList ('geneListModal','Enter a list of genes', 'Enter a list of genes (each line should contain the name of a gene):', 'geneListTextArea', 'submitGeneList')"/>
 <div th:include="fragments/core::geneList ('geneListDistModal','Enter a list of genes', 'Enter a list of genes (each line should contain the name of a gene):', 'geneListDistTextArea', 'submitGeneListDist')"/>
 

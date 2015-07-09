@@ -1,4 +1,4 @@
-define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'underscore', 'jquery'], function (util, plots, context, Spinner, _, $) {
+define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'underscore', 'jquery'], function (util, plots, context, Spinner, _, $, ls) {
     //Do setup work here
 
     var spinner;
@@ -217,6 +217,9 @@ define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'undersco
                 			}
                 		}
         },
+        showGallery: function(name, ids) {
 
+
+        }
     }
 });

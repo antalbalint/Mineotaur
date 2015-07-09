@@ -21,8 +21,7 @@ package org.mineotaur.application;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 import org.apache.commons.cli.*;
-import org.mineotaur.importer.DatabaseGenerator;
-import org.mineotaur.importer.ImportFromFile;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -67,19 +66,19 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
             }
             else if (line.hasOption("import")) {
 //                DatabaseGenerator gen = new DatabaseGenerator(args[1]);
-                ImportFromFile gen = new ImportFromFile(args[1]);
-                gen.generateDatabase(args[2], args[3]);
+                /*ImportFromFile gen = new ImportFromFile(args[1]);
+                gen.generateDatabase(args[2], args[3]);*/
             }
             else {
                 formatter.printHelp("Mineotaur", options);
             }
-        } catch (IllegalAccessException e) {
+        /*} catch (IllegalAccessException e) {
             System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
+            e.printStackTrace();*/
         } catch (ParseException e) {
             System.err.println("For the current usage use the -help handle.");
             e.printStackTrace();
-        } catch (IOException e) {
+        /*} catch (IOException e) {
             System.err.println("For the current usage use the -help handle.");
             e.printStackTrace();
         } catch (InstantiationException e) {
@@ -93,7 +92,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {
             System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
+            e.printStackTrace();*/
         } catch (Exception e) {
 
             e.printStackTrace();

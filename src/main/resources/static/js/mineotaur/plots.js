@@ -1,4 +1,4 @@
-define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regression', 'numbers', 'd3'], function (util, controller, context, regression, numbers, d3) {
+define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regression', 'numbers', 'd3', 'jquery'], function (util, controller, context, regression, numbers, d3, $) {
 	// Radius of the circles on the scatter plot.
 	var radius = 40;
 	// Maximum opacity value for the circles. 1 = not opaque, 0 = completely opaque.
@@ -228,6 +228,8 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		var graphWidth = $(target).width();
 		// Width of the graph
 		var width = graphWidth - margin.left - margin.right;
+		var thumbURL = context.getOmeroThumbnailURL();
+		var detailURL = context.getOmeroDetailURL();
 		// Height of the graph
 		//console.log($(target).css('max-height'));
 		var height;
@@ -285,14 +287,18 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		var dots = svg.selectAll(".dot")
 			.data(data)
 			.enter()
-			// Adds link to each circle to the corresponding sysgro page.
-//			.append("a")
-//			.attr("xlink:href", function (d) {
-//				if (d.name != "") {
-//					return "http://sysgro.org/omero/HTscape/geneFromScreen/" + d.name
-//				}
-//			})
-//			.attr("target", "_blank")
+			// Adds link to each circle to the corresponding Omero page.
+			/*.append("a")
+			.attr("xlink:href", function (d) {
+//				console.log(d.imageIDs);
+
+				if (d.imageIDs != null) {
+								ui.showGallery(d.name, d.imageIDs)
+
+//					return detailURL + d.imageIDs[0]
+				}
+			})
+			.attr("target", "_blank")*/
 			.append("circle")
 			// Adds context menu via the context_1 class attribute. See eventlistener.js for more.
 			.attr("class", "dot context_1")
@@ -339,6 +345,29 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 			.on("contextmenu", function (d) {
 				context.setCurrentItem(d);
 				//currentItem = d;
+			})
+			.on("click", function(d) {
+				if (d.imageIDs != null) {
+                	$('#galleryModalTitle').html(d.name)
+                	console.log(d.imageIDs)
+                	$('#thumbnails').empty()
+                	str = '';
+                    d.imageIDs.forEach(function(id) {
+                    	imgURL = thumbURL+id;
+                    	linkURL = detailURL+id;
+                    	str += '<a href="'+linkURL+'" target="_blank"><img src="'+imgURL+'/100/" /></a>'
+                    })
+                    $('#thumbnails').html(str)
+                    /*$('#lightSlider').lightSlider({
+                                        gallery: true,
+                                        item: 1,
+                                        loop: true,
+                                        slideMargin: 0,
+                                        thumbItem: 9
+                                    });*/
+                    $('#galleryModal').modal('show');
+
+				}
 			});
 			console.log(usedColors);
 	},

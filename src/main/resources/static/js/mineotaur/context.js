@@ -18,6 +18,9 @@ define(['underscore', 'pako'], function (_, pako) {
     var currentItem;
     var selected=[];
     var genename;
+    var omeroURL;
+    var omeroThumbnailURL;
+    var omeroDetailURL;
     var types = {  'genewiseScatter': 0,
 
                                              'genewiseHistogram': 1,
@@ -551,6 +554,18 @@ define(['underscore', 'pako'], function (_, pako) {
        },
        getParameters: function() {
         return parameters;
-       }
+       },
+       setOmeroURL: function(_omeroURL) {
+        omeroURL = _omeroURL;
+        part_url = 'https://'+omeroURL;
+        omeroThumbnailURL =  part_url+'/webgateway/render_thumbnail/';
+        omeroDetailURL = part_url+'/webclient/img_detail/';
+       },
+       getOmeroThumbnailURL: function() {
+        return omeroThumbnailURL;
+       },
+       getOmeroDetailURL: function() {
+        return omeroDetailURL;
+       },
     }
 });

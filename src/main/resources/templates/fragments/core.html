@@ -37,6 +37,27 @@
         </div>
     </div>
 </div>
+<div th:fragment="galleryModal (id)">
+    <div class="modal fade" th:id="${id}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="galleryModalTitle"></h4>
+                </div>
+                <div class="modal-body">
+                    <div id="thumbnails" class="col-sm-12">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
 <div th:fragment="geneList (id, title, lead, txtid, submitId)">
     <div class="modal fade" th:id="${id}">
         <div class="modal-dialog">
@@ -160,6 +181,7 @@
             'bootstrap': ['jquery'],
             'regression' : {exports: 'regression'},
             'numbers': {exports: 'numbers'},
+
             'underscore': {
                   exports: '_'
                 },
@@ -182,6 +204,11 @@ require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur
             parameters = {'gene': groupNames, 'props': cellProperties, 'aggValues': aggValues, 'stages': stages, 'hits': hits};
 
             context.setParameters(parameters);
+            omeroURL = /*[[${omeroURL}]]*/null;
+            if (omeroURL != null) {
+                console.log(omeroURL);
+                context.setOmeroURL(omeroURL);
+            }
     var toDecode = /*[[${toDecode}]]*/ false;
     if (toDecode) {
         type = /*[[${type}]]*/ null;

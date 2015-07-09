@@ -1155,6 +1155,29 @@ public abstract class DatabaseGenerator {
         }
     }
 
+    protected void getImageIDs(RelationshipType rt) {
+        try (Transaction tx = db.beginTx()) {
+            Iterator<Node> nodes = ggo.getAllNodesWithLabel(groupLabel).iterator();
+            while (nodes.hasNext()) {
+                Node group = nodes.next();
+
+                List<String> imageIDs = new ArrayList<>();
+                Iterator<Relationship> rels = group.getRelationships(rt).iterator();
+                while (rels.hasNext()) {
+                    Node other = rels.next().getOtherNode(group);
+                    String imageID = String.valueOf(other.getProperty("imageID", null));
+                    if (imageID != null && !imageIDs.contains(imageID)) {
+                        imageIDs.add(imageID);
+                    }
+                }
+                Mineotaur.LOGGER.info("Gene " + group.getId() + ": " + imageIDs.toString());
+                group.setProperty("imageIDs", imageIDs.toArray(new String[imageIDs.size()]));
+            }
+            tx.success();
+        }
+
+    }
+
     public static void main(String[] args) {
         /*String[] uniqueArr = {"B", "S", "U", "N"};
         int filterSize = uniqueArr.length;

@@ -65,6 +65,7 @@ public class MineotaurController {
     private Label groupLabel;
     private String groupName;
     private String filterName;
+    private String omeroURL;
 
     /**
      * Method to initalize the controller. The database provider is injected by Spring.
@@ -98,6 +99,10 @@ public class MineotaurController {
         groupLabel = (Label) context.get("groupLabel");
         groupName = (String) context.get("groupName");
         filterName = (String) context.get("filterName");
+        if (context.containsKey("omeroURL")) {
+            omeroURL = (String) context.get("omeroURL");
+        }
+
     }
 
     private void processFilters() {
@@ -622,6 +627,8 @@ public class MineotaurController {
                 map.put("logY", Math.log(yAgg));
                 map.put("name", geneName);
                 map.put("labels", actualLabels);
+                String[] imageIDs = (String[]) strain.getProperty("imageIDs",null);
+                map.put("imageIDs", imageIDs);
                 dataPoints.add(map);
                 //dataPoints.add(getDataPointsForGene(geneName, prop1, prop2, aggProp1, mapValuesProp1, aggProp2, mapValuesProp2, hitLabels));
 //                double[] xArr = getArrayData(strain, prop1, geneName);
@@ -1073,6 +1080,10 @@ public class MineotaurController {
     @ModelAttribute("aggValues")
     public List<String> getAggValues() {
         return aggValues;
+    }
+    @ModelAttribute("omeroURL")
+    public String getOmeroURL() {
+        return omeroURL;
     }
 
     private String decompressString(String data) {
