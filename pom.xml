@@ -136,13 +136,6 @@
             </exclusion>
         </exclusions>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.neo4j</groupId>-->
-            <!--<artifactId>neo4j-io</artifactId>-->
-            <!--<version>2.1.3</version>-->
-            <!--<type>test-jar</type>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
@@ -156,24 +149,6 @@
         </dependency>
     </dependencies>
 
-
-    <!--<repositories>-->
-        <!--<repository>-->
-            <!--<id>spring-snapshots</id>-->
-            <!--<name>Spring Snapshots</name>-->
-            <!--<url>http://repo.spring.io/snapshot</url>-->
-            <!--<snapshots>-->
-                <!--<enabled>true</enabled>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
-        <!--<repository>-->
-            <!--<id>spring-milestone</id>-->
-            <!--<url>http://repo.spring.io/libs-milestone</url>-->
-            <!--<snapshots>-->
-                <!--<enabled>false</enabled>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
-    <!--</repositories>-->
     <repositories>
         <repository>
             <id>ome.maven</id>
