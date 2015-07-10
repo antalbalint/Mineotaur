@@ -96,18 +96,27 @@
             <groupId>omero</groupId>
             <artifactId>blitz</artifactId>
             <version>5.1.2-ice35-b45</version>
-            <!--<exclusions>
-            <exclusion>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-            </exclusion>
-        </exclusions>-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.security</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>ome</groupId>
             <artifactId>bioformats_package</artifactId>
             <version>5.1.2</version>
-
+        <exclusions>
+            <exclusion>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
+        </exclusions>
         </dependency>
         <!--<dependency>-->
             <!--<groupId>org.neo4j</groupId>-->

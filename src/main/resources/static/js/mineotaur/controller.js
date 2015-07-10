@@ -1,4 +1,4 @@
-define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'pako',    'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap', 'lightslider.min'],
+define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'pako',    'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap'],
 function (events, ui, context, plots, util, pako, $) {
 
     /*console.log(util);
