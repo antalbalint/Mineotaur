@@ -21,10 +21,8 @@ package org.mineotaur.provider;
 
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.FileUtils;
+import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 
@@ -53,7 +51,6 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
     private static Map<String, Object> CONTEXT = new HashMap<>();
     private static List<String> AGGREGATION_MODES;
     private static List<String> GROUP_NAMES;
-    private static List<String> HIT_LABELS;
     private Label groupLabel;
     private String groupName;
 
@@ -112,11 +109,11 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         if (PROPERTIES == null) {
             throw new IllegalStateException("Property file has not been loaded yet.");
         }
-        HIT_LABELS = FileUtils.processTextFile(baseDir + "mineotaur.hitLabels");
-        CONTEXT.put("hitNames", HIT_LABELS);
+        List<String> hitLabels = FileUtils.processTextFile(baseDir + "mineotaur.hitLabels");
+        CONTEXT.put("hitNames", hitLabels);
         Map<String, Label> labelMap2 = new HashMap<>();
         Map<Label, String> labelMap3 = new HashMap<>();
-        for (String label: HIT_LABELS) {
+        for (String label: hitLabels) {
             Label l = DynamicLabel.label(label);
             labelMap2.put(label, l);
             labelMap3.put(l, label);
@@ -201,13 +198,6 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         return AGGREGATION_MODES;
     }
 
-    protected GraphDatabaseService newDatabaseService() {
-        GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(PROPERTIES.getString("db_path"));
-        gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, PROPERTIES.getString("total_memory"));
-        gdb.setConfig(GraphDatabaseSettings.cache_type, PROPERTIES.getString("cache"));
-        return gdb.newGraphDatabase();
-    }
-
     /**
      * Method to start the database.
      */
@@ -216,14 +206,12 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
             initProperties();
         }
         if (DATABASE ==  null) {
-            DATABASE = newDatabaseService();
+            DATABASE = GraphDatabaseUtils.createNewGraphDatabaseService(PROPERTIES.getString("db_path"), PROPERTIES.getString("total_memory"), PROPERTIES.getString("cache"));
         }
         if (GGO == null) {
             GGO = GlobalGraphOperations.at(DATABASE);
         }
     }
-
-
 
     /**
      * Method to access the database instance started.

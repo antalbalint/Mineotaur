@@ -55,11 +55,9 @@ public class MineotaurConfig {
             @Override
             public void customize(Connector connector) {
                 connector.setAttribute("maxHttpHeaderSize", 4096000);
-
                 connector.setAttribute("compression", "on");
                 connector.setAttribute("useSendfile",false);
                 connector.setAttribute("compressableMimeType","text/html,text/xml,text/plain,text/css,text/javascript,text/json,application/x-javascript,application/javascript,application/json");
-
             }
         });
         return factory;

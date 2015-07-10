@@ -319,9 +319,7 @@ public class ImportFromOmero extends DatabaseGenerator{
             generatePropertyFile();
         } catch (IOException e) {
             e.printStackTrace(); */
-        } catch (CannotCreateSessionException e) {
-            e.printStackTrace();
-        } catch (PermissionDeniedException e) {
+        } catch (CannotCreateSessionException | PermissionDeniedException e) {
             e.printStackTrace();
         } catch (ServerError serverError) {
             serverError.printStackTrace();
@@ -427,8 +425,6 @@ public class ImportFromOmero extends DatabaseGenerator{
                 }
                 tx.success();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

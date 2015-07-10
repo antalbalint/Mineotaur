@@ -47,22 +47,6 @@ public class ImportFromFile extends DatabaseGenerator{
         this.prop = prop;
         this.dataFile = dataFile;
         this.labelFile = labelFile;
-        init();
-    }
-
-    /**
-     *  Method for processing of environment variables and creating and starting an empty database.
-     */
-    protected void init() {
-        try {
-            Mineotaur.LOGGER.info("Reading properties...");
-            processProperties();
-            Mineotaur.LOGGER.info("Done\nStarting database...");
-            startDB();
-            Mineotaur.LOGGER.info("Database started.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -81,7 +65,6 @@ public class ImportFromFile extends DatabaseGenerator{
         separator = properties.getString("separator");
         totalMemory = properties.getString("total_memory");
         cache = properties.getString("cache");
-        confDir = new StringBuilder(name).append(FILE_SEPARATOR).append(CONF).append(FILE_SEPARATOR).toString();
         confDir = name + FILE_SEPARATOR + CONF + FILE_SEPARATOR;
         dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
         createDirs();
@@ -118,6 +101,11 @@ public class ImportFromFile extends DatabaseGenerator{
     @Override
     public void generateDatabase() {
         try {
+            Mineotaur.LOGGER.info("Reading properties...");
+            processProperties();
+            Mineotaur.LOGGER.info("Done\nStarting database...");
+            startDB();
+            Mineotaur.LOGGER.info("Database started.");
             Mineotaur.LOGGER.info("Processing metadata.");
             processMetadata();
             Mineotaur.LOGGER.info("Generating classes.");
@@ -147,9 +135,7 @@ public class ImportFromFile extends DatabaseGenerator{
                 getImageIDs(relationships.get(group).get("EXPERIMENT"));
             }
             Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        } catch (NotFoundException e) {
+        } catch (CannotCompileException | NotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
@@ -194,8 +180,6 @@ public class ImportFromFile extends DatabaseGenerator{
             }
             keySet = signatures.keySet();
             classCount = keySet.size();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -338,8 +322,6 @@ public class ImportFromFile extends DatabaseGenerator{
                 }
                 tx.success();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 public class MineotaurTest {
 
     @Test
-    public void MineotaurTest() {
+    public void MineotaurIntegrationTest() {
 
     }
 }

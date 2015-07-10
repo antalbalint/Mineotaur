@@ -39,8 +39,6 @@ public class FileUtils {
             while ((line = br.readLine()) != null) {
                 lines.add(line);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
