@@ -20,14 +20,11 @@ package org.mineotaur.provider;
 
 
 import org.mineotaur.application.Mineotaur;
-import org.mineotaur.common.FileUtil;
+import org.mineotaur.common.FileUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.schema.IndexDefinition;
-import org.neo4j.graphdb.schema.Schema;
 import org.neo4j.tooling.GlobalGraphOperations;
 
 
@@ -35,7 +32,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of GraphDatabaseProvider interface.
@@ -65,7 +61,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         if (PROPERTIES == null) {
             throw new IllegalStateException("Property file has not been loaded yet.");
         }
-        CONTEXT.put("features", FileUtil.processTextFile(baseDir + "mineotaur.features"));
+        CONTEXT.put("features", FileUtils.processTextFile(baseDir + "mineotaur.features"));
     }
 
     protected void loadFilters() {
@@ -77,7 +73,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         }
         else {
             CONTEXT.put("hasFilter", true);
-            List<String> filterList = FileUtil.processTextFile(baseDir + "mineotaur.filters");
+            List<String> filterList = FileUtils.processTextFile(baseDir + "mineotaur.filters");
             Map<String, String> filters = new HashMap<>();
             for (String filter: filterList) {
                 if (filter.contains("/")) {
@@ -98,9 +94,9 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
             throw new IllegalStateException("Property file has not been loaded yet.");
         }
         String groupPath = baseDir + "mineotaur.groupNames";
-        GROUP_NAMES = FileUtil.processTextFile(groupPath);
+        GROUP_NAMES = FileUtils.processTextFile(groupPath);
         CONTEXT.put("groupNames", GROUP_NAMES);
-        List<String> labels = FileUtil.processTextFile(groupPath);
+        List<String> labels = FileUtils.processTextFile(groupPath);
         Map<String, Label> labelMap = new HashMap<>();
         for (String label: labels) {
             labelMap.put(label, DynamicLabel.label(label));
@@ -116,7 +112,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
         if (PROPERTIES == null) {
             throw new IllegalStateException("Property file has not been loaded yet.");
         }
-        HIT_LABELS = FileUtil.processTextFile(baseDir + "mineotaur.hitLabels");
+        HIT_LABELS = FileUtils.processTextFile(baseDir + "mineotaur.hitLabels");
         CONTEXT.put("hitNames", HIT_LABELS);
         Map<String, Label> labelMap2 = new HashMap<>();
         Map<Label, String> labelMap3 = new HashMap<>();

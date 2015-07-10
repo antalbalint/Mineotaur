@@ -105,10 +105,6 @@ public class MineotaurController {
 
     }
 
-    private void processFilters() {
-
-    }
-
     /**
      * Method for mapping the starting page.
      * @param model The model.

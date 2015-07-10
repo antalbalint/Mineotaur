@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Class for common file utilites.
  */
-public class FileUtil {
+public class FileUtils {
 
     /**
      * Reads a text file line by line and returns a list containing the lines.
@@ -59,6 +59,21 @@ public class FileUtil {
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Method for creating a driectory to a give path. If the directory exists and overwrite is true then it deletes the existing directory first.
+     * @param name
+     */
+    public static void createDir(String name, boolean overwrite) {
+        File dir = new File(name);
+        boolean dirExists = dir.exists();
+        if (!dirExists || overwrite) {
+            if (dirExists) {
+                dir.delete();
+            }
+            dir.mkdir();
         }
     }
 

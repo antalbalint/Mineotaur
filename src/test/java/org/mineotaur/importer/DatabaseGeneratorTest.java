@@ -81,7 +81,7 @@ public class DatabaseGeneratorTest {
 
     @Test
     public void testStartDB() throws Exception {
-        dg.startDB();
+        dg.createNewGraphDatabaseService();
         assertNotNull(dg.db);
     }
 
@@ -267,7 +267,7 @@ public class DatabaseGeneratorTest {
 
     private int countObjects(Label label) {
         if (dg.db == null) {
-            dg.startDB();
+            dg.createNewGraphDatabaseService();
         }
         int count = 0;
         */
@@ -284,7 +284,7 @@ public class DatabaseGeneratorTest {
 
     private void deleteObjects(Label label) {
         if (dg.db == null) {
-            dg.startDB();
+            dg.createNewGraphDatabaseService();
         }
         try (Transaction tx = dg.db.beginTx()) {
             */

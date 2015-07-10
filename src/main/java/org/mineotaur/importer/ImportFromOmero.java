@@ -3,7 +3,6 @@ package org.mineotaur.importer;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import omero.RType;
 import omero.ServerError;
 import omero.api.IContainerPrx;
 import omero.api.IMetadataPrx;
@@ -14,7 +13,7 @@ import omero.grid.*;
 import omero.model.*;
 import omero.sys.ParametersI;
 import org.mineotaur.application.Mineotaur;
-import org.mineotaur.common.FileUtil;
+import org.mineotaur.common.FileUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -339,7 +338,7 @@ public class ImportFromOmero extends DatabaseGenerator{
     protected void storeFeatureNames() {
         List features = Arrays.asList(descriptiveHeader);
         Collections.sort(features);
-        FileUtil.saveList(confDir + "mineotaur.features", features);
+        FileUtils.saveList(confDir + "mineotaur.features", features);
     }
 
 
@@ -353,6 +352,7 @@ public class ImportFromOmero extends DatabaseGenerator{
         }
     }
 
+    @Override
     public void processMetadata() {
         try {
             getScreenData();
@@ -398,7 +398,7 @@ public class ImportFromOmero extends DatabaseGenerator{
             String[] header = br.readLine().split(separator);
             String line;
             List<String> list = new ArrayList<>(Arrays.asList(header).subList(1, header.length));
-            FileUtil.saveList(confDir + "mineotaur.hitLabels", list);
+            FileUtils.saveList(confDir + "mineotaur.hitLabels", list);
             while ((line = br.readLine()) != null) {
                 String[] terms = line.split(separator);
 

@@ -11,7 +11,7 @@ import org.neo4j.test.TestGraphDatabaseFactory;
     }
 
     @Override
-    public void startDB() {
+    public void createNewGraphDatabaseService() {
         db = new TestGraphDatabaseFactory().newImpermanentDatabase();
         registerShutdownHook(db);
     }
