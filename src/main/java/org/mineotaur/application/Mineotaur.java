@@ -18,16 +18,16 @@
 
 package org.mineotaur.application;
 
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
 import org.apache.commons.cli.*;
 
+import org.mineotaur.importer.DatabaseGenerator;
+import org.mineotaur.importer.ImportFromFile;
+import org.mineotaur.importer.ImportFromOmero;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -51,11 +51,11 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
      * Method to parse command line arguments using Apache Commons CLI.
      * @param args command-line arguments.
      */
-    private static void parseArguments(String[] args) {
+    protected static void parseArguments(String[] args) {
         CommandLineParser parser = new BasicParser();
         Options options = new Options();
         options.addOption("start", true, "Starts Mineotaur with the specified database. Parameters: name of the folder containing the Mineotaur data.");
-        options.addOption("import", true, "Generates the database from the specified file. Parameters: property file input file label file.");
+        options.addOption("import", true, "Generates the database from the specified file or from omero. Parameters: from file: property file input file label file; from omero: hostname username password screenID.");
         options.addOption("help", false, "Prints this help message.");
         HelpFormatter formatter = new HelpFormatter();
         try {
@@ -65,34 +65,25 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
                 SpringApplication.run(Mineotaur.class, args);
             }
             else if (line.hasOption("import")) {
-//                DatabaseGenerator gen = new DatabaseGenerator(args[1]);
-                /*ImportFromFile gen = new ImportFromFile(args[1]);
-                gen.generateDatabase(args[2], args[3]);*/
+                DatabaseGenerator gen;
+                if (args.length == 4) {
+                    gen = new ImportFromFile(args[1], args[2], args[3]);
+                }
+                else if (args.length == 5) {
+                    gen = new ImportFromOmero(args[1], args[2], args[3], Long.valueOf(args[4]));
+                }
+                else {
+                    throw new UnsupportedOperationException("The number of arguments must be 3 (if importing from files) or 4 (if importing from Omero).");
+                }
+                gen.generateDatabase();
             }
             else {
                 formatter.printHelp("Mineotaur", options);
             }
-        /*} catch (IllegalAccessException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();*/
+
         } catch (ParseException e) {
             System.err.println("For the current usage use the -help handle.");
             e.printStackTrace();
-        /*} catch (IOException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
-        } catch (CannotCompileException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
-        } catch (NotFoundException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            System.err.println("For the current usage use the -help handle.");
-            e.printStackTrace();*/
         } catch (Exception e) {
 
             e.printStackTrace();
