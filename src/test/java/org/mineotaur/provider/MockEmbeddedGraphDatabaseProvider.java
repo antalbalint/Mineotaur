@@ -14,7 +14,6 @@ public class MockEmbeddedGraphDatabaseProvider extends GenericEmbeddedGraphDatab
         baseDir = _baseDir;
     }
 
-    @Override
     protected GraphDatabaseService newDatabaseService() {
         return new TestGraphDatabaseFactory().newImpermanentDatabase();
     }
