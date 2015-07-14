@@ -5,12 +5,13 @@
 
 Welcome to Mineotaur's documentation!
 =====================================
-Test
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+
 
 
 
