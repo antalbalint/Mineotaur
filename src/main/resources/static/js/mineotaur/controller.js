@@ -722,7 +722,7 @@ $('#graphForm').submit(function(event){
                             		//$("#queryLink").attr("data-text", window.location.href + "query?type=" + type + "&" + queryString);
                             		//$("#queryLink").attr("data-text", encodeURIComponent(window.location.href) + "query?type=" + encodeURIComponent(type) + "&" + encodeURIComponent(queryString));
                             		//$('.clippy').clippy({clippy_path:'js/clippy.swf'});
-                            		var jsData = "<script language='text/javascript'>$('#copy-button').zclip({path:'js/ZeroClipboard.swf',beforeCopy:function() {console.log('valami');}, copy:function(){return window.location.href + 'query?type=' + type + '&' + queryString;}});</script>";
+//                            		var jsData = "<script language='text/javascript'>$('#copy-button').zclip({path:'js/ZeroClipboard.swf',beforeCopy:function() {console.log('valami');}, copy:function(){return window.location.href + 'query?type=' + type + '&' + queryString;}});</script>";
                             		$("#queryLink").html(jsData);
                             		$("#shareModal").modal('show');
                             	});
