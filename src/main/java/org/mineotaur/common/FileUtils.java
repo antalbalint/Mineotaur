@@ -32,7 +32,13 @@ public class FileUtils {
      * @param file Path to the text file.
      * @return the list containing the lines
      */
-    public static List<String> processTextFile(String file) {
+    public static List<String> processTextFile(File file) {
+        if (file == null) {
+            throw new IllegalArgumentException("File is null");
+        }
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("Not a file.");
+        }
         List<String> lines = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
@@ -45,12 +51,28 @@ public class FileUtils {
         return lines;
     }
 
+    public static List<String> processTextFile(String file) {
+        return processTextFile(new File(file));
+    }
+
     /**
      * Saves a list of strings as lines to a text file
      * @param file Path to the text file.
      * @param list the list containing the lines.
      */
-    public static void saveList(String file, List<String> list) {
+    public static void saveList(File file, List<String> list) {
+        if (file == null) {
+            throw new IllegalArgumentException("File is null");
+        }
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("Not a file.");
+        }
+        if (list == null) {
+            throw new IllegalArgumentException("List is null.");
+        }
+        if (list.isEmpty()) {
+            throw new IllegalArgumentException("List is empty.");
+        }
         try (PrintWriter pw = new PrintWriter(file)) {
             for (String s: list) {
                 pw.println(s);
@@ -60,16 +82,41 @@ public class FileUtils {
         }
     }
 
+    public static void saveList(String file, List<String> list) {
+        saveList(new File(file), list);
+    }
+
+    public static void deleteDirRecursively(File dir) {
+        if (dir == null) {
+            throw new IllegalArgumentException("File is null.");
+
+        }
+        if (!dir.isDirectory()) {
+            throw new IllegalArgumentException(dir.getAbsolutePath() + " is not a directory.");
+        }
+        File[] entries = dir.listFiles();
+        for (File entry: entries) {
+            if (entry.isDirectory()) {
+                deleteDirRecursively(entry);
+            }
+            entry.delete();
+        }
+        dir.delete();
+    }
+
     /**
-     * Method for creating a driectory to a give path. If the directory exists and overwrite is true then it deletes the existing directory first.
+     * Method for creating a directory to a give path. If the directory exists and overwrite is true then it deletes the existing directory first.
      * @param name
      */
     public static void createDir(String name, boolean overwrite) {
+        if (name == null || name.equals("")) {
+            throw new IllegalArgumentException("The provided directory name is either null or empty.");
+        }
         File dir = new File(name);
         boolean dirExists = dir.exists();
         if (!dirExists || overwrite) {
             if (dirExists) {
-                dir.delete();
+                deleteDirRecursively(dir);
             }
             dir.mkdir();
         }
