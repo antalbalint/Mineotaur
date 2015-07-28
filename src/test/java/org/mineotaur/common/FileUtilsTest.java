@@ -2,10 +2,14 @@ package org.mineotaur.common;
 
 import static org.mockito.Mockito.*;
 
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.FileReader;
 import java.util.List;
 
 import static org.testng.Assert.*;
@@ -18,12 +22,17 @@ public class FileUtilsTest {
 
     private String dirName = "testDir";
 
-    @Test
-    public void testProcessTextFile() throws Exception {
-        List<String> lines = FileUtils.processTextFile("input/mineotaur.input");
+    @DataProvider(name="testProcessTextFileDataProvider")
+    public Object[][] testProcessTextFileDataProvider() throws Exception {
+        return new Object[][] {{"input/mineotaur.input", 14}};
+    }
+
+    @Test(dataProvider = "testProcessTextFileDataProvider")
+    public void testProcessTextFile(String file, int numberOfLines) throws Exception {
+        List<String> lines = FileUtils.processTextFile(file);
         assertNotNull(lines);
         System.out.println(lines.toString());
-        assertEquals(lines.size(), 14);
+        assertEquals(lines.size(), numberOfLines);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
