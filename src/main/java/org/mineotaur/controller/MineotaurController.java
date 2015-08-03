@@ -20,7 +20,10 @@ package org.mineotaur.controller;
 
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.StringUtils;
+import org.mineotaur.provider.DataDescriptor;
+import org.mineotaur.provider.GenericEmbeddedGraphDatabaseProvider;
 import org.mineotaur.provider.GraphDatabaseProvider;
+import org.mineotaur.provider.HTHCSEmbeddedGraphDatabaseProvider;
 import org.neo4j.graphdb.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -44,18 +47,18 @@ public class MineotaurController {
     private GraphDatabaseProvider provider;
     private GraphDatabaseService db;
     private Map<String, Node> strainMap = null;
-    private List<String> aggValues;
+    //private List<String> aggValues;
     private Map<String, Label> hitsByName = null;
     private Map<Label, String> hitsByLabel = null;
-    private List<String> hitNames = null;
+    //private List<String> hitNames = null;
     private List<Label> allHitLabels = null;
     private boolean hasFilter;
-    private Map<String, String> filters;
+    /*private Map<String, String> filters;
     private Map<String, String> menu1;
     private Map<String, String> menu2;
-    private List<String> features;
+    private List<String> features;*/
     private List<String> groupNames;
-    private String omeroURL;
+    //private String omeroURL;
 
     /**
      * Method to initalize the controller. The database provider is injected by Spring.
@@ -65,116 +68,139 @@ public class MineotaurController {
     public void setProvider (GraphDatabaseProvider provider) {
         this.provider = provider;
         this.db = provider.getDatabaseService();
-        Map<String, Object> context = provider.getContext();
-        this.aggValues = (List<String>) context.get("aggValues");
+        manageDataDescriptor(provider);
+
+
+    }
+
+    private void manageDataDescriptor(GraphDatabaseProvider provider) {
+        if (provider instanceof GenericEmbeddedGraphDatabaseProvider) {
+            manageGenericDataDescriptor((Map<String, Object>) provider.getContext());
+        }
+        else if (provider instanceof HTHCSEmbeddedGraphDatabaseProvider) {
+            manageHTHCSDataDescriptor((DataDescriptor) provider.getContext());
+        }
+    }
+
+    private void manageGenericDataDescriptor(Map<String, Object> context) {
+        //this.aggValues = (List<String>) context.get("aggValues");
         this.hitsByName = (Map<String, Label>) context.get("hitLabels");
         this.hitsByLabel = (Map<Label, String>) context.get("hitsByLabel");
-        this.hitNames = (List<String>) context.get("hitNames");
+        //this.hitNames = (List<String>) context.get("hitNames");
         this.allHitLabels = new ArrayList<>();
         allHitLabels.addAll(hitsByLabel.keySet());
         this.strainMap = (Map<String, Node>) context.get("groupByGroupName");
-        menu1 = new HashMap<>();
+        /*menu1 = new HashMap<>();
         menu1.put("cellwiseScatter", "Cell-wise scatter plot");
         menu1.put("cellwiseHistogramX", "Histogram (X axis)");
         menu1.put("cellwiseHistogramY", "Histogram (Y axis)");
         menu1.put("cellwiseKDEX", "Kernel Density Estimation (X axis)");
         menu1.put("cellwiseKDEY", "Kernel Density Estimation (Y axis)");
         menu2 = new HashMap<>();
-        menu2.put("analyze", "Analyze");
-        features = (List<String>) context.get("features");
-        filters = (Map<String, String>) context.get("filters");
+        menu2.put("analyze", "Analyze");*/
+        //features = (List<String>) context.get("features");
+        //filters = (Map<String, String>) context.get("filters");
         groupNames = (List<String>) context.get("groupNames");
         hasFilter = (boolean) context.get("hasFilter");
-        if (context.containsKey("omeroURL")) {
+        /*if (context.containsKey("omeroURL")) {
             omeroURL = (String) context.get("omeroURL");
-        }
+        }*/
+    }
+
+    private void manageHTHCSDataDescriptor(DataDescriptor dataDescriptor) {
 
     }
 
-    /**
-     * Getter method for allHitLabels;
-     * @return allHitLabels.
-     */
-    @ModelAttribute("allLabels")
+    @ModelAttribute("dataDescriptor")
+    public Object getDataDescriptor() {
+        return provider.getContext();
+    }
+
+
+        /**
+         * Getter method for allHitLabels;
+         * @return allHitLabels.
+         */
+    /*@ModelAttribute("allLabels")
     public List<String> getAllHitLabels() {
         return hitNames;
-    }
+    }*/
 
     /**
      * Getter method for filters;
      * @return filters.
      */
-    @ModelAttribute("filters")
+    /*@ModelAttribute("filters")
     public Map<String, String> getFilters() {
         return filters;
-    }
+    }*/
 
     /**
      * Getter method for menu1;
      * @return menu1.
      */
-    @ModelAttribute("menu1")
+    /*@ModelAttribute("menu1")
     public Map<String, String> getMenu1() {
         return menu1;
-    }
+    }*/
 
     /**
      * Getter method for menu2
      * @return menu2.
      */
-    @ModelAttribute("menu2")
+    /*@ModelAttribute("menu2")
     public Map<String, String> getMenu2() {
         return menu2;
-    }
+    }*/
 
     /**
      * Getter method for features;
      * @return features.
      */
-    @ModelAttribute("features")
+    /*@ModelAttribute("features")
     public List<String> getFeatures() {
         return features;
-    }
+    }*/
 
     /**
      * Getter method for groupNames;
      * @return groupNames.
      */
-    @ModelAttribute("groupNames")
+    /*@ModelAttribute("groupNames")
     public List<String> getGroupNames() {
         return groupNames;
-    }
+    }*/
 
     /**
      * Getter method for hasFilter;
      * @return hasFilter.
      */
-    @ModelAttribute("hasFilter")
+    /*@ModelAttribute("hasFilter")
     public boolean hasFilter() {
         return hasFilter;
-    }
+    }*/
 
     /**
      * Getter method for hitNames;
      * @return hitNames.
      */
-    @ModelAttribute("hits")
+    /*@ModelAttribute("hits")
     public List<String> getHitNames() {
         return hitNames;
-    }
+    }*/
 
     /**
      * Getter method for aggValues;
      * @return aggValues.
      */
-    @ModelAttribute("aggValues")
+    /*@ModelAttribute("aggValues")
     public List<String> getAggValues() {
         return aggValues;
-    }
-    @ModelAttribute("omeroURL")
+    }*/
+    /*@ModelAttribute("omeroURL")
     public String getOmeroURL() {
         return omeroURL;
-    }
+    }*/
 
     /**
      * Method for mapping the starting page.
@@ -188,6 +214,9 @@ public class MineotaurController {
 
     @RequestMapping("/share")
     public String query(Model model, @RequestParam String type, @RequestParam String content) {
+        if (model == null || type == null || content == null || "".equals(type) || "".equals(content)) {
+            throw new IllegalArgumentException();
+        }
         model.addAttribute("content", content);
         model.addAttribute("type", type);
         model.addAttribute("toDecode", true);
@@ -197,6 +226,9 @@ public class MineotaurController {
 
     @RequestMapping("/embed")
     public String embed(Model model, @RequestParam MultiValueMap<String, String> params) {
+        if (model == null || params == null || params.size() == 0) {
+            throw new IllegalArgumentException();
+        }
         model = StringUtils.decodeURL(model, params, groupNames);
         String type = (String) model.asMap().get("type");
         List<Map<String, Object>> dataPoints;
@@ -214,6 +246,9 @@ public class MineotaurController {
 
     @RequestMapping("/decode")
     public @ResponseBody List<Map<String, Object>> decodeQuery(Model model, @RequestParam MultiValueMap<String, String> params) {
+        if (model == null || params == null || params.size() == 0) {
+            throw new IllegalArgumentException();
+        }
         model = StringUtils.decodeURL(model, params, groupNames);
         String type = (String) model.asMap().get("type");
         switch (type) {
@@ -248,7 +283,9 @@ public class MineotaurController {
                                                                                       @RequestParam(required = false) List<String> mapValuesProp1,
                                                                                       @RequestParam String[] hitCheckbox,
                                                                                       @RequestParam(required = false) List<String> mapValuesProp2) {
-
+        if (model == null || geneList == null || geneList.length == 0 || prop1 == null || "".equals(prop1) || prop2 == null || "".equals(prop2) || aggProp1 == null || "".equals(aggProp1) || aggProp2 == null || "".equals(aggProp2)|| hitCheckbox == null || hitCheckbox.length == 0) {
+            throw new IllegalArgumentException();
+        }
         List<Label> hitLabels = manageHitCheckbox(hitCheckbox);
         Map<String, Object> map = model.asMap();
         // TODO: fix it!
@@ -260,6 +297,7 @@ public class MineotaurController {
         return dataPoints;
     }
     protected List<Map<String, Object>> getGenewiseScatterplotData(String[] geneList, String prop1, String prop2, String aggProp1, List<String> mapValuesProp1, String aggProp2, List<String> mapValuesProp2, List<Label> hitLabels) {
+
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
 
@@ -451,13 +489,16 @@ public class MineotaurController {
         return dataPoints;
     }
 
-    protected List<Map<String, Object>> getCellwiseDistributionData(String prop1, List<String> mapValues, Node strain) {
+    protected List<Map<String, Object>> getCellwiseDistributionData(String prop1, List<String> filter, Node strain) {
+        if (strain == null || prop1 == null || "".equals(prop1) || filter == null || filter.isEmpty())  {
+            throw new IllegalArgumentException();
+        }
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
             List<String> actualLabels = getActualLabels(allHitLabels, strain);
             double[] xArr;
             if (hasFilter) {
-                xArr = getFilteredArrayData(strain, prop1, "", mapValues);
+                xArr = getFilteredArrayData(strain, prop1, "", filter);
             }
             else {
                 xArr = getArrayData(strain, prop1, "");
@@ -477,6 +518,9 @@ public class MineotaurController {
     }
 
     protected double[] getArrayData(Node strain, String prop1, String genename) {
+        if (strain == null || prop1 == null || "".equals(prop1) || genename == null || "".equals(genename))  {
+            throw new IllegalArgumentException();
+        }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1+"_ARRAY")).iterator();
         if (!prop1Iterator.hasNext()) {
             throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
@@ -490,6 +534,9 @@ public class MineotaurController {
     }
 
     protected double[] getFilteredArrayData(Node strain, String prop1, String genename, List<String> filter) {
+        if (strain == null || prop1 == null || "".equals(prop1) ||  filter == null || filter.isEmpty())  {
+            throw new IllegalArgumentException();
+        }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1+"_ARRAY")).iterator();
         Mineotaur.LOGGER.info(prop1 + ": " + prop1Iterator.hasNext());
         Node node = null;
@@ -524,6 +571,9 @@ public class MineotaurController {
     }
 
     protected Double getFilteredAggregatedData(Node strain, String prop1, String genename, String aggregate, List<String> filter) {
+        if (strain == null || prop1 == null || "".equals(prop1) || genename == null || "".equals(genename) || aggregate == null || "".equals(aggregate) || filter == null || filter.isEmpty())  {
+            throw new IllegalArgumentException();
+        }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
         Node node = null;
         while (prop1Iterator.hasNext()) {
@@ -552,6 +602,9 @@ public class MineotaurController {
     }
 
     protected Double getAggregatedData(Node strain, String prop1, String genename, String aggProp1) {
+        if (strain == null || prop1 == null || "".equals(prop1) || genename == null || "".equals(genename) || aggProp1 == null || "".equals(aggProp1)) {
+            throw new IllegalArgumentException();
+        }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
         if (!prop1Iterator.hasNext()) {
             Mineotaur.LOGGER.info("There is no node stored for strain " + genename + " for property " + prop1);
@@ -572,6 +625,9 @@ public class MineotaurController {
      * @return The list of labels.
      */
     private List<Label> manageHitCheckbox(String[] hitCheckbox) {
+        if (hitCheckbox == null || hitCheckbox.length == 0) {
+            throw new IllegalArgumentException();
+        }
         List<Label> hitLabels = new ArrayList<>();
         for (String hit : hitCheckbox) {
             hitLabels.add(hitsByName.get(hit));
@@ -586,6 +642,9 @@ public class MineotaurController {
      * @return The list of label names.
      */
     private List<String> getActualLabels(List<Label> hitLabels, Node strain) {
+        if (hitLabels == null || hitLabels.size() == 0 || strain == null) {
+            throw new IllegalArgumentException();
+        }
         List<String> actualLabels = new ArrayList<>();
         for (Label label : hitLabels) {
             if (strain.hasLabel(label)) {
@@ -598,6 +657,9 @@ public class MineotaurController {
 
     public @ResponseBody
     List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model) {
+        if (model == null) {
+            throw new IllegalArgumentException();
+        }
         Map<String, Object> map = model.asMap();
         List<String> mapValuesProp1 = getMapValues(map.get("mapValuesCWDist"));
         return getDistributionDataCellwiseJSON(model, (String) map.get("propCWDist"), (String) map.get("geneCWDist"), mapValuesProp1);
@@ -605,6 +667,9 @@ public class MineotaurController {
 
     public @ResponseBody
     List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model) {
+        if (model == null) {
+            throw new IllegalArgumentException();
+        }
         Map<String, Object> map = model.asMap();
         String[] hitCheckbox;
         Object hit = map.get("hitCheckboxGWDist");
@@ -619,11 +684,17 @@ public class MineotaurController {
 
     public @ResponseBody
     List<Map<String, Object>> getScatterPlotDataCellJSONSeparate(Model model) {
+        if (model == null) {
+            throw new IllegalArgumentException();
+        }
         Map<String, Object> map = model.asMap();
         return cellwiseScatterJSON(model, ((String) map.get("cellwiseProp1")), ((String) map.get("cellwiseProp2")), ((List<String>) map.get("mapValuesCellwiseProp1")), ((List<String>) map.get("mapValuesCellwiseProp2")), ((String) map.get("geneCWProp1")));
     }
 
     private List<String> getMapValues(Object o) {
+        if (o == null) {
+            throw new IllegalArgumentException();
+        }
         List mapValues = null;
         if (o instanceof String[]) {
             mapValues = Arrays.asList((String[])o);
@@ -637,6 +708,9 @@ public class MineotaurController {
 
     public @ResponseBody
     List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model) {
+        if (model == null) {
+            throw new IllegalArgumentException();
+        }
         Map<String, Object> map = model.asMap();
         System.out.println(map.toString());
         String[] geneList = ((String[]) map.get("geneList"));
