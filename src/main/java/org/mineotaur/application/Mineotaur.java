@@ -21,13 +21,14 @@ package org.mineotaur.application;
 import org.apache.commons.cli.*;
 
 import org.mineotaur.importer.DatabaseGenerator;
-import org.mineotaur.importer.ImportFromFile;
-import org.mineotaur.importer.ImportFromOmero;
+import org.mineotaur.importer.DatabaseGeneratorFromFile;
+import org.mineotaur.importer.DatabaseGeneratorFromOmero;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -66,11 +67,12 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
             }
             else if (line.hasOption("import")) {
                 DatabaseGenerator gen;
+                Mineotaur.LOGGER.info(Arrays.toString(args));
                 if (args.length == 4) {
-                    gen = new ImportFromFile(args[1], args[2], args[3]);
+                    gen = new DatabaseGeneratorFromFile(args[1], args[2], args[3]);
                 }
                 else if (args.length == 5) {
-                    gen = new ImportFromOmero(args[1], args[2], args[3], Long.valueOf(args[4]));
+                    gen = new DatabaseGeneratorFromOmero(args[1], args[2], args[3], Long.valueOf(args[4]));
                 }
                 else {
                     throw new UnsupportedOperationException("The number of arguments must be 3 (if importing from files) or 4 (if importing from Omero).");

@@ -53,23 +53,24 @@ public abstract class DatabaseGenerator {
     protected final Map<String, Map<String, RelationshipType>> relationships = new HashMap<>();
     protected Label groupLabel;
     protected Label descriptiveLabel;
-    protected final Properties mineotaurProperties = new Properties();
     protected String totalMemory;
-    protected String cache;
+    protected String cache = "none";
     protected boolean toPrecompute;
     protected final List<String> filterProps = new ArrayList<>();
     protected int limit;
-    protected BufferedReader br;
     protected boolean overwrite;
-    protected int relationshipCount;
-    protected Label precomputed;
+    protected Label precomputedLabel;
+    protected String omero;
     protected final Label wildTypeLabel = DynamicLabel.label("Wild type");
 
 
     /**
      * Method for creating a directory for the configuration files.
      */
-    protected void createDirs() {
+    protected void createDirs(String name, String confDir, boolean overwrite) {
+        if (name == null || "".equals(name) || confDir == null || "".equals(confDir)) {
+            throw new IllegalArgumentException();
+        }
         FileUtils.createDir(name, overwrite);
         FileUtils.createDir(confDir, overwrite);
     }
@@ -79,7 +80,14 @@ public abstract class DatabaseGenerator {
      *
      * @param rels A string containing the names. Each relationship should be separated by a ',', while the nodes should be separated by '-'.
      */
-    protected void createRelationships(String rels) {
+    protected Map<String, Map<String, RelationshipType>> createRelationshipTypes(String rels) {
+        if (rels == null || "".equals(rels)) {
+            throw new IllegalArgumentException();
+        }
+        if (!rels.matches("(\\w+\\-{1}\\w+,*)+")) {
+            throw new IllegalArgumentException("Relationships string is in wrong format. It should be: XXX-XXX[,...]");
+        }
+        Map<String, Map<String, RelationshipType>> relationships = new HashMap<>();
         String[] terms = rels.split(",");
         for (String s : terms) {
             String[] objects = s.split("-");
@@ -90,13 +98,19 @@ public abstract class DatabaseGenerator {
             }
             map.put(objects[1], DynamicRelationshipType.withName(objects[0] + "_AND_" + objects[1]));
         }
-        relationshipCount = relationships.size();
+        return relationships;
     }
 
     /**
      * Starts the database. If there was no database in the confDir present, a new instance is created.
      */
-    protected void startDB() {
+    protected void startDB(String dbPath, String totalMemory, String cache) {
+        if (dbPath == null || "".equals(dbPath) || totalMemory == null || "".equals(totalMemory) || cache == null || "".equals(cache)) {
+            throw new IllegalArgumentException();
+        }
+        if (!totalMemory.matches("\\dG")) {
+            throw new IllegalArgumentException("The total memory string is in wrong format. It should be: [0-9]G");
+        }
         db = GraphDatabaseUtils.createNewGraphDatabaseService(dbPath, totalMemory, cache);
         ggo = GlobalGraphOperations.at(db);
     }
@@ -104,8 +118,10 @@ public abstract class DatabaseGenerator {
     /**
      * Method to put filter property on the relationship edges between group and descriptive nodes.
      */
-    protected void createFilters() {
-        Mineotaur.LOGGER.info("Creating filters...");
+    protected void createFilters(GraphDatabaseService db, GlobalGraphOperations ggo, Label groupLabel, Label descriptiveLabel, RelationshipType rt, List<String> filterProps, int limit) {
+        if (db == null || ggo == null || groupLabel == null || descriptiveLabel == null || rt== null || filterProps == null || filterProps.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         int nodeCount = 0;
         Transaction tx = null;
         try {
@@ -114,7 +130,7 @@ public abstract class DatabaseGenerator {
             while (groups.hasNext()) {
                 Node group = groups.next();
                 nodeCount++;
-                Iterator<Relationship> rels = group.getRelationships(relationships.get(groupLabel.name()).get(descriptiveLabel.name())).iterator();
+                Iterator<Relationship> rels = group.getRelationships(rt).iterator();
                 while (rels.hasNext()) {
                     Relationship rel = rels.next();
                     Node descriptive = rel.getOtherNode(group);
@@ -149,7 +165,7 @@ public abstract class DatabaseGenerator {
      *
      * @param limit The maximum number of fetched Nodes per transactions.
      */
-    protected void precomputeOptimized(int limit) {
+    protected void precomputeOptimized(GraphDatabaseService db, GlobalGraphOperations ggo, Label groupLabel, Label descriptiveLabel, Label precomputed, Map<String, Map<String, RelationshipType>> relationships, List<String> filterProps, String group, String descriptive, int limit) {
         int count = 0;
         Transaction tx = null;
         try {
@@ -251,28 +267,16 @@ public abstract class DatabaseGenerator {
                     Set<String> uniqueFilters = valuesByFilter.keySet();
                     String[] uniqueArr = uniqueFilters.toArray(new String[uniqueFilters.size()]);
                     int filterSize = uniqueArr.length;
-                    double maxSize = Math.pow(2, filterSize);
-                    int set = 1;
-                    while (set < maxSize) {
 
+                    if (filterSize == 0) {
                         DescriptiveStatistics stat = new DescriptiveStatistics();
                         Node precomputedAgg = db.createNode(precomputed);
-                        Relationship aggRel = precomputedAgg.createRelationshipTo(node, DynamicRelationshipType.withName(s));
-                        List<String> actualFilters = new ArrayList<>();
-                        for (int i = 0; i < filterSize; ++i) {
-                            if (((set >> i) & 1) == 1) {
-                                List<Double> v = valuesByFilter.get(uniqueArr[i]);
-                                actualFilters.add(uniqueArr[i]);
-                                for (Double d : v) {
-                                    if (!Double.isNaN(d)) {
-                                        stat.addValue(d);
-                                    }
+                        precomputedAgg.createRelationshipTo(node, DynamicRelationshipType.withName(s));
 
-                                }
-                            }
+                        List<Double> vals = features.get(s);
+                        for (Double d: vals) {
+                            stat.addValue(d);
                         }
-
-                        aggRel.setProperty("filter", actualFilters.toArray(new String[actualFilters.size()]));
                         precomputedAgg.setProperty("Average", stat.getMean());
                         precomputedAgg.setProperty("Minimum", stat.getMin());
                         precomputedAgg.setProperty("Maximum", stat.getMax());
@@ -280,8 +284,41 @@ public abstract class DatabaseGenerator {
                         precomputedAgg.setProperty("Median", stat.getPercentile(50));
                         precomputedAgg.setProperty("Count", stat.getN());
                         Mineotaur.LOGGER.info("Created aggregated node for property " + s);
-                        set += 1;
                     }
+                    else {
+                        double maxSize = Math.pow(2, filterSize);
+                        int set = 1;
+                        while (set < maxSize) {
+
+                            DescriptiveStatistics stat = new DescriptiveStatistics();
+                            Node precomputedAgg = db.createNode(precomputed);
+                            Relationship aggRel = precomputedAgg.createRelationshipTo(node, DynamicRelationshipType.withName(s));
+                            List<String> actualFilters = new ArrayList<>();
+                            for (int i = 0; i < filterSize; ++i) {
+                                if (((set >> i) & 1) == 1) {
+                                    List<Double> v = valuesByFilter.get(uniqueArr[i]);
+                                    actualFilters.add(uniqueArr[i]);
+                                    for (Double d : v) {
+                                        if (!Double.isNaN(d)) {
+                                            stat.addValue(d);
+                                        }
+
+                                    }
+                                }
+                            }
+
+                            aggRel.setProperty("filter", actualFilters.toArray(new String[actualFilters.size()]));
+                            precomputedAgg.setProperty("Average", stat.getMean());
+                            precomputedAgg.setProperty("Minimum", stat.getMin());
+                            precomputedAgg.setProperty("Maximum", stat.getMax());
+                            precomputedAgg.setProperty("Standard deviation", stat.getStandardDeviation());
+                            precomputedAgg.setProperty("Median", stat.getPercentile(50));
+                            precomputedAgg.setProperty("Count", stat.getN());
+                            Mineotaur.LOGGER.info("Created aggregated node for property " + s);
+                            set += 1;
+                        }
+                    }
+
                 }
             }
         } finally {
@@ -298,39 +335,40 @@ public abstract class DatabaseGenerator {
      *
      * @param db The GraphDatabaseService instance.
      */
-    protected void storeGroupnames(GraphDatabaseService db) {
+    protected List<String> generateGroupnameList(GraphDatabaseService db, Label groupLabel, String groupName) {
+        Mineotaur.LOGGER.info(groupLabel.toString());
+        Mineotaur.LOGGER.info(groupName);
+        List<String> names = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
             GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> groups = ggo.getAllNodesWithLabel(groupLabel).iterator();
-            List<String> names = new ArrayList<>();
+
             while (groups.hasNext()) {
                 Node node = groups.next();
-                String gname = (String) node.getProperty(groupName, null);
-                if (gname != null) {
 
+                String gname = (String) node.getProperty(groupName, null);
+                Mineotaur.LOGGER.info(gname);
+                if (gname != null) {
                     names.add(gname);
-                } else {
-                    gname = (String) node.getProperty("reference", null);
-                    if (gname != null) {
-                        node.setProperty(groupName, gname);
-                        names.add(gname);
-                    }
+                }
+                else {
+                    throw new IllegalStateException("The property " + groupName + " does not exists for node.");
                 }
             }
             Collections.sort(names);
-            FileUtils.saveList(confDir + "mineotaur.groupNames", names);
+            //FileUtils.saveList(confDir + "mineotaur.groupNames", names);
             tx.success();
         }
+        return names;
     }
 
     /**
      * Method to store the filters in an external file.
      */
-    protected void storeFilters() {
+    protected List<String> generateFilterList(GraphDatabaseService db, GlobalGraphOperations ggo, Label descriptiveLabel, List<String> filterProps) {
+        List<String> filterValues = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
-            GlobalGraphOperations ggo = GlobalGraphOperations.at(db);
             Iterator<Node> iterator = ggo.getAllNodesWithLabel(descriptiveLabel).iterator();
-            List<String> filterValues = new ArrayList<>();
             while (iterator.hasNext()) {
                 Node node = iterator.next();
                 Iterator<String> props = node.getPropertyKeys().iterator();
@@ -346,9 +384,10 @@ public abstract class DatabaseGenerator {
                     }
                 }
             }
-            FileUtils.saveList(confDir + "mineotaur.filters", filterValues);
+            //FileUtils.saveList(confDir + "mineotaur.filters", filterValues);
             tx.success();
         }
+        return filterValues;
     }
 
     /**
@@ -356,29 +395,36 @@ public abstract class DatabaseGenerator {
      *
      * @throws IOException
      */
-    protected void generatePropertyFile() throws IOException {
-        if (filterProps == null || filterProps.isEmpty()) {
+    protected Properties generatePropertyFile(List<String> filterProps, String group, String groupName, String totalMemory, String dbPath,  String omero) {
+        Properties mineotaurProperties = new Properties();
+        boolean hasFilter = filterProps != null && !filterProps.isEmpty();
+        mineotaurProperties.put("hasFilters", String.valueOf(hasFilter));
+        if (hasFilter) {
+            mineotaurProperties.put("filterName", filterProps.get(0));
+        }
+
+        /*if (filterProps == null || filterProps.isEmpty()) {
             mineotaurProperties.put("hasFilters", "false");
         } else {
             mineotaurProperties.put("hasFilters", "true");
             mineotaurProperties.put("filterName", filterProps.get(0));
-            storeFilters();
-        }
-        if (toPrecompute) {
-            mineotaurProperties.put("query_relationship", precomputed.name());
+            generateFilterList(db, descriptiveLabel, filterProps, confDir);
+        }*/
+        /*if (toPrecompute) {
+            mineotaurProperties.put("query_relationship", precomputedLabel.name());
         } else {
             mineotaurProperties.put("query_relationship", relationships.get(groupLabel.name()).get(descriptiveLabel.name()));
-        }
+        }*/
         mineotaurProperties.put("group", group);
         mineotaurProperties.put("groupName", groupName);
         mineotaurProperties.put("total_memory", totalMemory);
         mineotaurProperties.put("db_path", dbPath);
         mineotaurProperties.put("cache", "soft");
-        if (properties.containsKey("omero")) {
-            mineotaurProperties.put("omero", properties.getString("omero_server"));
+        if (omero != null) {
+            mineotaurProperties.put("omero", omero);
         }
-        Mineotaur.LOGGER.info(mineotaurProperties.toString());
-        mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
+        return mineotaurProperties;
+        //mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
     }
 
 
@@ -411,14 +457,27 @@ public abstract class DatabaseGenerator {
 
     }
 
+    protected void storeConfigurationFiles() throws IOException {
+        FileUtils.saveList(confDir + "mineotaur.features", generateFeatureNameList());
+        FileUtils.saveList(confDir + "mineotaur.groupNames", generateGroupnameList(db, groupLabel, groupName));
+        if (filterProps != null && !filterProps.isEmpty()) {
+            FileUtils.saveList(confDir + "mineotaur.filters", generateFilterList(db, ggo, descriptiveLabel, filterProps));
+        }
+        FileUtils.saveList(confDir + "mineotaur.hitLabels", getHits());
+        generatePropertyFile(filterProps, group, groupName, totalMemory, dbPath, omero).store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
+    }
+
+    protected abstract List<String> getHits();
+
     /**
      * Method to store feature names in an external file.
+
      */
-    protected abstract void storeFeatureNames();
+    protected abstract List<String> generateFeatureNameList();
 
     public abstract void generateDatabase();
 
-    protected abstract void processData();
+    protected abstract void processData(GraphDatabaseService db);
 
     protected abstract void labelGenes();
 

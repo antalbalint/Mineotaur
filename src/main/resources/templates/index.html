@@ -42,7 +42,7 @@
 <!--data-main="js/mineotaur.js" -->
 <body>
 <!--<div id="genewise" class="tab-pane active">
-    <form id="graphForm" action="/getScatterPlotDataGeneJSONSeparate">
+    <form id="groupwiseScatterPlotForm" action="/getScatterPlotDataGeneJSONSeparate">
         <div class="row clearfix">
             <div class="col-md-8 column">
                 <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
@@ -67,7 +67,7 @@
                      th:include="fragments/query::genes (${groupNames}, 'List', true, true)"/>
             </div>
         </div>
-        <div th:include="fragments/query::formButtons ('graphForm')"/>
+        <div th:include="fragments/query::formButtons ('groupwiseScatterPlotForm')"/>
 
     </form>
 </div>
@@ -94,81 +94,81 @@
         </div>
         <div class="tab-content container">
             <div id="genewise" class="tab-pane active">
-                <form id="graphForm">
+                <form id="groupwiseScatterPlotForm">
                     <div class="row clearfix">
                         <div class="col-md-8 column">
                             <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::property('Property 1', 'prop1', ${features}, false)"/>
+                                     th:include="fragments/query::property('Property 1', 'prop1', ${dataDescriptor.features}, false)"/>
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::aggregation('aggProp1', ${aggValues})"/>
-                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop1')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::aggregation('aggProp1', ${dataDescriptor.aggValues})"/>
+                                <div class="col-md-4 column" th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'Prop1')" />
                             </div>
                             <div class="col-md-6 column" style="border-right: 1px solid #ccc;">
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::property('Property 2', 'prop2', ${features}, false)"/>
+                                     th:include="fragments/query::property('Property 2', 'prop2', ${dataDescriptor.features}, false)"/>
                                 <div class="col-md-4 column"
-                                     th:include="fragments/query::aggregation('aggProp2', ${aggValues})"/>
-                                <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'Prop2')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::aggregation('aggProp2', ${dataDescriptor.aggValues})"/>
+                                <div class="col-md-4 column"  th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'Prop2')"/>
                             </div>
                         </div>
                         <div class="col-md-4 column">
                             <div class="col-md-4 column" style="border-right: 1px solid #ccc;"
-                                 th:include="fragments/query::hits (${hits}, '', false)"/>
+                                 th:include="fragments/query::hits (${dataDescriptor.hitNames}, '', false)"/>
                             <div class="col-md-8 column"
-                                 th:include="fragments/query::genes (${groupNames}, 'List', true, true)"/>
+                                 th:include="fragments/query::genes (${dataDescriptor.groupNames}, 'List', true, true)"/>
                         </div>
                     </div>
-                    <div th:include="fragments/query::formButtons ('graphForm')"/>
+                    <div th:include="fragments/query::formButtons ('groupwiseScatterPlotForm')"/>
                 </form>
             </div>
 
 
-            <div id="genewiseDistribution" class="tab-pane">
-                <form id="genewiseDistributionForm">
+            <div id="groupwiseDistributionForm" class="tab-pane">
+                <form id="groupwiseDistributionFormForm">
                     <div class="row clearfix">
                         <div class="col-md-4 column" style="padding-right:0px; border-right: 1px solid #ccc;">
                             <div class="col-md-6 column"
-                                 th:include="fragments/query::property('Property', 'propGWDist', ${features}, false)"/>
+                                 th:include="fragments/query::property('Property', 'propGWDist', ${dataDescriptor.features}, false)"/>
                             <div class="col-md-6 column"
-                                 th:include="fragments/query::aggregation(aggGWDist, ${aggValues})"/>
+                                 th:include="fragments/query::aggregation(aggGWDist, ${dataDescriptor.aggValues})"/>
                         </div>
                         <div class="col-md-4 column"
                              style="padding-right:0px; padding-left:0px; border-right: 1px solid #ccc;">
-                            <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'GWDist')" th:if="${hasFilter}"/>
-                            <div class="col-md-6 column" th:include="fragments/query::hits (${hits}, 'GWDist', false)"/>
+                            <div class="col-md-6 column" th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'GWDist')"/>
+                            <div class="col-md-6 column" th:include="fragments/query::hits (${dataDescriptor.hitNames}, 'GWDist', false)"/>
                         </div>
 
                         <div class="col-md-4 column" style="padding-left:0px;">
                             <div class="col-md-4 column"
                                  th:include="fragments/query::distributionPlot ('genewise', true)"/>
                             <div class="col-md-8 column"
-                                 th:include="fragments/query::genes (${groupNames}, 'ListDist', true, true)"/>
+                                 th:include="fragments/query::genes (${dataDescriptor.groupNames}, 'ListDist', true, true)"/>
                         </div>
                     </div>
                     <br/>
 
-                    <div th:include="fragments/query::formButtons ('genewiseDistribution')"/>
+                    <div th:include="fragments/query::formButtons ('groupwiseDistributionForm')"/>
                 </form>
             </div>
 
             <div id="cellwise" class="tab-pane">
-                <form id="cellwiseGraphForm">
+                <form id="cellwisegroupwiseScatterPlotForm">
                     <div class="row clearfix">
                         <div class="col-md-12 column">
                             <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
                                 <div class="col-md-6 column"
-                                     th:include="fragments/query::property('Property 1', 'cellwiseProp1', ${features}, false)"/>
-                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'CellwiseProp1')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::property('Property 1', 'cellwiseProp1', ${dataDescriptor.features}, false)"/>
+                                <div class="col-md-6 column" th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'CellwiseProp1')" />
                             </div>
                             <div class="col-md-4 column" style="padding-right:20px; border-right: 1px solid #ccc;">
                                 <div class="col-md-6 column"
-                                     th:include="fragments/query::property('Property 2', 'cellwiseProp2', ${features}, false)"/>
-                                <div class="col-md-6 column" th:include="fragments/query::cellcycle(${filters}, 'CellwiseProp2')" th:if="${hasFilter}"/>
+                                     th:include="fragments/query::property('Property 2', 'cellwiseProp2', ${dataDescriptor.features}, false)"/>
+                                <div class="col-md-6 column" th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'CellwiseProp2')" />
                             </div>
                         </div>
                         <div class="col-md-4 column"
-                             th:include="fragments/query::genes (${groupNames}, 'CWProp1', false, false)"/>
+                             th:include="fragments/query::genes (${dataDescriptor.groupNames}, 'CWProp1', false, false)"/>
                     </div>
                     <div th:include="fragments/query::formButtons ('cellwiseGraph')"/>
                 </form>
@@ -178,10 +178,10 @@
                     <div class="row clearfix">
                         <div class="col-md-6 column">
                             <div class="col-md-4 column"
-                                 th:include="fragments/query::genes (${groupNames}, 'CWDist', false, false)"/>
+                                 th:include="fragments/query::genes (${dataDescriptor.groupNames}, 'CWDist', false, false)"/>
                             <div class="col-md-4 column"
-                                 th:include="fragments/query::property('Property', 'propCWDist', ${features}, false)"/>
-                            <div class="col-md-4 column" th:include="fragments/query::cellcycle(${filters}, 'CWDist')" th:if="${hasFilter}"/>
+                                 th:include="fragments/query::property('Property', 'propCWDist', ${dataDescriptor.features}, false)"/>
+                            <div class="col-md-4 column" th:if="${dataDescriptor.hasFilter}" th:include="fragments/query::cellcycle(${dataDescriptor.filters}, 'CWDist')" />
                         </div>
 
                         <div class="col-md-6 column"
@@ -198,13 +198,13 @@
                     <div class="col-md-4 column">
                         <div class="col-md-6 column" th:include="fragments/tools::plotTools"/>
                         <div class="col-md-6 column">
-                            <div  th:include="fragments/query::hits (${hits}, 'Filt', false)"/>
+                            <div  th:include="fragments/query::hits (${dataDescriptor.hitNames}, 'Filt', false)"/>
                             Allow multiple hit types <input type="checkbox" name="include" checked="true" />
                         </div>
                     </div>
                     <div class="col-md-4 column" th:include="fragments/tools::buttons"/>
                     <div class="col-md-4 column">
-                        <div th:include="fragments/query::genes (${groupNames}, 'Filt', true, false)" />
+                        <div th:include="fragments/query::genes (${dataDescriptor.groupNames}, 'Filt', true, false)" />
                         <a href="#" id="geneFiltLink">Filter</a> <a href="#" id="resetFiltLink">Reset filter</a>
                     </div>
 
@@ -227,8 +227,8 @@
 </div>
 
 <div class="mfp-hide col-md-12 column container" id="comparison" th:include="fragments/core::comparison" />
-<div th:include="fragments/core::contextMenu('menu_1',${menu1})"/>
-<div th:include="fragments/core::contextMenu('menu_2',${menu2})"/>
+<div th:include="fragments/core::contextMenu('menu_1',${dataDescriptor.menu1})"/>
+<div th:include="fragments/core::contextMenu('menu_2',${dataDescriptor.menu2})"/>
 <div th:include="fragments/core::startupScript"/>
 <!--<div class="footer">-->
     <!--<div class="container">-->

@@ -11,9 +11,6 @@ import org.neo4j.graphdb.schema.Schema;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by balintantal on 10/07/2015.
- */
 public class GraphDatabaseUtils {
 
     /**
@@ -24,6 +21,12 @@ public class GraphDatabaseUtils {
      * @return the GraphDatabaseService instance.
      */
     public static GraphDatabaseService createNewGraphDatabaseService(String dbPath, String totalMemory, String cache) {
+        if (dbPath == null || totalMemory == null || cache == null) {
+            throw new IllegalArgumentException();
+        }
+        if ("".equals(dbPath) || "".equals(totalMemory) || "".equals(cache)) {
+            throw new IllegalArgumentException("Empty string provided.");
+        }
         GraphDatabaseBuilder gdb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(dbPath);
         gdb.setConfig(GraphDatabaseSettings.all_stores_total_mapped_memory_size, totalMemory);
         gdb.setConfig(GraphDatabaseSettings.cache_type, cache);
@@ -36,7 +39,10 @@ public class GraphDatabaseUtils {
      * Registers a shutdown hook for the database (from neo4j.com).
      * @param graphDb The database.
      */
-    public static void registerShutdownHook(final GraphDatabaseService graphDb) {
+    protected static void registerShutdownHook(final GraphDatabaseService graphDb) {
+        if (graphDb == null) {
+            throw new IllegalArgumentException();
+        }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -52,6 +58,9 @@ public class GraphDatabaseUtils {
      * @param name The property ot be indexed
      */
     public static void createIndex(GraphDatabaseService db, Label label, String name) {
+        if (db == null || label == null || name == null || "".equals(name)) {
+            throw new IllegalArgumentException();
+        }
         IndexDefinition indexDefinition;
         try (Transaction tx = db.beginTx()) {
             Schema schema = db.schema();

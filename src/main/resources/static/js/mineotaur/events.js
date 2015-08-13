@@ -36,7 +36,7 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         var suffix = context.getSuffix(type);
         var mv = mapValues + suffix;
 
-        if (type === 'genewiseScatter' || type === 'cellwiseScatter') {
+        if (type === 'groupwiseScatterplot' || type === 'cellwiseScatter') {
             var timePoints1 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop1') + ')';
             console.log(mv + 'Prop1');
             console.log(timePoints1);
@@ -67,7 +67,7 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
             console.log(prop2);
             context.setProperties([prop1, prop2]);
             context.setLegends([prop1Val, prop2Val]);
-            if (type == 'genewiseScatter') {
+            if (type == 'groupwiseScatterplot') {
                 var values = $("#geneList").val();
                 //console.log(values);
                 $("#geneList").find(":checkbox").each(function (f) {
@@ -120,10 +120,10 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         /*getContext: function() {
             return context;
         },*/
-        genewiseScatterSuccess: function(data, prop1Pm, prop2Pm) {
-        	handleResponse(data, 'genewiseScatter', '#graph', 'chart', prop1Pm, prop2Pm);
-        	$('#graphFormSubmit').removeAttr("disabled");
-            $('#graphFormReset').removeAttr("disabled");
+        groupwiseScatterplotSuccess: function(data, prop1Pm, prop2Pm) {
+        	handleResponse(data, 'groupwiseScatterplot', '#graph', 'chart', prop1Pm, prop2Pm);
+        	$('#groupwiseScatterPlotFormSubmit').removeAttr("disabled");
+            $('#groupwiseScatterPlotFormReset').removeAttr("disabled");
             $('#transpose').prop('disabled', false);
                     	$('#regression').prop('disabled', false);
                     	$('#selection').prop('disabled', false);
@@ -186,8 +186,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         	context.setLegends([prop1Val, prop2Val]);*/
 
 
-        	/*type = 'genewiseScatter';
-        	context.setType('genewiseScatter');
+        	/*type = 'groupwiseScatterplot';
+        	context.setType('groupwiseScatterplot');
         	context.setTarget('#graph');
         	context.setId('chart');*/
 
@@ -196,8 +196,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         cellwiseScatterSuccess: function(data, prop1Pm, prop2Pm) {
             //ui.showRandomGraph(300000);
             handleResponse(data, 'cellwiseScatter', '#graph', 'chart', prop1Pm, prop2Pm);
-        	$('#cellwiseGraphFormSubmit').removeAttr("disabled");
-        	$('#cellwiseGraphFormReset').removeAttr("disabled");
+        	$('#cellwisegroupwiseScatterPlotFormSubmit').removeAttr("disabled");
+        	$('#cellwisegroupwiseScatterPlotFormReset').removeAttr("disabled");
         	context.setGenename($('#geneCWProp1').val());
         	$("#geneFilt").multiselect("disable");
             filters.forEach(function(f) {
@@ -216,12 +216,12 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
 
         },
 
-        genewiseDistributionSuccess: function(data, prop1Pm) {
+        groupwiseDistributionFormSuccess: function(data, prop1Pm) {
             handleResponse(data, $('#genewisePlotType').val(), '#graph', 'chart', prop1Pm);
         	/*ui.hideSpinner();
         	if (sharedLink) $.unblockUI();*/
-        	$('#genewiseDistributionFormSubmit').removeAttr("disabled");
-        	$('#genewiseDistributionFormReset').removeAttr("disabled");
+        	$('#groupwiseDistributionFormFormSubmit').removeAttr("disabled");
+        	$('#groupwiseDistributionFormFormReset').removeAttr("disabled");
         	/*data = util.shuffle(data);
         	ui.resetTools();
         	*//*points = JSON.parse(JSON.stringify(data));*//*

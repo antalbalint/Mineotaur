@@ -18,6 +18,9 @@ import java.util.zip.Inflater;
 public class StringUtils {
 
     public static String decompressString(String data) {
+        if (data == null || "".equals(data)) {
+            throw new IllegalArgumentException();
+        }
         String decompressed = null;
         byte[] byteData = Base64.getDecoder().decode(data);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(byteData.length)){
@@ -38,10 +41,15 @@ public class StringUtils {
         return decompressed;
     }
 
-    public static  Model decodeURL(Model model, MultiValueMap<String, String> params, List<String> groupNames) {
-
+    public static Model decodeURL(Model model, MultiValueMap<String, String> params, List<String> groupNames) {
+        if (model == null || params == null || groupNames == null || params.isEmpty() || groupNames.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        if (!params.containsKey("content")) {
+            throw new IllegalArgumentException("Params should contain content.");
+        }
         String data = params.get("content").get(0);
-        String decompressed = decompressString(data);
+        String decompressed = decompressString(data.replaceAll(" ","+"));
         String[] terms = decompressed.split(",");
         for (String term: terms) {
             String[] parts = term.split(":");

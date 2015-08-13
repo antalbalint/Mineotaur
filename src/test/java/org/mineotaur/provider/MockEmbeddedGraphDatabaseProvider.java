@@ -14,11 +14,10 @@ public class MockEmbeddedGraphDatabaseProvider extends GenericEmbeddedGraphDatab
         baseDir = _baseDir;
     }
 
-    protected GraphDatabaseService newDatabaseService() {
+    public static GraphDatabaseService newDatabaseService() {
         return new TestGraphDatabaseFactory().newImpermanentDatabase();
     }
 
-    @Override
     protected void preFecthGroupNames() {
 
     }

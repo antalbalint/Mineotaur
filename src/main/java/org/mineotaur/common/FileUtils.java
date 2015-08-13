@@ -64,9 +64,9 @@ public class FileUtils {
         if (file == null) {
             throw new IllegalArgumentException("File is null");
         }
-        if (!file.isFile()) {
+        /*if (!file.isFile()) {
             throw new IllegalArgumentException("Not a file.");
-        }
+        }*/
         if (list == null) {
             throw new IllegalArgumentException("List is null.");
         }

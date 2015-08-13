@@ -208,12 +208,12 @@ public class MineotaurController {
      * @return The requested page.
      */
     @RequestMapping("/")
-    public String start(Model model) {
+    protected String start(Model model) {
         return "index";
     }
 
     @RequestMapping("/share")
-    public String query(Model model, @RequestParam String type, @RequestParam String content) {
+    protected String query(Model model, @RequestParam String type, @RequestParam String content) {
         if (model == null || type == null || content == null || "".equals(type) || "".equals(content)) {
             throw new IllegalArgumentException();
         }
@@ -225,7 +225,7 @@ public class MineotaurController {
     }
 
     @RequestMapping("/embed")
-    public String embed(Model model, @RequestParam MultiValueMap<String, String> params) {
+    protected String embed(Model model, @RequestParam MultiValueMap<String, String> params) {
         if (model == null || params == null || params.size() == 0) {
             throw new IllegalArgumentException();
         }
@@ -234,8 +234,8 @@ public class MineotaurController {
         List<Map<String, Object>> dataPoints;
         switch (type) {
             case "cellwiseScatter": dataPoints = getScatterPlotDataCellJSONSeparate(model); break;
-            case "genewiseScatter": dataPoints = getScatterPlotDataGeneJSONSeparate(model); break;
-            case "genewiseDistribution": dataPoints = getDistributionDataGenewiseJSON(model); break;
+            case "groupwiseScatterplot": dataPoints = getScatterPlotDataGeneJSONSeparate(model); break;
+            case "groupwiseDistributionForm": dataPoints = getDistributionDataGenewiseJSON(model); break;
             case "cellwiseDistribution": dataPoints = getDistributionDataCellwiseJSON(model); break;
             default: throw new UnsupportedOperationException();
         }
@@ -245,7 +245,7 @@ public class MineotaurController {
     }
 
     @RequestMapping("/decode")
-    public @ResponseBody List<Map<String, Object>> decodeQuery(Model model, @RequestParam MultiValueMap<String, String> params) {
+    protected @ResponseBody List<Map<String, Object>> decodeQuery(Model model, @RequestParam MultiValueMap<String, String> params) {
         if (model == null || params == null || params.size() == 0) {
             throw new IllegalArgumentException();
         }
@@ -253,8 +253,8 @@ public class MineotaurController {
         String type = (String) model.asMap().get("type");
         switch (type) {
             case "cellwiseScatter": return getScatterPlotDataCellJSONSeparate(model);
-            case "genewiseScatter": return getScatterPlotDataGeneJSONSeparate(model);
-            case "genewiseDistribution": return getDistributionDataGenewiseJSON(model);
+            case "groupwiseScatterplot": return getScatterPlotDataGeneJSONSeparate(model);
+            case "groupwiseDistributionForm": return getDistributionDataGenewiseJSON(model);
             case "cellwiseDistribution": return getDistributionDataCellwiseJSON(model);
             default: throw new UnsupportedOperationException();
         }
@@ -273,8 +273,8 @@ public class MineotaurController {
      * @param mapValuesProp2 Checked filters for the first property.
      * @return A JSON object containing the data points.
      */
-    @RequestMapping("/genewiseScatterJSON")
-    public @ResponseBody List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model,
+    @RequestMapping("/groupwiseScatterplotJSON")
+    protected @ResponseBody List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model,
                                                                                       @RequestParam String[] geneList,
                                                                                       @RequestParam String prop1,
                                                                                       @RequestParam String prop2,
@@ -289,14 +289,14 @@ public class MineotaurController {
         List<Label> hitLabels = manageHitCheckbox(hitCheckbox);
         Map<String, Object> map = model.asMap();
         // TODO: fix it!
-        List<Map<String, Object>> dataPoints = getGenewiseScatterplotData(geneList, prop1, prop2, aggProp1, (List<String>) map.get("mapValuesProp1"), aggProp2, (List<String>) map.get("mapValuesProp2"), hitLabels);
+        List<Map<String, Object>> dataPoints = getGroupwiseScatterplotData(geneList, prop1, prop2, aggProp1, (List<String>) map.get("mapValuesProp1"), aggProp2, (List<String>) map.get("mapValuesProp2"), hitLabels);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("prop1", prop1);
         model.addAttribute("prop2", prop2);
         model.addAttribute("selectedGenes", geneList);
         return dataPoints;
     }
-    protected List<Map<String, Object>> getGenewiseScatterplotData(String[] geneList, String prop1, String prop2, String aggProp1, List<String> mapValuesProp1, String aggProp2, List<String> mapValuesProp2, List<Label> hitLabels) {
+    protected List<Map<String, Object>> getGroupwiseScatterplotData(String[] geneList, String prop1, String prop2, String aggProp1, List<String> mapValuesProp1, String aggProp2, List<String> mapValuesProp2, List<Label> hitLabels) {
 
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
@@ -352,23 +352,24 @@ public class MineotaurController {
      * @param hitCheckboxGWDist The selected hits.
      * @return A JSON object containing the data points.
      */
-    @RequestMapping("/genewiseDistributionJSON")
-    public @ResponseBody List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model,
+    @RequestMapping("/groupwiseDistributionFormJSON")
+    protected @ResponseBody List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model,
                                                                                    @RequestParam String[] geneListDist,
                                                                                    @RequestParam String propGWDist,
                                                                                    @RequestParam String aggGWDist,
                                                                                    @RequestParam(required = false) List<String> mapValuesGWDist,
                                                                                    @RequestParam String[] hitCheckboxGWDist) {
+
         List<Label> hitLabels = manageHitCheckbox(hitCheckboxGWDist);
         //TODO: fix it!
-        List<Map<String, Object>> dataPoints = getGenewiseDistributionData(geneListDist, propGWDist, aggGWDist, mapValuesGWDist, hitLabels);
+        List<Map<String, Object>> dataPoints = getgroupwiseDistributionFormData(geneListDist, propGWDist, aggGWDist, mapValuesGWDist, hitLabels);
         model.addAttribute("prop1", propGWDist);
         model.addAttribute("dataPoints", dataPoints);
         model.addAttribute("selectedGenes", geneListDist);
         return dataPoints;
     }
 
-    protected List<Map<String, Object>> getGenewiseDistributionData(String[] geneListDist, String prop1, String agg, List<String> mapValues, List<Label> hitLabels) {
+    protected List<Map<String, Object>> getgroupwiseDistributionFormData(String[] geneListDist, String prop1, String agg, List<String> mapValues, List<Label> hitLabels) {
         List<Map<String, Object>> dataPoints = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
             for (String geneName : geneListDist) {
@@ -418,7 +419,7 @@ public class MineotaurController {
      * @return A JSON object containing the data points.
      */
     @RequestMapping("/cellwiseScatterJSON")
-    public @ResponseBody List<Map<String, Object>> cellwiseScatterJSON(Model model,
+    protected @ResponseBody List<Map<String, Object>> cellwiseScatterJSON(Model model,
                                                                        @RequestParam String cellwiseProp1,
                                                                        @RequestParam String cellwiseProp2,
                                                                        @RequestParam(required = false) List<String> mapValuesCellwiseProp1,
@@ -477,7 +478,7 @@ public class MineotaurController {
      * @return A JSON object containing the data points.
      */
     @RequestMapping("/cellwiseDistributionJSON")
-    public @ResponseBody List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model,
+    protected @ResponseBody List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model,
                                                                                    @RequestParam String propCWDist,
                                                                                    @RequestParam String geneCWDist,
                                                                                    @RequestParam(required = false) List<String> mapValuesCWDist) {
@@ -490,7 +491,7 @@ public class MineotaurController {
     }
 
     protected List<Map<String, Object>> getCellwiseDistributionData(String prop1, List<String> filter, Node strain) {
-        if (strain == null || prop1 == null || "".equals(prop1) || filter == null || filter.isEmpty())  {
+        if (strain == null || prop1 == null || "".equals(prop1))  {
             throw new IllegalArgumentException();
         }
         List<Map<String, Object>> dataPoints = new ArrayList<>();
@@ -518,7 +519,7 @@ public class MineotaurController {
     }
 
     protected double[] getArrayData(Node strain, String prop1, String genename) {
-        if (strain == null || prop1 == null || "".equals(prop1) || genename == null || "".equals(genename))  {
+        if (strain == null || prop1 == null || "".equals(prop1))  {
             throw new IllegalArgumentException();
         }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1+"_ARRAY")).iterator();
@@ -598,7 +599,14 @@ public class MineotaurController {
             Mineotaur.LOGGER.warning("There is no node stored for strain " + genename + " for property " + prop1);
             return null;
         }
-        return (Double) node.getProperty(aggregate,null);
+        Object value = node.getProperty(aggregate,null);
+        if (value instanceof Double) {
+            return (Double) value;
+        }
+        else if (value instanceof Long) {
+            return ((Long) value).doubleValue();
+        }
+        throw new UnsupportedOperationException();
     }
 
     protected Double getAggregatedData(Node strain, String prop1, String genename, String aggProp1) {
@@ -606,15 +614,19 @@ public class MineotaurController {
             throw new IllegalArgumentException();
         }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
+        //Iterator<Relationship> prop1Iterator = strain.getRelationships().iterator();
+
         if (!prop1Iterator.hasNext()) {
-            Mineotaur.LOGGER.info("There is no node stored for strain " + genename + " for property " + prop1);
+//            Mineotaur.LOGGER.info("There is no node stored for strain " + genename + " for property " + prop1);
             return null;
         }
+
         Relationship rel = prop1Iterator.next();
-        if (prop1Iterator.hasNext()) {
-            Mineotaur.LOGGER.info("There are multiple nodes stored for strain " + genename + " for property " + prop1);
+        RelationshipType rt = rel.getType();
+        /*if (prop1Iterator.hasNext()) {
+//            Mineotaur.LOGGER.info("There are multiple nodes stored for strain " + genename + " for property " + prop1);
             return null;
-        }
+        }*/
         Node node = rel.getOtherNode(strain);
         return (Double) node.getProperty(aggProp1,null);
     }
@@ -655,17 +667,21 @@ public class MineotaurController {
     }
 
 
-    public @ResponseBody
+    protected @ResponseBody
     List<Map<String, Object>> getDistributionDataCellwiseJSON(Model model) {
         if (model == null) {
             throw new IllegalArgumentException();
         }
         Map<String, Object> map = model.asMap();
-        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesCWDist"));
+        List<String> mapValuesProp1 = null;
+        if ((hasFilter)) {
+            mapValuesProp1 = getMapValues(map.get("mapValuesCWDist"));
+        }
+
         return getDistributionDataCellwiseJSON(model, (String) map.get("propCWDist"), (String) map.get("geneCWDist"), mapValuesProp1);
     }
 
-    public @ResponseBody
+    protected @ResponseBody
     List<Map<String, Object>> getDistributionDataGenewiseJSON(Model model) {
         if (model == null) {
             throw new IllegalArgumentException();
@@ -682,7 +698,7 @@ public class MineotaurController {
         return getDistributionDataGenewiseJSON(model, (String[]) map.get("geneListDist"), (String) map.get("propGWDist"), (String) map.get("aggGWDist"), (List<String>) map.get("mapValuesGWDist"), hitCheckbox);
     }
 
-    public @ResponseBody
+    protected @ResponseBody
     List<Map<String, Object>> getScatterPlotDataCellJSONSeparate(Model model) {
         if (model == null) {
             throw new IllegalArgumentException();
@@ -694,6 +710,7 @@ public class MineotaurController {
     private List<String> getMapValues(Object o) {
         if (o == null) {
             throw new IllegalArgumentException();
+            //return null;
         }
         List mapValues = null;
         if (o instanceof String[]) {
@@ -706,19 +723,25 @@ public class MineotaurController {
         return mapValues;
     }
 
-    public @ResponseBody
+    protected @ResponseBody
     List<Map<String, Object>> getScatterPlotDataGeneJSONSeparate(Model model) {
         if (model == null) {
             throw new IllegalArgumentException();
         }
         Map<String, Object> map = model.asMap();
-        System.out.println(map.toString());
+        //System.out.println(map.toString());
         String[] geneList = ((String[]) map.get("geneList"));
         String prop1 = (String) map.get("prop1");
         String prop2 = (String) map.get("prop2");
         String aggProp1 = (String) map.get("aggProp1");
         String aggProp2 = (String) map.get("aggProp2");
-        List<String> mapValuesProp1 = getMapValues(map.get("mapValuesProp1"));
+        List<String> mapValuesProp1 = null;
+        List<String> mapValuesProp2 = null;
+
+        if (hasFilter) {
+            mapValuesProp1 =  getMapValues(map.get("mapValuesProp1"));
+            mapValuesProp2 =  getMapValues(map.get("mapValuesProp2"));
+        }
         Object hit =  map.get("hitCheckbox");
         String[] hitCheckbox;
         if (hit instanceof String) {
@@ -727,7 +750,6 @@ public class MineotaurController {
         else {
             hitCheckbox = ((String[]) hit);
         }
-        List<String> mapValuesProp2 = getMapValues(map.get("mapValuesProp2"));
         return getScatterPlotDataGeneJSONSeparate(model, geneList, prop1, prop2, aggProp1, aggProp2, mapValuesProp1, hitCheckbox, mapValuesProp2);
     }
 

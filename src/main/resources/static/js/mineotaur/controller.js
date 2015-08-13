@@ -1,4 +1,4 @@
-define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'pako',    'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap'],
+define(['mineotaur/events', 'mineotaur/ui', 'mineotaur/context', 'mineotaur/plots', 'mineotaur/util', 'pako',    'jquery', 'jquery.form', 'jquery-ui', 'jquery.magnific-popup','jquery.multiselect', 'jquery.multiselect.filter', 'jquery.jeegoocontext',   'jquery.history', 'bootstrap', 'chardinjs.min'],
 function (events, ui, context, plots, util, pako, $) {
 
     /*console.log(util);
@@ -87,6 +87,43 @@ function (events, ui, context, plots, util, pako, $) {
             console.log(btoa(compressed).length);*/
             return btoa(compressed);
         }
+
+        function formSubmit(type, prefix) {
+                data = {};
+                                                                        	    data['content'] = transformFormData(this,type);
+                                                                                context.setURL("content="+data['content']);
+                                                                                console.log(data);
+                                                                        	    /*context.setType('genewiseScatter');
+                                                                        	    queryString = $(this).formSerialize();
+                                                                                context.setURL(queryString);
+                                                                        	    */
+                                                                        	    $.ajax({
+                                                                                                                    url: "/decode",
+                                                                                                                    data: data,
+                                                                                                                    dataType: "json",
+                                                                                                                    type:"GET",
+                                                                                                                    beforeSend: function () {
+                                                                                                                                            			ui.showSpinner('spin');
+                                                                                                                                            			$('#' + prefix + 'FormSubmit').attr("disabled", "disabled");
+                                                                                                                                            			$('#' + prefix + 'FormReset').attr("disabled", "disabled");
+
+                                                                                                                                            		},
+                                                                                                                                            		// success identifies the function to invoke when the server response
+                                                                                                                                            		// has been received
+                                                                                                                                            		success: function(data) {
+                                                                                                                                            		    switch(type) {
+                                                                                                                                            		        case 'genewiseScatter': events.genewiseScatterSuccess(data)
+                                                                                                                                            		        case 'cellwiseScatter': events.cellwiseScatterSuccess(data)
+                                                                                                                                            		        }
+                                                                                                                                            		},
+                                                                                                                                            		error: function () {
+                                                                                                                                            			ui.formError('spin');
+                                                                                                                                            		}
+                                                                                                                    }
+                                                                                                                )
+
+                                                                                event.preventDefault();
+            }
     $(document).ready(function () {
 
 
@@ -115,6 +152,7 @@ function (events, ui, context, plots, util, pako, $) {
                 	}).bind('keyup', function () {
                 		context.setKeyDown(false);
                 	});
+                	$('body').chardinJs();
                 	$('.context_1').jeegoocontext('menu_1', {
                     		widthOverflowOffset: 0,
                     		heightOverflowOffset: 3,
@@ -182,6 +220,7 @@ function (events, ui, context, plots, util, pako, $) {
                                     context.setRangeBulk(plots.getRange(context.getData()));
                                     console.log(context.getRange());
                     				ui.showGraph();
+                    				$('#selection').prop('checked', false);
                     				break;
                     			default:
                     				return false;
@@ -216,7 +255,11 @@ function (events, ui, context, plots, util, pako, $) {
                     		//console.log(History.getState().title); // do something on statechange
                     	});
                     	//- See more at: http://blog.teamextension.com/onhashchange-jquery-hashchange-pushstate-and-history-js-1012#sthash.RLmY4eXl.dpuf
-
+                        $('#help').on('click', function(e) {
+						  e.preventDefault();
+						  $('body').chardinJs('toggle')
+//                                      return ($('body').data('chardinJs')).toggle();
+						});
                     	$("#geneList").multiselect({
                     		noneSelectedText: "Genes"
                     	}).multiselectfilter();
@@ -226,35 +269,35 @@ function (events, ui, context, plots, util, pako, $) {
                     	$("#geneFilt").multiselect({
                     		noneSelectedText: "Genes"
                     	}).multiselectfilter();
-//                        $('#graphForm').ajaxForm({
+//                        $('#groupwiseScatterPlotForm').ajaxForm({
 //                        		// dataType identifies the expected content type of the server response
 //                        		dataType: 'json',
 //                        		beforeSend: function (arr, $form, options) {
 //                        		console.log("button hit");
 //                        		ui.showSpinner('spin');
 //                                    //ui.spinner.spin(document.getElementById('spin'));
-//                        			$('#graphFormSubmit').attr("disabled", "disabled");
-//                        			$('#graphFormReset').attr("disabled", "disabled");
-//                        			queryString = $('#graphForm').formSerialize();
+//                        			$('#groupwiseScatterPlotFormSubmit').attr("disabled", "disabled");
+//                        			$('#groupwiseScatterPlotFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#groupwiseScatterPlotForm').formSerialize();
 //                                    context.setURL(queryString);
 //                        		},
 //                        		// success identifies the function to invoke when the server response
 //                        		// has been received
-//                        		success: function(data) {events.genewiseScatterSuccess(data)},
+//                        		success: function(data) {events.groupwiseScatterplotSuccess(data)},
 //                        		error: function () {
 //
 //                        				ui.formError('spin');
 //                        			}
 //
 //                        	});
-//                        	$('#cellwiseGraphForm').ajaxForm({
+//                        	$('#cellwisegroupwiseScatterPlotForm').ajaxForm({
 //                        		// dataType identifies the expected content type of the server response
 //                        		dataType: 'json',
 //                        		beforeSend: function () {
 //                        			ui.showSpinner('spin');
-//                        			$('#cellwiseGraphFormSubmit').attr("disabled", "disabled");
-//                        			$('#cellwiseGraphFormReset').attr("disabled", "disabled");
-//                        			queryString = $('#cellwiseGraphForm').formSerialize();
+//                        			$('#cellwisegroupwiseScatterPlotFormSubmit').attr("disabled", "disabled");
+//                        			$('#cellwisegroupwiseScatterPlotFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#cellwisegroupwiseScatterPlotForm').formSerialize();
 //                        			context.setURL(queryString);
 //                        		},
 //                        		// success identifies the function to invoke when the server response
@@ -264,19 +307,19 @@ function (events, ui, context, plots, util, pako, $) {
 //                        			ui.formError('spin');
 //                        		}
 //                        	});
-//                        	$('#genewiseDistributionForm').ajaxForm({
+//                        	$('#groupwiseDistributionFormForm').ajaxForm({
 //                        		// dataType identifies the expected content type of the server response
 //                        		dataType: 'json',
 //                        		beforeSend: function () {
 //                        			ui.showSpinner('spin');
-//                        			$('#genewiseDistributionFormSubmit').attr("disabled", "disabled");
-//                        			$('#genewiseDistributionFormReset').attr("disabled", "disabled");
-//                        			queryString = $('#genewiseDistributionForm').formSerialize();
+//                        			$('#groupwiseDistributionFormFormSubmit').attr("disabled", "disabled");
+//                        			$('#groupwiseDistributionFormFormReset').attr("disabled", "disabled");
+//                        			queryString = $('#groupwiseDistributionFormForm').formSerialize();
 //                        			context.setURL(queryString);
 //                        		},
 //                        		// success identifies the function to invoke when the server response
 //                        		// has been received
-//                        		success: function(data) {events.genewiseDistributionSuccess(data)},
+//                        		success: function(data) {events.groupwiseDistributionFormSuccess(data)},
 //                        		error: function () {
 //                        			ui.formError('spin');
 //                        		}
@@ -298,11 +341,11 @@ function (events, ui, context, plots, util, pako, $) {
 //                        			ui.formError('spin');
 //                        		}
 //                        	});
-$('#graphForm').submit(function(event){
+$('#groupwiseScatterPlotForm').submit(function(event){
                         	    data = {};
-                                                        	    data['content'] = transformFormData(this,'genewiseScatter');
+                                                        	    data['content'] = transformFormData(this,'groupwiseScatterplot');
                                                                 context.setURL("content="+data['content']);
-                                                        	    /*context.setType('genewiseScatter');
+                                                        	    /*context.setType('groupwiseScatterplot');
                                                         	    queryString = $(this).formSerialize();
                                                                 context.setURL(queryString);
                                                         	    console.log(data);*/
@@ -313,13 +356,13 @@ $('#graphForm').submit(function(event){
                                                                                                     type:"GET",
                                                                                                     beforeSend: function () {
                                                                                                                             			ui.showSpinner('spin');
-                                                                                                                            			$('#graphFormSubmit').attr("disabled", "disabled");
-                                                                                                                            			$('#graphFormReset').attr("disabled", "disabled");
+                                                                                                                            			$('#groupwiseScatterPlotFormSubmit').attr("disabled", "disabled");
+                                                                                                                            			$('#groupwiseScatterPlotFormReset').attr("disabled", "disabled");
 
                                                                                                                             		},
                                                                                                                             		// success identifies the function to invoke when the server response
                                                                                                                             		// has been received
-                                                                                                                            		success: function(data) {events.genewiseScatterSuccess(data)},
+                                                                                                                            		success: function(data) {events.groupwiseScatterplotSuccess(data)},
                                                                                                                             		error: function () {
                                                                                                                             			ui.formError('spin');
                                                                                                                             		}
@@ -328,7 +371,7 @@ $('#graphForm').submit(function(event){
 
                                                                 event.preventDefault();
                         	});
-                        	$('#cellwiseGraphForm').submit(function(event){
+                        	$('#cellwisegroupwiseScatterPlotForm').submit(function(event){
                         	    data = {};
                         	    data['content'] = transformFormData(this, 'cellwiseScatter');
                         	    context.setURL("content="+data['content']);
@@ -340,8 +383,8 @@ $('#graphForm').submit(function(event){
                                                                     type:"POST",
                                                                     beforeSend: function () {
                                                                                             			ui.showSpinner('spin');
-                                                                                            			$('#cellwiseGraphFormSubmit').attr("disabled", "disabled");
-                                                                                            			$('#cellwiseGraphFormReset').attr("disabled", "disabled");
+                                                                                            			$('#cellwisegroupwiseScatterPlotFormSubmit').attr("disabled", "disabled");
+                                                                                            			$('#cellwisegroupwiseScatterPlotFormReset').attr("disabled", "disabled");
 
                                                                                             		},
                                                                                             		// success identifies the function to invoke when the server response
@@ -365,9 +408,9 @@ $('#graphForm').submit(function(event){
                                 */
                                 event.preventDefault();
                         	});
-                        	$('#genewiseDistributionForm').submit(function(event){
+                        	$('#groupwiseDistributionFormForm').submit(function(event){
                                                     	    data = {};
-                                                    	    data['content'] = transformFormData(this, 'genewiseDistribution');
+                                                    	    data['content'] = transformFormData(this, 'groupwiseDistributionForm');
                                                     	    context.setURL("content="+data['content']);
                                                     	    console.log(data);
                                                     	    $.ajax({
@@ -377,8 +420,8 @@ $('#graphForm').submit(function(event){
                                                                                                 type:"POST",
                                                                                                 beforeSend: function () {
                                                                                                                         			ui.showSpinner('spin');
-                                                                                                                        			$('#genewiseDistributionFormSubmit').attr("disabled", "disabled");
-                                                                                                                        			$('#genewiseDistributionhFormReset').attr("disabled", "disabled");
+                                                                                                                        			$('#groupwiseDistributionFormFormSubmit').attr("disabled", "disabled");
+                                                                                                                        			$('#groupwiseDistributionFormhFormReset').attr("disabled", "disabled");
 
                                                                                                                         		},
                                                                                                                         		// success identifies the function to invoke when the server response
@@ -387,7 +430,7 @@ $('#graphForm').submit(function(event){
                                                                                                                         		/*queryString = this.url;
                                                                                                                                 context.setURL(queryString);*/
 
-                                                                                                                        		events.genewiseDistributionSuccess(data)},
+                                                                                                                        		events.groupwiseDistributionFormSuccess(data)},
 
                                                                                                                         		error: function () {
                                                                                                                         			ui.formError('spin');
@@ -402,14 +445,14 @@ $('#graphForm').submit(function(event){
                                                             */
                                                             event.preventDefault();
                                                     	});
-                        	/*$('#cellwiseGraphForm').ajaxForm({
+                        	/*$('#cellwisegroupwiseScatterPlotForm').ajaxForm({
                         		// dataType identifies the expected content type of the server response
                         		dataType: 'json',
                         		beforeSend: function () {
                         			ui.showSpinner('spin');
-                        			$('#cellwiseGraphFormSubmit').attr("disabled", "disabled");
-                        			$('#cellwiseGraphFormReset').attr("disabled", "disabled");
-                        			queryString = $('#cellwiseGraphForm').formSerialize();
+                        			$('#cellwisegroupwiseScatterPlotFormSubmit').attr("disabled", "disabled");
+                        			$('#cellwisegroupwiseScatterPlotFormReset').attr("disabled", "disabled");
+                        			queryString = $('#cellwisegroupwiseScatterPlotForm').formSerialize();
                         			context.setURL(queryString);
                         		},
                         		// success identifies the function to invoke when the server response
@@ -559,7 +602,8 @@ $('#graphForm').submit(function(event){
                         		util.downloadCSV.call(this, 'data.csv');
                         	});
                         	$('#share').on('click', function (event) {
-                        	    var string = window.location.href + "share?type=" + context.getType() + "&" + context.getURL();
+                        	    var string = window.location.origin + "/share?type=" + context.getType() + "&" + context.getURL();
+                        	    //var string = window.location.href + "share?type=" + context.getType() + "&" + context.getURL();
                                 $('#shareTextArea').val(string);
                                 $('#shareTextArea').attr('readonly', true);
                                 $('#shareModal').modal('show');
@@ -591,7 +635,7 @@ $('#graphForm').submit(function(event){
                             			}
                             			var row = util.createInfoRow(context.getProperty(0), arr);
                             			var type = context.getType();
-                            			if (type == 'genewiseScatter' || type == 'cellwiseScatter') {
+                            			if (type == 'groupwiseScatterplot' || type == 'cellwiseScatter') {
                             				arr = [];
                             				if (!select) {
                             					currentData.forEach(function (d) {
@@ -939,8 +983,8 @@ $('#graphForm').submit(function(event){
 							// has been received
 							success: function(data) {
 								switch (type) {
-									case 'genewiseScatter':
-										events.genewiseScatterSuccess(data);
+									case 'groupwiseScatterplot':
+										events.groupwiseScatterplotSuccess(data);
 										break;
 									case 'cellwiseScatter':
 										events.cellwiseScatterSuccess(data);
@@ -948,7 +992,7 @@ $('#graphForm').submit(function(event){
 									case 'genewiseHistogram':
 									case 'genewiseKDE':
 									case 'genewiseMultihistogram':
-										events.genewiseDistributionSuccess(data);
+										events.groupwiseDistributionFormSuccess(data);
 										break;
 
 									case 'cellwiseHistogram':

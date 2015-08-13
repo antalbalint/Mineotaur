@@ -18,6 +18,9 @@ require.config({
             'underscore': {
                   exports: '_'
                 },
+            
+            'chardinjs.min': ['jquery']
+
     }
 });
 

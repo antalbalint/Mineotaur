@@ -21,7 +21,7 @@ define(['underscore', 'pako'], function (_, pako) {
     var omeroURL;
     var omeroThumbnailURL;
     var omeroDetailURL;
-    var types = {  'genewiseScatter': 0,
+    var types = {  'groupwiseScatterplot': 0,
 
                                              'genewiseHistogram': 1,
                                              'genewiseMultiHistogram': 1,
@@ -33,7 +33,7 @@ define(['underscore', 'pako'], function (_, pako) {
     var sizes;
     var bitsForData;
     var parameters;
-    var suffix = {  'genewiseScatter': '',
+    var suffix = {  'groupwiseScatterplot': '',
                             'cellwiseScatter': 'Cellwise',
                             'genewiseHistogram': 'GWDist',
                             'genewiseMultiHistogram': 'GWDist',
@@ -138,7 +138,7 @@ define(['underscore', 'pako'], function (_, pako) {
         var prop1, prop2, aggProp1, aggProp2, stage1, stage2, hits, geneList;
         var temp;
         switch (type) {
-           case 'genewiseScatter':
+           case 'groupwiseScatterplot':
                 prop1 = tags['prop1'][0];
                 prop2 = tags['prop2'][0];
                 aggProp1 = tags['aggProp1'][0];
@@ -302,6 +302,7 @@ define(['underscore', 'pako'], function (_, pako) {
                                    console.log(btoa(geneBits).length);
                  console.log(compressed.length);
                  console.log(btoa(compressed).length);
+                 return compressed;
     }
     return {
         setLabels: function(_labels) {

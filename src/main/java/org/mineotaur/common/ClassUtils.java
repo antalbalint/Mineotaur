@@ -1,13 +1,13 @@
 package org.mineotaur.common;
 
 import javassist.*;
-import org.neo4j.graphdb.DynamicLabel;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
+import javassist.NotFoundException;
+import org.mineotaur.application.Mineotaur;
+import org.neo4j.graphdb.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +18,37 @@ public class ClassUtils {
 
     protected static final String JAVA_LANG_STRING = "java.lang.String";
 
-    public static Class createClass(ClassPool pool, String className, List<Integer> indices, String[] header, String[] dataTypes, List<String> idFields, String dataType) throws javassist.NotFoundException, CannotCompileException {
+    public static Class createClass(ClassPool pool,
+                                    String className,
+                                    List<Integer> indices,
+                                    String[] header,
+                                    String[] dataTypes,
+                                    String dataType,
+                                    String methodBody) throws javassist.NotFoundException, CannotCompileException {
+        if (pool == null || className == null || indices == null || header == null || dataTypes == null ||  dataType == null || methodBody == null) {
+            throw new IllegalArgumentException();
+        }
+        if (className.equals("")) {
+            throw new IllegalArgumentException("Class name is empty string.");
+        }
+        if (dataType.equals("")) {
+            throw new IllegalArgumentException("Data type is empty string.");
+        }
+        if (methodBody.equals("")) {
+            throw new IllegalArgumentException("Method body is empty string.");
+        }
+        if (indices.isEmpty()) {
+            throw new IllegalArgumentException("Index list is empty.");
+        }
+        if (header.length==0) {
+            throw new IllegalArgumentException("Header is empty.");
+        }
+        if (dataTypes.length==0) {
+            throw new IllegalArgumentException("Header is empty.");
+        }
         CtClass claz = pool.makeClass(className);
         for (Integer i : indices) {
+            System.out.println(i);
             CtClass type;
             if (dataTypes[i].equals(dataType)) {
                 type = CtClass.doubleType;
@@ -31,11 +59,8 @@ public class ClassUtils {
             field.setModifiers(Modifier.PUBLIC);
             claz.addField(field);
         }
-        if (idFields != null) {
-            String methodBody = buildEquals(claz.getName(), idFields);
-            CtMethod method = CtMethod.make(methodBody, claz);
-            claz.addMethod(method);
-        }
+        CtMethod method = CtMethod.make(methodBody, claz);
+        claz.addMethod(method);
         return claz.toClass();
     }
 
@@ -47,9 +72,20 @@ public class ClassUtils {
      * @return The text of the equals method.
      */
     public static String buildEquals(String name, List<String> idFields) {
+        if (name == null || idFields == null) {
+            Mineotaur.LOGGER.info(name);
+            Mineotaur.LOGGER.info(idFields.toString());
+            throw new IllegalArgumentException();
+        }
+        if (name.equals("")) {
+            throw new IllegalArgumentException("Class name is empty string.");
+        }
+        if (idFields.isEmpty()) {
+            throw new IllegalArgumentException("Id list is empty.");
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("public boolean equals(Object o) {\n");
-        sb.append("if (this == o) return true;\n" + "        if (o == null || getClass() != o.getClass()) return false;\n").append(name).append(" obj = (").append(name).append(") o;\n");
+        sb.append("if (this == o) return true;\nif (o == null || getClass() != o.getClass()) return false;\n").append(name).append(" obj = (").append(name).append(") o;\n");
         for (String id : idFields) {
             sb.append("if (!this.").append(id).append(".equals(obj.").append(id).append(")) return false;\n");
         }
@@ -65,14 +101,20 @@ public class ClassUtils {
      * @throws IllegalAccessException
      */
     public static Node createNode(Object o, Label label, GraphDatabaseService db) throws IllegalAccessException {
-        Class claz = o.getClass();
-        Node node = db.createNode(label);
-        Field[] fields = claz.getDeclaredFields();
-        for (Field f : fields) {
-            if (f.get(o) != null) {
-                node.setProperty(f.getName(), f.get(o));
+        if (o == null || label == null || db == null) {
+            throw new IllegalArgumentException();
+        }
+        Node node = null;
+        try (Transaction tx = db.beginTx()) {
+            Class claz = o.getClass();
+            node = db.createNode(label);
+            Field[] fields = claz.getFields();
+            for (Field f : fields) {
+                if (f.get(o) != null) {
+                    node.setProperty(f.getName(), f.get(o));
+                }
             }
-
+            tx.success();
         }
         return node;
     }
@@ -83,36 +125,37 @@ public class ClassUtils {
      * @return The retireved Node object or if not exists, a new one created by createNode.
      * @throws IllegalAccessException
      */
-    public static Node lookupObject(Object o, Map<String, List<Node>> nonUniqueNodes, GraphDatabaseService db) throws IllegalAccessException {
+    public static Node lookupObject(Object o, List<Node> storedNodes, GraphDatabaseService db) throws IllegalAccessException {
+        if (o == null || storedNodes == null || storedNodes.isEmpty() || db == null) {
+            throw new IllegalArgumentException();
+        }
         Class claz = o.getClass();
-        String className = claz.getName();
-        List<Node> storedNodes = nonUniqueNodes.get(className);
-        if (storedNodes == null) {
-            storedNodes = new ArrayList<>();
-            nonUniqueNodes.put(className, storedNodes);
-        }
-        for (Node node : storedNodes) {
-            boolean same = true;
-            Field[] fields = claz.getDeclaredFields();
-            for (Field f : fields) {
-                String key = f.getName();
-                Object nodeValue = node.getProperty(key, null);
-                Object storedValue = f.get(o);
-                if (storedValue == null && nodeValue == null) {
-                    continue;
+        try (Transaction tx = db.beginTx()) {
+            for (Node node : storedNodes) {
+                boolean same = true;
+                Field[] fields = claz.getFields();
+                for (Field f : fields) {
+                    String key = f.getName();
+                    Object nodeValue = node.getProperty(key, null);
+                    Object storedValue = f.get(o);
+                    if (storedValue == null && nodeValue == null) {
+                        continue;
+                    }
+                    if (nodeValue == null || storedValue == null || !nodeValue.equals(storedValue)) {
+                        same = false;
+                        break;
+                    }
                 }
-                if (nodeValue == null || storedValue == null || !nodeValue.equals(storedValue)) {
-                    same = false;
-                    break;
+                if (same) {
+                    tx.success();
+                    return node;
                 }
             }
-            if (same) {
-                return node;
-            }
+            tx.success();
         }
-        Node node = createNode(o, DynamicLabel.label(className), db);
-        storedNodes.add(node);
-        return node;
+        return null;
+        /*Node node =
+        return node;*/
     }
 
 }

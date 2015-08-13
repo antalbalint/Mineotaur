@@ -40,13 +40,13 @@ public interface GraphDatabaseProvider {
      * Method to access the GlobalGraphOperations instance.
      * @return the GlobalGraphOperations instance.
      */
-    GlobalGraphOperations getGlobalGraphOperations();
+    //GlobalGraphOperations getGlobalGraphOperations();
 
     /**
      * Method to access the context variables.
      * @return A map containing all the context vaiables.
      */
-    Map<String, Object> getContext();
+    Object getContext();
 
 }
 

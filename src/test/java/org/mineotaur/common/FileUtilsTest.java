@@ -2,14 +2,10 @@ package org.mineotaur.common;
 
 import static org.mockito.Mockito.*;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileReader;
 import java.util.List;
 
 import static org.testng.Assert.*;

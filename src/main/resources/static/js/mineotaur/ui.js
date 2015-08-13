@@ -99,7 +99,7 @@ define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'undersco
             }*/
             data = util.shuffle(data);
             labels = util.getLabels(data);
-            if (type == 'genewiseScatter' || type == 'cellwiseScatter') {
+            if (type == 'groupwiseScatterplot' || type == 'cellwiseScatter') {
                 /*var adjust = xRange === null && yRange === null;
                 console.log(adjust);*/
                 var content;

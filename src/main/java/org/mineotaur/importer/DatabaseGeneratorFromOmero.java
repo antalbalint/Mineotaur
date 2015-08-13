@@ -27,7 +27,7 @@ import java.util.*;
  * Created by balintantal on 06/07/2015.
  */
 
-public class ImportFromOmero extends DatabaseGenerator{
+public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
     private String hostName;
     private client client;
@@ -40,7 +40,7 @@ public class ImportFromOmero extends DatabaseGenerator{
     private Label experimentLabel;
     private String[] descriptiveHeader;
 
-    public ImportFromOmero(  String hostName, String userName, String password, Long screenId) {
+    public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
         this.userName = userName;
         this.hostName = hostName;
@@ -286,6 +286,12 @@ public class ImportFromOmero extends DatabaseGenerator{
     }
 
     @Override
+    protected List<String> getHits() {
+        return null;
+    }
+
+
+    @Override
     public void generateDatabase() {
         try {
             Mineotaur.LOGGER.info("Establishing connection with the Omero server.");
@@ -307,15 +313,15 @@ public class ImportFromOmero extends DatabaseGenerator{
             }
             if (toPrecompute) {
                 Mineotaur.LOGGER.info("Precomputing nodes.");
-                precomputed = DynamicLabel.label(group+COLLECTED);
+                precomputedLabel = DynamicLabel.label(group+COLLECTED);
                 precomputeOptimized(10000);
             }
             else {
                 mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
             }
             Mineotaur.LOGGER.info("Generating property files.");
-            storeFeatureNames();
-            storeGroupnames(db);
+            generateFeatureNameList();
+            generateGroupnameList(db);
             generatePropertyFile();
         } catch (IOException e) {
             e.printStackTrace(); */
@@ -333,15 +339,16 @@ public class ImportFromOmero extends DatabaseGenerator{
 
 
     @Override
-    protected void storeFeatureNames() {
+    protected List<String> generateFeatureNameList() {
         List features = Arrays.asList(descriptiveHeader);
         Collections.sort(features);
-        FileUtils.saveList(confDir + "mineotaur.features", features);
+        return features;
+        //FileUtils.saveList(confDir + "mineotaur.features", features);
     }
 
 
     @Override
-    public void processData() {
+    public void processData(GraphDatabaseService db) {
         Mineotaur.LOGGER.info("Loading annotation table.");
         try {
             getAnnotations("screenID", screen.getId());
@@ -360,7 +367,7 @@ public class ImportFromOmero extends DatabaseGenerator{
 
             dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
             addDummyValues();
-            startDB();
+            startDB(dbPath, totalMemory, cache);
 
         } catch (ServerError serverError) {
             serverError.printStackTrace();
@@ -431,17 +438,17 @@ public class ImportFromOmero extends DatabaseGenerator{
 
     }
 
-    protected void generatePropertyFile() throws IOException {
+    /*protected void generatePropertyFile() throws IOException {
         if (filterProps == null || filterProps.isEmpty()) {
             mineotaurProperties.put("hasFilters", "false");
         }
         else {
             mineotaurProperties.put("hasFilters", "true");
             mineotaurProperties.put("filterName", filterProps.get(0));
-            storeFilters();
+            generateFilterList();
         }
         if (toPrecompute) {
-            mineotaurProperties.put("query_relationship", precomputed.name());
+            mineotaurProperties.put("query_relationship", precomputedLabel.name());
         }
         else {
             mineotaurProperties.put("query_relationship", relationships.get(groupLabel.name()).get(descriptiveLabel.name()));
@@ -453,7 +460,7 @@ public class ImportFromOmero extends DatabaseGenerator{
         mineotaurProperties.put("total_memory", "4G");
         mineotaurProperties.put("omero", hostName);
         mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
-    }
+    }*/
 
 
 

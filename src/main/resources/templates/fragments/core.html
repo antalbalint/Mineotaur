@@ -99,7 +99,7 @@
             <a href="#genewise" data-toggle="tab">Gene-wise scatterplot</a>
         </li>
         <li>
-            <a href="#genewiseDistribution" data-toggle="tab">Gene-wise distribution</a>
+            <a href="#groupwiseDistributionForm" data-toggle="tab">Gene-wise distribution</a>
         </li>
 
         <li>
@@ -193,22 +193,24 @@ require.config({
 });
 
 require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur/events', 'pako', 'jquery', 'jquery.blockUI'], function(controller, context, ui, events, $) {
-        context.setLabels(/*[[${allLabels}]]*/null);
-    var sharedLink = /*[[${sharedLink}]]*/false;
-            console.log(sharedLink);
-            groupNames = /*[[${groupNames}]]*/null;
-            cellProperties = /*[[${features}]]*/null;
-            aggValues = /*[[${aggValues}]]*/null;
-            stages = /*[[${filters}]]*/null;
-            hits = /*[[${hits}]]*/null;
-            parameters = {'gene': groupNames, 'props': cellProperties, 'aggValues': aggValues, 'stages': stages, 'hits': hits};
 
-            context.setParameters(parameters);
-            omeroURL = /*[[${omeroURL}]]*/null;
+        var sharedLink = /*[[${sharedLink}]]*/false;
+            //console.log(sharedLink);
+            groupNames = /*[[${dataDescriptor.groupNames}]]*/null;
+            cellProperties = /*[[${dataDescriptor.features}]]*/null;
+            aggValues = /*[[${dataDescriptor.aggValues}]]*/null;
+            stages = /*[[${dataDescriptor.filters}]]*/null;
+            hits = /*[[${dataDescriptor.hitNames}]]*/null;
+            omeroURL = /*[[${dataDescriptor.omeroURL}]]*/null;
             if (omeroURL != null) {
                 console.log(omeroURL);
                 context.setOmeroURL(omeroURL);
             }
+            context.setLabels(hits);
+            parameters = {'gene': groupNames, 'props': cellProperties, 'aggValues': aggValues, 'stages': stages, 'hits': hits};
+
+            context.setParameters(parameters);
+
     var toDecode = /*[[${toDecode}]]*/ false;
     if (toDecode) {
         type = /*[[${type}]]*/ null;
@@ -240,14 +242,14 @@ require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur
                 context.setId('chart');
                 ui.showSpinner('spin');
                 $.blockUI();
-                if (type == 'genewiseScatter') {
-                    events.genewiseScatterSuccess(data,prop1,prop2);
+                if (type == 'groupwiseScatterplot') {
+                    events.groupwiseScatterplotSuccess(data,prop1,prop2);
                 }
                 else if (type == 'cellwiseScatter') {
                     events.cellwiseScatterSuccess(data,prop1,prop2);
                 }
                 else if (type == 'genewiseHistogram' || type == 'genewiseMultiHistogram' || type == 'genewiseKDE') {
-                    events.genewiseDistributionSuccess(data,prop1);
+                    events.groupwiseDistributionFormSuccess(data,prop1);
                 }
                 else if (type == 'cellwiseHistogram' || type == 'cellwiseKDE') {
                     events.cellwiseDistributionSuccess(data,prop1);
