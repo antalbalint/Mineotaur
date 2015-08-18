@@ -14,6 +14,7 @@ import static org.testng.Assert.*;
 /**
  * Created by balintantal on 01/09/2014.
  */
+@Test(groups = {"unit"})
 public class FileUtilsTest {
 
     private String dirName = "testDir";

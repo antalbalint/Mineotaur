@@ -25,14 +25,15 @@ import static org.testng.Assert.*;
 /**
  * Created by balintantal on 22/07/2015.
  */
+@Test(groups = {"unit"})
 @PrepareForTest(value = {FileUtils.class, GraphDatabaseUtils.class, GlobalGraphOperations.class})
 public class DatabaseGeneratorTest extends PowerMockTestCase {
 
-    protected DatabaseGenerator dg;
+    protected DatabaseGenerator dg = new MockDatabaseGenerator();
     protected String name = "test";
     protected String confDir = "conf";
     protected boolean overwrite = false;
-    protected String dbPath = name+"/db";
+    protected String dbPath = name+File.separator+"db";
     protected String totalMemory = "4G";
     protected String cache = "none";
     protected int limit = (int) DefaultProperty.LIMIT.getValue();

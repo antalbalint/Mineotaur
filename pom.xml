@@ -28,6 +28,24 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <groups>unit</groups>
+                    <reuseForks>false</reuseForks>
+                    <forkCount>1</forkCount>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-testng</artifactId>
+                        <version>2.18.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
@@ -91,7 +109,7 @@
             <artifactId>testng</artifactId>
             <version>6.9.4</version>
             <scope>test</scope>
-            <classifier>jdk15</classifier>
+            <!--<classifier>jdk15</classifier>-->
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
@@ -209,22 +227,27 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-core</artifactId>
             <version>1.6.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
             <version>1.6.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-testng</artifactId>
             <version>1.6.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.0.31-beta</version>
+            <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>

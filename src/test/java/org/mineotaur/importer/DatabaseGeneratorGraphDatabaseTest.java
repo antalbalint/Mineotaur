@@ -3,6 +3,7 @@ package org.mineotaur.importer;
 import org.mineotaur.provider.MockEmbeddedGraphDatabaseProvider;
 import org.neo4j.graphdb.*;
 import org.neo4j.tooling.GlobalGraphOperations;
+import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -16,7 +17,8 @@ import static org.testng.Assert.assertTrue;
 /**
  * Created by balintantal on 05/08/2015.
  */
-public class DatabaseGeneratorGraphDatabaseTest {
+@Test(groups = {"unit"})
+public class DatabaseGeneratorGraphDatabaseTest{
 
     protected DatabaseGenerator dg = new MockDatabaseGenerator();
 
@@ -35,7 +37,7 @@ public class DatabaseGeneratorGraphDatabaseTest {
         RelationshipType relationshipType = mock(RelationshipType.class);
         List<String> filterProps = mock(List.class);
         List zeroList = mock(List.class);
-        when(zeroList.size()).thenReturn(0);
+        when(zeroList.isEmpty()).thenReturn(true);
         Map zeroMap = mock(Map.class);
         when(zeroMap.size()).thenReturn(0);
         Object[][] params = {
@@ -44,7 +46,9 @@ public class DatabaseGeneratorGraphDatabaseTest {
                 {db, ggo, null, descriptiveLabel, relationshipType, filterProps, limit},
                 {db, ggo, groupLabel, null, relationshipType, filterProps, limit},
                 {db, ggo, groupLabel, descriptiveLabel, null, filterProps, limit},
-                {db, ggo, groupLabel, descriptiveLabel, zeroMap, filterProps, limit},
+/*
+                {db, ggo, groupLabel, descriptiveLabel, relationshipType, filterProps, limit},
+*/
                 {db, ggo, groupLabel, descriptiveLabel, relationshipType, null, limit},
                 {db, ggo, groupLabel, descriptiveLabel, relationshipType, zeroList, limit},
         };
@@ -114,7 +118,7 @@ public class DatabaseGeneratorGraphDatabaseTest {
         assertEquals(descriptiveCount, 0);
     }
 
-    @DataProvider(name="testPrecomputeOptimizedExceptionDataProvider")
+    /*@DataProvider(name="testPrecomputeOptimizedExceptionDataProvider")
      public Object[][] testPrecomputeOptimizedExceptionDataProvider() {
         return new Object[][] {{}};
     }
@@ -202,6 +206,6 @@ public class DatabaseGeneratorGraphDatabaseTest {
 
     @Test(dataProvider="testGetImageIDsDataProvider", expectedExceptions = IllegalArgumentException.class)
     public void testGetImageIDs() {
-    }
+    }*/
     
 }

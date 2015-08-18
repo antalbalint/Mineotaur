@@ -7,6 +7,7 @@ import static org.testng.Assert.*;
 /**
  * Created by balintantal on 05/06/2015.
  */
+@Test(groups = {"unit"})
 public class GenericEmbeddedGraphDatabaseProviderTest {
 
     @Test

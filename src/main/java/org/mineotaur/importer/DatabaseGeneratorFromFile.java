@@ -19,8 +19,8 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     protected static final String ID = "ID";
     protected static final String FILTER = "FILTER";
 
-    //protected ResourceBundle properties;
-    protected final String prop;
+    protected Properties properties;
+    protected String propertyPath;
 /*
     protected List<String> unique = new ArrayList<>();
 */
@@ -43,25 +43,46 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     protected List<String> hitList;
 
 
-    public DatabaseGeneratorFromFile(String prop, String dataFile, String labelFile) {
-        this.prop = prop;
+    public DatabaseGeneratorFromFile(String propertyPath, String dataFile, String labelFile) {
+        this.propertyPath = propertyPath;
         this.dataFile = dataFile;
         this.labelFile = labelFile;
     }
 
-    /**
-     * Processing input properties and creating a directory to store configuration files.
-     * @throws IOException if there is an error with the input property file
-     */
-    protected void processProperties(String prop) throws IOException {
-        ResourceBundle properties = new PropertyResourceBundle(new FileReader(prop));
+    public DatabaseGeneratorFromFile(Properties properties, String dataFile, String labelFile) {
+        this.properties = properties;
+        this.dataFile = dataFile;
+        this.labelFile = labelFile;
+    }
+
+    protected void processProperties(Properties prop) throws IOException {
         if (properties.containsKey("name")) {
-            name = properties.getString("name");
+            name = properties.getProperty("name");
         }
         else {
             throw new IllegalArgumentException("The input property file should contain a name property.");
         }
-        if (properties.containsKey("group")) {
+        group = properties.getProperty("group", (String) DefaultProperty.GROUP.getValue());
+        groupName = properties.getProperty("groupName", (String) DefaultProperty.GROUP_NAME.getValue());
+        descriptive = properties.getProperty("descriptive", (String) DefaultProperty.DESCRIPTIVE.getValue());
+        separator = properties.getProperty("separator", (String) DefaultProperty.SEPARATOR.getValue());
+        totalMemory = properties.getProperty("total_memory", (String) DefaultProperty.TOTAL_MEMORY.getValue());
+        relationshipString = properties.getProperty("relationships", group+"-"+descriptive);
+        if (properties.containsKey("limit")) {
+            limit = Integer.valueOf(properties.getProperty("limit"));
+        }
+        else {
+            limit = (int) DefaultProperty.LIMIT.getValue();
+            Mineotaur.LOGGER.warning("Property limit not provided, using default value: " + limit);
+        }
+        if (properties.containsKey("overwrite")) {
+            overwrite = Boolean.valueOf(properties.getProperty("overwrite"));
+        }
+        else {
+            overwrite = (boolean) DefaultProperty.OVERWRITE.getValue();
+            Mineotaur.LOGGER.warning("Property overwrite not provided, using default value: " + overwrite);
+        }
+        /*if (properties.containsKey("group")) {
             group = properties.getString("group");
         }
         else {
@@ -102,26 +123,26 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         else {
             relationshipString = (group+"-"+descriptive);
             Mineotaur.LOGGER.warning("Property relationships not provided, using default value: " + relationshipString);
-        }
-        if (properties.containsKey("limit")) {
-            limit = Integer.valueOf(properties.getString("limit"));
-        }
-        else {
-            limit = (int) DefaultProperty.LIMIT.getValue();
-            Mineotaur.LOGGER.warning("Property limit not provided, using default value: " + limit);
-        }
-        if (properties.containsKey("overwrite")) {
-            overwrite = Boolean.valueOf(properties.getString("overwrite"));
-        }
-        else {
-            overwrite = (boolean) DefaultProperty.OVERWRITE.getValue();
-            Mineotaur.LOGGER.warning("Property overwrite not provided, using default value: " + overwrite);
-        }
+        }*/
+
         groupLabel = DynamicLabel.label(group);
         descriptiveLabel = DynamicLabel.label(descriptive);
         precomputedLabel = DynamicLabel.label(group+COLLECTED);
         confDir = name + FILE_SEPARATOR + CONF + FILE_SEPARATOR;
         dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
+    }
+
+    /**
+     * Processing input properties and creating a directory to store configuration files.
+     * @throws IOException if there is an error with the input property file
+     */
+    protected void processProperties(String prop) throws IOException {
+        properties = new Properties();
+        properties.load(new FileReader(prop));
+/*
+        ResourceBundle properties = new PropertyResourceBundle(new FileReader(propertyPath));
+*/
+
 
     }
 
@@ -133,7 +154,12 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     public void generateDatabase() {
         try {
             Mineotaur.LOGGER.info("Reading properties...");
-            processProperties(prop);
+            if (propertyPath != null) {
+                processProperties(propertyPath);
+            }
+            else {
+                processProperties(properties);
+            }
             Mineotaur.LOGGER.info("Creating directories...");
             createDirs(name, confDir, overwrite);
             Mineotaur.LOGGER.info("Creating relationship types...");

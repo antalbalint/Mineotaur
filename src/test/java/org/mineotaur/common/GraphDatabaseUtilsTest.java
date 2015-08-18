@@ -18,6 +18,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by balintantal on 23/07/2015.
  */
+@Test(groups = {"unit"})
 public class GraphDatabaseUtilsTest {
 
     @DataProvider(name="testCreateNewGraphDatabaseServiceExcpetionDataProvider")
@@ -50,7 +51,7 @@ public class GraphDatabaseUtilsTest {
     @Test(dataProvider = "testCreateNewGraphDatabaseServiceDataProvider")
     public void testCreateNewGraphDatabaseService(String dbPath, String totalMemory, String cache) throws Exception {
         assertNotNull(GraphDatabaseUtils.createNewGraphDatabaseService(dbPath, totalMemory, cache));
-        FileUtils.deleteDirRecursively(new File(dbPath));
+        //FileUtils.deleteDirRecursively(new File(dbPath));
     }
 
     @DataProvider(name="testCreateIndexServiceExcpetionDataProvider")

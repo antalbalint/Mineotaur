@@ -73,8 +73,7 @@ public class ClassUtils {
      */
     public static String buildEquals(String name, List<String> idFields) {
         if (name == null || idFields == null) {
-            Mineotaur.LOGGER.info(name);
-            Mineotaur.LOGGER.info(idFields.toString());
+
             throw new IllegalArgumentException();
         }
         if (name.equals("")) {

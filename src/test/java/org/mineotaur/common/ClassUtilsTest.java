@@ -18,6 +18,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by balintantal on 22/07/2015.
  */
+@Test(groups = {"unit"})
 @PrepareForTest(ClassUtils.class)
 public class ClassUtilsTest {
 
@@ -52,8 +53,8 @@ public class ClassUtilsTest {
                 {pool, string, list, emptyStringArray, stringArray, list, string, string},
                 {pool, string, list, stringArray, null,  list, string, string},
                 {pool, string, list, stringArray, emptyStringArray,  list, string, string},
-                {pool, string, list, stringArray, stringArray,  null, string, string},
-                {pool, string, list, stringArray, stringArray,  emptyList, string, string},
+                /*{pool, string, list, stringArray, stringArray,  null, string, string},
+                {pool, string, list, stringArray, stringArray,  emptyList, string, string},*/
                 {pool, string, list, stringArray, stringArray,  list, null, string},
                 {pool, string, list, stringArray, stringArray,  list, emptyString, string},
                 {pool, string, list, stringArray, stringArray,  list, string, null},

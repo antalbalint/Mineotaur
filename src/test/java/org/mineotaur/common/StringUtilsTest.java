@@ -18,6 +18,7 @@ import static org.mockito.Mockito.*;
 /**
  * Created by balintantal on 23/07/2015.
  */
+@Test(groups = {"unit"})
 public class StringUtilsTest {
 
     @DataProvider(name = "testDecompressStringExceptionDataProvider") 

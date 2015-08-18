@@ -23,6 +23,7 @@ import org.apache.commons.cli.*;
 import org.mineotaur.importer.DatabaseGenerator;
 import org.mineotaur.importer.DatabaseGeneratorFromFile;
 import org.mineotaur.importer.DatabaseGeneratorFromOmero;
+import org.mineotaur.importer.gui.ImporterWizard;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -57,6 +58,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
         Options options = new Options();
         options.addOption("start", true, "Starts Mineotaur with the specified database. Parameters: name of the folder containing the Mineotaur data.");
         options.addOption("import", true, "Generates the database from the specified file or from omero. Parameters: from file: property file input file label file; from omero: hostname username password screenID.");
+        options.addOption("import", true, "Starts the Mineotaur import wizard.");
         options.addOption("help", false, "Prints this help message.");
         HelpFormatter formatter = new HelpFormatter();
         try {
@@ -78,6 +80,11 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
                     throw new UnsupportedOperationException("The number of arguments must be 3 (if importing from files) or 4 (if importing from Omero).");
                 }
                 gen.generateDatabase();
+            }
+            else if (line.hasOption("wizard")) {
+                ImporterWizard iw = new ImporterWizard();
+                iw.pack();
+                iw.setVisible(true);
             }
             else {
                 formatter.printHelp("Mineotaur", options);
