@@ -408,14 +408,14 @@ public class ImporterWizard extends JFrame {
     }*/
 
 
-    private void createUIComponents() {
+    /*private void createUIComponents() {
         // TODO: place custom component creation code here
     }
 
     public void setData(ImporterBean data) {
     }
 
-    /*public void getData(ImporterBean data) {
+    public void getData(ImporterBean data) {
     }
 
     public boolean isModified(ImporterBean data) {
