@@ -330,7 +330,7 @@ public class ImporterWizard extends JFrame {
         return panel1;
     }
 
-    static class TextAreaHandler extends StreamHandler {
+    /*static class TextAreaHandler extends StreamHandler {
         private void configure() {
             setFormatter(new SimpleFormatter());
             try {
@@ -405,7 +405,7 @@ public class ImporterWizard extends JFrame {
             }
             buf.write(b);
         }
-    }
+    }*/
 
 
     private void createUIComponents() {
@@ -415,7 +415,7 @@ public class ImporterWizard extends JFrame {
     public void setData(ImporterBean data) {
     }
 
-    public void getData(ImporterBean data) {
+    /*public void getData(ImporterBean data) {
     }
 
     public boolean isModified(ImporterBean data) {
@@ -452,7 +452,7 @@ public class ImporterWizard extends JFrame {
             // scrolls the text area to the end of data
             textArea.setCaretPosition(textArea.getDocument().getLength());
         }
-    }
+    }*/
 
 
 
