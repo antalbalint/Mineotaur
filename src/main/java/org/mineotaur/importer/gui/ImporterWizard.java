@@ -3,20 +3,15 @@ package org.mineotaur.importer.gui;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
-import javafx.application.Platform;
-import org.mineotaur.application.Mineotaur;
 import org.mineotaur.importer.DatabaseGeneratorFromFile;
-import org.mineotaur.importer.gui.thirdparty.MessageConsole;
 
 import javax.swing.*;
-import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.MouseAdapter;
 import java.io.*;
-import java.util.Formatter;
 import java.util.Properties;
 import java.util.logging.*;
 

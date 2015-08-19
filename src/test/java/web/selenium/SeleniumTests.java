@@ -25,7 +25,7 @@ public class SeleniumTests {
     protected WebDriver driver;
     protected String mineotaurName = "sysgrorunnames";
 
-    @BeforeSuite
+    //@BeforeSuite
     public void setUp() {
         Mineotaur.name = mineotaurName;
         SpringApplication.run(Mineotaur.class);
@@ -33,7 +33,7 @@ public class SeleniumTests {
         driver.get("http://localhost:8080");
     }
 
-    @AfterSuite
+    //@AfterSuite
     public void tearDown() {
         driver.quit();
     }
@@ -46,7 +46,7 @@ public class SeleniumTests {
         };
     }
 
-    @Test(dataProvider = "testBasicElementsDataProvider")
+    //@Test(dataProvider = "testBasicElementsDataProvider")
     public void testBasicElements(String element) {
         assertNotNull(driver.findElement(By.id(element)));
     }
@@ -69,7 +69,7 @@ public class SeleniumTests {
         return values;
     }
 
-    @Test(dataProvider = "testGroupwiseScatterPlotDataProvider")
+    //@Test(dataProvider = "testGroupwiseScatterPlotDataProvider")
     public void testGroupwiseScatterPlot(String option1, String option2) {
         Select select = new Select(driver.findElement(By.id("prop1")));
         select.selectByVisibleText(option1);
