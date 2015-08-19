@@ -21,14 +21,13 @@ public class FileUtilsTest {
 
     @DataProvider(name="testProcessTextFileDataProvider")
     public Object[][] testProcessTextFileDataProvider() throws Exception {
-        return new Object[][] {{"input/mineotaur.input", 14}};
+        return new Object[][] {{"test_input/mineotaur.input", 14}};
     }
 
     @Test(dataProvider = "testProcessTextFileDataProvider")
     public void testProcessTextFile(String file, int numberOfLines) throws Exception {
         List<String> lines = FileUtils.processTextFile(file);
         assertNotNull(lines);
-        System.out.println(lines.toString());
         assertEquals(lines.size(), numberOfLines);
     }
 

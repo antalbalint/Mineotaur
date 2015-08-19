@@ -1,0 +1,14 @@
+name = Chia_new
+relationships = GENE-CELL,GENE-EXPERIMENT
+aggregate = CELL
+unique = CELL
+group = GENE
+groupName = GeneSymbol
+descriptive = CELL
+precompute = true
+precompute_limit = 100
+process_limit = 5000
+total_memory = 3G
+cache = none
+separator = \t
+query_relationship = COLLECTED
