@@ -107,7 +107,7 @@ Generation using the wizard
     java -jar <path_to_jar file> -wizard
 
     .. image:: /images/wizard.png
-    :align: center
+        :align: center
 
 4.	After the database creation is completed you can start your Mineotaur instance with the following command::
 
