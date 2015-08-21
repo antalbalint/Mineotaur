@@ -96,3 +96,21 @@ Generation from command line
     java –jar <path_to_jar file> -start <instance_name>
 
 5.	You can start querying at http://127.0.0.1:8080 in your browser.
+
+Generation using the wizard
+-------------------------------------
+
+1.	Download the latest jar file from http://www.mineotaur.org.
+2.	Create a property file, a data file and a label file (see documentation and example input data)
+3.	Start the data import with the following command::
+
+    java -jar <path_to_jar file> -wizard
+
+    .. image:: /images/wizard.png
+    :align: center
+
+4.	After the database creation is completed you can start your Mineotaur instance with the following command::
+
+    java –jar <path_to_jar file> -start <instance_name>
+
+5.	You can start querying at http://127.0.0.1:8080 in your browser.

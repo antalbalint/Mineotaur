@@ -26,6 +26,8 @@
     <rowspec value="center:max(d;4px):noGrow"/>
     <rowspec value="top:3dlu:noGrow"/>
     <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:3dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
     <colspec value="fill:520px:noGrow"/>
     <constraints>
       <xy x="20" y="20" width="526" height="420"/>
@@ -80,7 +82,7 @@
             <properties>
               <horizontalAlignment value="0"/>
               <horizontalTextPosition value="0"/>
-              <text value="Select data file"/>
+              <text value="Select data file *"/>
             </properties>
           </component>
           <component id="faf2b" class="javax.swing.JButton" binding="dataButton">
@@ -119,7 +121,7 @@
             <properties>
               <horizontalAlignment value="0"/>
               <horizontalTextPosition value="0"/>
-              <text value="Select label file"/>
+              <text value="Select label file *"/>
             </properties>
           </component>
           <component id="cb7e0" class="javax.swing.JButton" binding="labelButton">
@@ -177,14 +179,16 @@
               <splitpane position="left"/>
             </constraints>
             <properties>
-              <text value="Name of the instance:"/>
+              <text value="Name of the instance: *"/>
             </properties>
           </component>
           <component id="ae3a4" class="javax.swing.JTextField" binding="nameField">
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="Name of the Mineotaur instance. Required. "/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -214,7 +218,9 @@
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="name of the group object (same as described in the data file). Default: GENE"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -244,7 +250,9 @@
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="group object ID (same as described in the data file). Default: geneID"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -274,7 +282,9 @@
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="name of the group object (same as described in the data file). Default:  CELL"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -298,13 +308,16 @@
             </constraints>
             <properties>
               <text value="Total memory"/>
+              <toolTipText value=""/>
             </properties>
           </component>
           <component id="56592" class="javax.swing.JTextField" binding="totalMemoryField">
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="the amount of memory can be used by Neo4J. Default: 4G"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -328,13 +341,16 @@
             </constraints>
             <properties>
               <text value="Separator"/>
+              <toolTipText value=""/>
             </properties>
           </component>
           <component id="d9e62" class="javax.swing.JTextField" binding="separatorField">
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="character used to separate columns in the data and the label files. Default: \\t"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -358,13 +374,16 @@
             </constraints>
             <properties>
               <text value="Overwrite previous"/>
+              <toolTipText value=""/>
             </properties>
           </component>
           <component id="1f4a4" class="javax.swing.JTextField" binding="overwriteField">
             <constraints>
               <splitpane position="right"/>
             </constraints>
-            <properties/>
+            <properties>
+              <toolTipText value="whether to overwrite the current instance with the same name. Default: true"/>
+            </properties>
           </component>
         </children>
       </splitpane>
@@ -375,6 +394,15 @@
         </constraints>
         <properties>
           <text value="Generate the Mineotaur instance"/>
+        </properties>
+      </component>
+      <component id="3669f" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="26" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="&lt;html&gt;* Required fields. Please see &lt;a href=&quot;http://docs.mineotaur.org&quot;&gt;http://docs.mineotaur.org&lt;/a&gt; for instructions.&lt;html&gt;"/>
         </properties>
       </component>
     </children>

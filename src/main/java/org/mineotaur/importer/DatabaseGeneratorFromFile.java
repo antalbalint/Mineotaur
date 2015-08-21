@@ -58,6 +58,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     protected void processProperties(Properties prop) throws IOException {
         if (properties.containsKey("name")) {
             name = properties.getProperty("name");
+
         }
         else {
             throw new IllegalArgumentException("The input property file should contain a name property.");
@@ -139,6 +140,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     protected void processProperties(String prop) throws IOException {
         properties = new Properties();
         properties.load(new FileReader(prop));
+        processProperties(properties);
 /*
         ResourceBundle properties = new PropertyResourceBundle(new FileReader(propertyPath));
 */

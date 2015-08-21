@@ -1,6 +1,9 @@
 
 package org.mineotaur.importer.gui;
 
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 import org.mineotaur.importer.DatabaseGeneratorFromFile;
@@ -192,17 +195,17 @@ public class ImporterWizard extends JFrame {
      */
     private void $$$setupUI$$$() {
         panel1 = new JPanel();
-        panel1.setLayout(new FormLayout("fill:520px:noGrow", "center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow"));
+        panel1.setLayout(new FormLayout("fill:520px:noGrow", "center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow,top:3dlu:noGrow,center:max(d;4px):noGrow"));
         panel1.setPreferredSize(new Dimension(520, 520));
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel2.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
         CellConstraints cc = new CellConstraints();
         panel1.add(panel2, cc.xy(1, 1));
         final JLabel label1 = new JLabel();
         label1.setText("Mineotaur Import Wizard");
-        panel2.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
-        panel2.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel2.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel2.add(spacer1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         dataPane = new JSplitPane();
         dataPane.setDividerLocation(300);
         dataPane.setDividerSize(0);
@@ -211,7 +214,7 @@ public class ImporterWizard extends JFrame {
         final JLabel label2 = new JLabel();
         label2.setHorizontalAlignment(0);
         label2.setHorizontalTextPosition(0);
-        label2.setText("Select data file");
+        label2.setText("Select data file *");
         dataPane.setLeftComponent(label2);
         dataButton = new JButton();
         dataButton.setActionCommand("Button");
@@ -229,7 +232,7 @@ public class ImporterWizard extends JFrame {
         labelPane = new JLabel();
         labelPane.setHorizontalAlignment(0);
         labelPane.setHorizontalTextPosition(0);
-        labelPane.setText("Select label file");
+        labelPane.setText("Select label file *");
         splitPane1.setLeftComponent(labelPane);
         labelButton = new JButton();
         labelButton.setLabel("Browse...");
@@ -254,9 +257,10 @@ public class ImporterWizard extends JFrame {
         splitPane2.setEnabled(false);
         panel1.add(splitPane2, cc.xy(1, 11));
         final JLabel label3 = new JLabel();
-        label3.setText("Name of the instance:");
+        label3.setText("Name of the instance: *");
         splitPane2.setLeftComponent(label3);
         nameField = new JTextField();
+        nameField.setToolTipText("Name of the Mineotaur instance. Required. ");
         splitPane2.setRightComponent(nameField);
         final JSplitPane splitPane3 = new JSplitPane();
         splitPane3.setDividerLocation(150);
@@ -267,6 +271,7 @@ public class ImporterWizard extends JFrame {
         label4.setText("Group object:");
         splitPane3.setLeftComponent(label4);
         groupField = new JTextField();
+        groupField.setToolTipText("name of the group object (same as described in the data file). Default: GENE");
         splitPane3.setRightComponent(groupField);
         final JSplitPane splitPane4 = new JSplitPane();
         splitPane4.setDividerLocation(150);
@@ -277,6 +282,7 @@ public class ImporterWizard extends JFrame {
         label5.setText("Group name property:");
         splitPane4.setLeftComponent(label5);
         groupNameField = new JTextField();
+        groupNameField.setToolTipText("group object ID (same as described in the data file). Default: geneID");
         splitPane4.setRightComponent(groupNameField);
         final JSplitPane splitPane5 = new JSplitPane();
         splitPane5.setDividerLocation(150);
@@ -287,6 +293,7 @@ public class ImporterWizard extends JFrame {
         label6.setText("Descriptive object");
         splitPane5.setLeftComponent(label6);
         descriptiveField = new JTextField();
+        descriptiveField.setToolTipText("name of the group object (same as described in the data file). Default:  CELL");
         splitPane5.setRightComponent(descriptiveField);
         final JSplitPane splitPane6 = new JSplitPane();
         splitPane6.setDividerLocation(150);
@@ -295,8 +302,10 @@ public class ImporterWizard extends JFrame {
         panel1.add(splitPane6, cc.xy(1, 19));
         final JLabel label7 = new JLabel();
         label7.setText("Total memory");
+        label7.setToolTipText("");
         splitPane6.setLeftComponent(label7);
         totalMemoryField = new JTextField();
+        totalMemoryField.setToolTipText("the amount of memory can be used by Neo4J. Default: 4G");
         splitPane6.setRightComponent(totalMemoryField);
         final JSplitPane splitPane7 = new JSplitPane();
         splitPane7.setDividerLocation(150);
@@ -305,8 +314,10 @@ public class ImporterWizard extends JFrame {
         panel1.add(splitPane7, cc.xy(1, 21));
         final JLabel label8 = new JLabel();
         label8.setText("Separator");
+        label8.setToolTipText("");
         splitPane7.setLeftComponent(label8);
         separatorField = new JTextField();
+        separatorField.setToolTipText("character used to separate columns in the data and the label files. Default: \\\\t");
         splitPane7.setRightComponent(separatorField);
         final JSplitPane splitPane8 = new JSplitPane();
         splitPane8.setDividerLocation(150);
@@ -315,12 +326,17 @@ public class ImporterWizard extends JFrame {
         panel1.add(splitPane8, cc.xy(1, 23));
         final JLabel label9 = new JLabel();
         label9.setText("Overwrite previous");
+        label9.setToolTipText("");
         splitPane8.setLeftComponent(label9);
         overwriteField = new JTextField();
+        overwriteField.setToolTipText("whether to overwrite the current instance with the same name. Default: true");
         splitPane8.setRightComponent(overwriteField);
         generateTheMineotaurInstanceButton = new JButton();
         generateTheMineotaurInstanceButton.setText("Generate the Mineotaur instance");
         panel1.add(generateTheMineotaurInstanceButton, cc.xy(1, 25));
+        final JLabel label10 = new JLabel();
+        label10.setText("<html>* Required fields. Please see <a href=\"http://docs.mineotaur.org\">http://docs.mineotaur.org</a> for instructions.<html>");
+        panel1.add(label10, cc.xy(1, 27));
     }
 
     /**
@@ -453,8 +469,6 @@ public class ImporterWizard extends JFrame {
             textArea.setCaretPosition(textArea.getDocument().getLength());
         }
     }*/
-
-
 
 
 }

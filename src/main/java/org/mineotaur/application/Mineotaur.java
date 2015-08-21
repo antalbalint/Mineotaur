@@ -58,7 +58,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
         Options options = new Options();
         options.addOption("start", true, "Starts Mineotaur with the specified database. Parameters: name of the folder containing the Mineotaur data.");
         options.addOption("import", true, "Generates the database from the specified file or from omero. Parameters: from file: property file input file label file; from omero: hostname username password screenID.");
-        options.addOption("wizard", true, "Starts the Mineotaur import wizard.");
+        options.addOption("wizard", false, "Starts the Mineotaur import wizard.");
         options.addOption("help", false, "Prints this help message.");
         HelpFormatter formatter = new HelpFormatter();
         try {
@@ -69,7 +69,6 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
             }
             else if (line.hasOption("import")) {
                 DatabaseGenerator gen;
-                Mineotaur.LOGGER.info(Arrays.toString(args));
                 if (args.length == 4) {
                     gen = new DatabaseGeneratorFromFile(args[1], args[2], args[3]);
                 }
