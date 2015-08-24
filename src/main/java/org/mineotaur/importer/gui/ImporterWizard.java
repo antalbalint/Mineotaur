@@ -38,9 +38,10 @@ public class ImporterWizard extends JFrame {
     private JTextArea logArea;
     private String dataFile;
     private String labelFile;
+    private JFrame frame = this;
 
     public ImporterWizard() {
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         panel1.addComponentListener(new ComponentAdapter() {
         });
         panel1.addMouseListener(new MouseAdapter() {
@@ -89,6 +90,8 @@ public class ImporterWizard extends JFrame {
                 } else if ("".equals(nameField.getText())) {
                     JOptionPane.showMessageDialog(null, "Please provide a name for the Mineotaur instance.");
                 } else {
+                    generateTheMineotaurInstanceButton.setEnabled(false);
+                    generateTheMineotaurInstanceButton.setText("Generating instance...");
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -120,9 +123,10 @@ public class ImporterWizard extends JFrame {
                             }
                             DatabaseGeneratorFromFile dg = new DatabaseGeneratorFromFile(properties, dataFile, labelFile);
                             dg.generateDatabase();
+
                         }
                     });
-
+                    frame.dispose();
                 }
 
                 /*final StreamHandler seh = new StreamHandler(System.err, Mineotaur.LOGGER.getHandlers()[0].getFormatter()) {

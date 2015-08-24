@@ -81,6 +81,7 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
                 gen.generateDatabase();
             }
             else if (line.hasOption("wizard")) {
+
                 ImporterWizard iw = new ImporterWizard();
                 iw.pack();
                 iw.setVisible(true);

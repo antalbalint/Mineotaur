@@ -21,7 +21,7 @@ public class FileUtilsTest {
 
     @DataProvider(name="testProcessTextFileDataProvider")
     public Object[][] testProcessTextFileDataProvider() throws Exception {
-        return new Object[][] {{"test_input/mineotaur.input", 14}};
+        return new Object[][] {{"test_input"+File.separator +"mineotaur.input", 14}};
     }
 
     @Test(dataProvider = "testProcessTextFileDataProvider")

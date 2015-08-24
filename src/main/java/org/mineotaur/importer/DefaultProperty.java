@@ -5,7 +5,7 @@ package org.mineotaur.importer;
  */
 public enum DefaultProperty {
     GROUP("GENE"),
-    GROUP_NAME("geneID"),
+    GROUP_NAME("GeneID"),
     DESCRIPTIVE("CELL"),
     SEPARATOR("\t"),
     TOTAL_MEMORY("4G"),
