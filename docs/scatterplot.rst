@@ -49,6 +49,8 @@ By invoking the context menu (e.g. right-click in Windows or CMD+click in OSX) a
 .. image:: /images/context_menu.png
     :align: center
 
+To go back to the original scatterplot, use the browser's back button.
+
 Plot tools
 ----------
 
