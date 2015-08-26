@@ -39,6 +39,8 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
     protected Long screenId;
     private Label experimentLabel;
     private String[] descriptiveHeader;
+    private OriginalFile dataFile;
+    private OriginalFile labelFile;
 
     public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
@@ -105,6 +107,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         List<IObject> results = proxy.loadContainerHierarchy(Screen.class.getName(), screenIds, param);
 
         Iterator<IObject> i = results.iterator();
+
 //        ScreenData screen;
 
 
@@ -137,10 +140,24 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         while (j.hasNext()) {
             FileAnnotation annotation = (FileAnnotation) j.next();
             FileAnnotationData fad = new FileAnnotationData(annotation);
-            //System.out.println(fad.getFileName());
-            readTable(annotation.getFile());
-            break;
+            String fileName = fad.getFileName();
+            if (dataFile != null && labelFile != null) {
+                break;
+            }
+            if (dataFile == null || fileName.endsWith(".h5")) {
+                dataFile = annotation.getFile();
+                continue;
+            }
+            if (labelFile == null || "bulk_annotations".equals(fileName)) {
+                labelFile = annotation.getFile();
+                continue;
+            }
+            //System.out.println(fad.getFileName() + " " + fad.getFileFormat());
+            //readTable(annotation.getFile());
+            //break;
         }
+        System.out.println(dataFile.getName());
+        System.out.println(labelFile.getName());
 //Do something with annotations.
     }
 
@@ -298,7 +315,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             establishConnection();
             Mineotaur.LOGGER.info("Processing metadata.");
             processMetadata();
-            getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+            processData(db);
+            labelGenes();
+            //getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
             /*
             Mineotaur.LOGGER.info("Creating directories.");
             createDirs();
@@ -395,7 +414,33 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
     @Override
     public void labelGenes() {
-        labelGenes("Input/sysgro_labels.tsv");
+        labelGenes(labelFile);
+
+//        labelGenes("Input/sysgro_labels.tsv");
+    }
+
+    protected void labelGenes(OriginalFile file) {
+        TablePrx table = null;
+        try {
+            table = entry.sharedResources().openTable(file);
+            Column[] cols = table.getHeaders();
+            List<Integer> experimentIDs = new ArrayList<>();
+            List<Integer> strainIDs = new ArrayList<>();
+//        String[] descriptiveHeader = null;
+            Integer filter = null;
+            Integer experimentID = null;
+            Integer strainID = null;
+            Integer descriptiveID = null;
+            for (int i = 0; i < cols.length; i++) {
+                String colName = cols[i].name;
+                System.out.println(colName);
+            }
+        } catch (ServerError serverError) {
+            serverError.printStackTrace();
+        }
+
+//read headers
+
     }
 
     protected void labelGenes(String file) {
