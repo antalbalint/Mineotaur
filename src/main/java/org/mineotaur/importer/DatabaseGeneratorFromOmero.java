@@ -3,6 +3,9 @@ package org.mineotaur.importer;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
+import omero.RLong;
+import omero.rtypes;
+import omero.rtypes.RTypeObjectFactoryRegistry;
 import omero.ServerError;
 import omero.api.IContainerPrx;
 import omero.api.IMetadataPrx;
@@ -14,6 +17,7 @@ import omero.model.*;
 import omero.sys.ParametersI;
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.FileUtils;
+import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -41,6 +45,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
     private String[] descriptiveHeader;
     private OriginalFile dataFile;
     private OriginalFile labelFile;
+    private List<String> hits = new ArrayList<>();
 
     public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
@@ -115,7 +120,8 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         PlateData plate;*/
 
         while (i.hasNext()) {
-            screen = new ScreenData((Screen) i.next());
+            Screen s = (Screen)i.next();
+            screen = new ScreenData(s);
             if (i.hasNext()) {
                 Mineotaur.LOGGER.info("There are multiple screens with id: " + screenId);
             }
@@ -131,13 +137,40 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
     protected void getAnnotations(String name, Long Id) throws ServerError {
         List<String> nsToInclude = new ArrayList<String>();
+        nsToInclude.add("openmicroscopy.org/omero/bulk_annotations");
         List<String> nsToExclude = new ArrayList<String>();
-        ParametersI param = new ParametersI();
-        param.addLong(name, Id);
-        IMetadataPrx proxy = entry.getMetadataService();
-        List<Annotation> annotations = proxy.loadSpecifiedAnnotations(FileAnnotation.class.getName(), nsToInclude, nsToExclude, param);
-        Iterator<Annotation> j = annotations.iterator();
+            ParametersI param = new ParametersI();
+            param.add("id",rtypes.rlong(Id));
+            IQueryPrx proxy = entry.getQueryService();
+            String q = "SELECT link.child.file FROM ScreenAnnotationLink link WHERE link.parent.id=:id";
+            List<IObject> results = proxy.findAllByQuery(q, param);
+        Iterator<IObject> i = results.iterator();
+        while (i.hasNext()) {
+            OriginalFile file = (OriginalFile) i.next();
+            String fileName = file.getName().getValue();
+            if (dataFile != null && labelFile != null) {
+                break;
+            }
+            if (dataFile == null || fileName.endsWith(".h5")) {
+                dataFile = file;
+                continue;
+            }
+            if (labelFile == null || "bulk_annotations".equals(fileName)) {
+                labelFile = file;
+                continue;
+            }
+            /*FileAnnotation a = (FileAnnotation)i.next();
+            System.out.println(a.getFile().getName().getValue());*/
+            /*FileAnnotationData fad = new FileAnnotationData(a);
+            String fileName = fad.getFileName();
+            System.out.println(fad.getAttachedFile().getName());
+            System.out.println(fileName);*/
+        }
+        //IMetadataPrx proxy = entry.getMetadataService();
+        //List<Annotation> annotations = proxy.loadSpecifiedAnnotations(FileAnnotation.class.getName(), nsToInclude, nsToExclude, param);
+        /*Iterator<Annotation> j = annotations.iterator();
         while (j.hasNext()) {
+
             FileAnnotation annotation = (FileAnnotation) j.next();
             FileAnnotationData fad = new FileAnnotationData(annotation);
             String fileName = fad.getFileName();
@@ -155,9 +188,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             //System.out.println(fad.getFileName() + " " + fad.getFileFormat());
             //readTable(annotation.getFile());
             //break;
-        }
-        System.out.println(dataFile.getName());
-        System.out.println(labelFile.getName());
+        }*/
+        /*System.out.println(dataFile.getName());
+        System.out.println(labelFile.getName());*/
 //Do something with annotations.
     }
 
@@ -175,7 +208,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         Integer descriptiveID = null;
         for (int i = 0; i < cols.length; i++) {
             String colName = cols[i].name;
-            //System.out.println(colName);
+            System.out.println(colName);
             if ("ImageID".equals(colName)) {
                 //experimentIDs.add(i);
                 experimentID = i;
@@ -223,41 +256,58 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         double[][] descriptiveColumn = ((DoubleArrayColumn)cols[descriptiveID]).values;
         double[] filterColumn = descriptiveColumn[filter];
         filterProps.add(descriptiveHeader[filter]);
-        for (int i = 0; i < strainColumn.length; ++i) {
-            try (Transaction tx = db.beginTx()) {
-                Mineotaur.LOGGER.info("Line " + i);
-                String sid = strainColumn[i];
-                Node strain = strains.get(sid);
-                if (strain == null) {
-                    strain = db.createNode(groupLabel);
-                    strain.setProperty("strainID", sid);
-                    addProperties(strain, cols, strainIDs, i);
-                    strains.put(sid, strain);
-                    Mineotaur.LOGGER.info("Strain created with imageID: " + sid);
+        int count = 0;
+        Transaction tx = null;
+        try {
+            tx = db.beginTx();
+            for (int i = 0; i < strainColumn.length; ++i) {
+
+                    Mineotaur.LOGGER.info("Line " + i);
+                    String sid = strainColumn[i];
+                    Node strain = strains.get(sid);
+                    if (strain == null) {
+                        strain = db.createNode(groupLabel);
+                        count++;
+                        strain.setProperty("strainID", sid);
+                        addProperties(strain, cols, strainIDs, i);
+                        strains.put(sid, strain);
+                        Mineotaur.LOGGER.info("Strain created with imageID: " + sid);
+                    }
+                    else {
+                        Mineotaur.LOGGER.info("Strain loaded with imageID: " + sid);
+                    }
+                    Long imageID = experimentColumn[i];
+                    Node experiment = images.get(imageID);
+                    if (experiment == null) {
+                        experiment = db.createNode(experimentLabel);
+                        count++;
+                        experiment.setProperty("imageID", imageID);
+                        addProperties(experiment, cols, experimentIDs, i);
+                        images.put(imageID, experiment);
+                        experiment.createRelationshipTo(strain, DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+                        Mineotaur.LOGGER.info("Experiment created with imageID: " + imageID);
+                    }
+                    else {
+                        Mineotaur.LOGGER.info("Experiment loaded with imageID: " + imageID);
+                    }
+                    Node descriptive = createDescriptiveNode(descriptiveHeader, descriptiveColumn[i]);
+                    descriptive.createRelationshipTo(strain, DefaultRelationships.GROUP_CELL.getRelationshipType());
+                    Mineotaur.LOGGER.info("Descriptive node created.");
+                    count++;
+                if (count > 10000) {
+                    count = 0;
+                    tx.success();
+                    tx.close();
+                    tx = db.beginTx();
                 }
-                else {
-                    Mineotaur.LOGGER.info("Strain loaded with imageID: " + sid);
-                }
-                Long imageID = experimentColumn[i];
-                Node experiment = images.get(imageID);
-                if (experiment == null) {
-                    experiment = db.createNode(experimentLabel);
-                    experiment.setProperty("imageID", imageID);
-                    addProperties(experiment, cols, experimentIDs, i);
-                    images.put(imageID, experiment);
-                    experiment.createRelationshipTo(strain, DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
-                    Mineotaur.LOGGER.info("Experiment created with imageID: " + imageID);
-                }
-                else {
-                    Mineotaur.LOGGER.info("Experiment loaded with imageID: " + imageID);
-                }
-                Node descriptive = createDescriptiveNode(descriptiveHeader, descriptiveColumn[i]);
-                descriptive.createRelationshipTo(strain, DefaultRelationships.GROUP_CELL.getRelationshipType());
-                Mineotaur.LOGGER.info("Descriptive node created.");
-                tx.success();
+
             }
 
 
+        }
+        finally {
+            tx.success();
+            tx.close();
         }
 
 
@@ -291,7 +341,11 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             }
             else if (claz.equals(StringColumn.class)) {
                 String[] stringValues = ((StringColumn)c).values;
+
                 value = stringValues[i];
+                if (c.name.equals("name")) {
+                    System.out.println(value);
+                }
 
             }
             if (value == null) {
@@ -304,7 +358,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
     @Override
     protected List<String> getHits() {
-        return null;
+        return hits;
     }
 
 
@@ -315,35 +369,37 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             establishConnection();
             Mineotaur.LOGGER.info("Processing metadata.");
             processMetadata();
+            //processData(db);
+            //Mineotaur.LOGGER.info("Creating directories.");
+
+            Mineotaur.LOGGER.info("Loading attachments.");
             processData(db);
-            labelGenes();
-            //getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
-            /*
-            Mineotaur.LOGGER.info("Creating directories.");
-            createDirs();
-            Mineotaur.LOGGER.info("Creating indices.");
-            createIndex(db);
             Mineotaur.LOGGER.info("Processing input data.");
-            processData();
+            readTable(dataFile);
             Mineotaur.LOGGER.info("Processing label data.");
             labelGenes();
+            Mineotaur.LOGGER.info(filterProps.toString());
             if (filterProps != null && !filterProps.isEmpty()) {
-                createFilters();
+                Mineotaur.LOGGER.info("Processing descriptive filters.");
+                createFilters(db, ggo, groupLabel, descriptiveLabel, DefaultRelationships.GROUP_CELL.getRelationshipType(), filterProps, limit);
             }
-            if (toPrecompute) {
-                Mineotaur.LOGGER.info("Precomputing nodes.");
-                precomputedLabel = DynamicLabel.label(group+COLLECTED);
-                precomputeOptimized(10000);
-            }
-            else {
-                mineotaurProperties.put("query_relationship", relationships.get(group).get(descriptive));
-            }
+            Mineotaur.LOGGER.info("Connecting images to strains.");
+            getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+            Mineotaur.LOGGER.info("Precomputing nodes.");
+            precomputedLabel = DynamicLabel.label(group+COLLECTED);
+            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, 10000);
+            Mineotaur.LOGGER.info("Creating indices.");
+            GraphDatabaseUtils.createIndex(db, groupLabel, groupName);
+            Mineotaur.LOGGER.info("Precomputing nodes.");
+            precomputedLabel = DynamicLabel.label(group+COLLECTED);
+            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, 10000);
             Mineotaur.LOGGER.info("Generating property files.");
-            generateFeatureNameList();
-            generateGroupnameList(db);
-            generatePropertyFile();
+            storeConfigurationFiles();
+            /*generateFeatureNameList();
+            generateGroupnameList(db, groupLabel, groupName);
+            generatePropertyFile(filterProps, group, groupName, totalMemory, dbPath, omero);*/
         } catch (IOException e) {
-            e.printStackTrace(); */
+            e.printStackTrace();
         } catch (CannotCreateSessionException | PermissionDeniedException e) {
             e.printStackTrace();
         } catch (ServerError serverError) {
@@ -385,7 +441,10 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             confDir = name + FILE_SEPARATOR + CONF + FILE_SEPARATOR;
 
             dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
+
             addDummyValues();
+            createDirs(name, confDir, overwrite);
+
             startDB(dbPath, totalMemory, cache);
 
         } catch (ServerError serverError) {
@@ -399,7 +458,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         totalMemory = "4G";
         cache = "none";
         groupLabel = DefaultLabels.GROUP.getLabel();
-        groupName = groupLabel.name();
+        groupName = "reference";
         group = DefaultLabels.GROUP.name();
         descriptive = DefaultLabels.DESCRIPTIVE.name();
         descriptiveLabel = DefaultLabels.DESCRIPTIVE.getLabel();
@@ -410,6 +469,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         relationships.put(group, rel);
         toPrecompute = true;
         separator = "\t";
+        hits.add(wildTypeLabel.name());
     }
 
     @Override
@@ -419,7 +479,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 //        labelGenes("Input/sysgro_labels.tsv");
     }
 
-    protected void labelGenes(OriginalFile file) {
+    protected void labelGenes(OriginalFile file){
         TablePrx table = null;
         try {
             table = entry.sharedResources().openTable(file);
@@ -430,82 +490,134 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             Integer filter = null;
             Integer experimentID = null;
             Integer strainID = null;
-            Integer descriptiveID = null;
+            Integer labelID = null;
             for (int i = 0; i < cols.length; i++) {
                 String colName = cols[i].name;
                 System.out.println(colName);
+                if ("Gene Identifier".equals(colName)) {
+                    strainID = i;
+                }
+                if ("Mineotaur Hit Type".equals(colName)) {
+                    labelID = i;
+                }
             }
+            long[] columnsToRead = new long[cols.length];
+            for (int i = 0; i < cols.length; i++) {
+                columnsToRead[i] = i;
+            }
+
+// The number of columns we wish to read.
+            long[] rowSubset = new long[(int) (table.getNumberOfRows()-1)];
+            for (int j = 0; j < rowSubset.length; j++) {
+                rowSubset[j] = j;
+            }
+            Data data = table.slice(columnsToRead, rowSubset); // read the data.
+            cols = data.columns;
+            /*Map<Long, Node> images = new HashMap<>();
+            Map<String, Node> strains = new HashMap<>();*/
+            String[] strainColumn = ((StringColumn) cols[strainID]).values;
+            String[] labelColumn =  ((StringColumn) cols[labelID]).values;
+            /*long[] experimentColumn = ((ImageColumn) cols[experimentID]).values;
+            double[][] descriptiveColumn = ((DoubleArrayColumn)cols[descriptiveID]).values;
+            double[] filterColumn = descriptiveColumn[filter];
+            filterProps.add(descriptiveHeader[filter]);       */
+            int count = 0;
+            Map<String, List<String>> labelMap = new HashMap<>();
+            for (int i = 0; i < strainColumn.length; ++i) {
+                String sid = strainColumn[i];
+//                Mineotaur.LOGGER.info(sid);
+                if (labelMap.containsKey(sid)) {
+                    continue;
+                }
+                if (sid == null || "".equals(sid) || "empty".equals(sid)) {
+                    Mineotaur.LOGGER.warning("Gene id is empty.");
+                    continue;
+                }
+
+
+                /*System.out.println(sid);
+                System.out.println(labelColumn[i]);*/
+
+
+
+                String[] labels = labelColumn[i].split(";");
+                labelMap.put(sid, Arrays.asList(labels));
+                /*f*/
+            }
+            try (Transaction tx = db.beginTx()) {
+                for (String sid: labelMap.keySet()) {
+                    Iterator<Node> strains = db.findNodesByLabelAndProperty(groupLabel, groupName, sid).iterator();
+                    if (!strains.hasNext()) {
+                        Mineotaur.LOGGER.warning("No group object with id " + sid);
+                        continue;
+                    }
+                    Node strain = strains.next();
+                    if (!strains.hasNext()) {
+                        Mineotaur.LOGGER.warning("Multiple group object with id " + sid);
+                    }
+                    List<String> labels = labelMap.get(sid);
+                    for (String label: labels) {
+                        if ("".equals(label)) {
+                            strain.addLabel(wildTypeLabel);
+                            continue;
+                        }
+                        strain.addLabel(DynamicLabel.label(label));
+                        if (!hits.contains(label)) {
+                            hits.add(label);
+                        }
+                        Mineotaur.LOGGER.info("New label for group object " + sid + ": " + label);
+                    }
+                }
+
+                tx.success();
+            }
+                /*try (Transaction tx = db.beginTx()) {
+                    Mineotaur.LOGGER.info("Line " + i);
+                    String sid = strainColumn[i];
+                    Node strain = strains.get(sid);
+                    if (strain == null) {
+                        strain = db.createNode(groupLabel);
+                        strain.setProperty("strainID", sid);
+                        addProperties(strain, cols, strainIDs, i);
+                        strains.put(sid, strain);
+                        Mineotaur.LOGGER.info("Strain created with imageID: " + sid);
+                    }
+                    else {
+                        Mineotaur.LOGGER.info("Strain loaded with imageID: " + sid);
+                    }
+                    Long imageID = experimentColumn[i];
+                    Node experiment = images.get(imageID);
+                    if (experiment == null) {
+                        experiment = db.createNode(experimentLabel);
+                        experiment.setProperty("imageID", imageID);
+                        addProperties(experiment, cols, experimentIDs, i);
+                        images.put(imageID, experiment);
+                        experiment.createRelationshipTo(strain, DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+                        Mineotaur.LOGGER.info("Experiment created with imageID: " + imageID);
+                    }
+                    else {
+                        Mineotaur.LOGGER.info("Experiment loaded with imageID: " + imageID);
+                    }
+                    Node descriptive = createDescriptiveNode(descriptiveHeader, descriptiveColumn[i]);
+                    descriptive.createRelationshipTo(strain, DefaultRelationships.GROUP_CELL.getRelationshipType());
+                    Mineotaur.LOGGER.info("Descriptive node created.");
+                    tx.success();
+                }*/
+
+
+
+
+
+            table.close();
         } catch (ServerError serverError) {
             serverError.printStackTrace();
         }
 
-//read headers
+
+
 
     }
 
-    protected void labelGenes(String file) {
-        try (Transaction tx = db.beginTx(); BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String[] header = br.readLine().split(separator);
-            String line;
-            List<String> list = new ArrayList<>(Arrays.asList(header).subList(1, header.length));
-            FileUtils.saveList(confDir + "mineotaur.hitLabels", list);
-            while ((line = br.readLine()) != null) {
-                String[] terms = line.split(separator);
-
-                Iterator<Node> nodes = db.findNodesByLabelAndProperty(groupLabel, header[0], terms[0]).iterator();
-
-                if (!nodes.hasNext()) {
-                    Mineotaur.LOGGER.warning("No such gene: " + terms[0]);
-                    continue;
-
-                }
-                Node node = nodes.next();
-
-                if (nodes.hasNext()) {
-                    throw new IllegalStateException("Id is not unique: " + terms[0]);
-
-                }
-                boolean hasLabel = false;
-                for (int i = 1; i < terms.length; ++i) {
-                    if (terms[i].equals("1")) {
-                        node.addLabel(DynamicLabel.label(header[i]));
-                        hasLabel = true;
-                    }
-                }
-                if (!hasLabel) {
-                    node.addLabel(wildTypeLabel);
-                }
-                tx.success();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /*protected void generatePropertyFile() throws IOException {
-        if (filterProps == null || filterProps.isEmpty()) {
-            mineotaurProperties.put("hasFilters", "false");
-        }
-        else {
-            mineotaurProperties.put("hasFilters", "true");
-            mineotaurProperties.put("filterName", filterProps.get(0));
-            generateFilterList();
-        }
-        if (toPrecompute) {
-            mineotaurProperties.put("query_relationship", precomputedLabel.name());
-        }
-        else {
-            mineotaurProperties.put("query_relationship", relationships.get(groupLabel.name()).get(descriptiveLabel.name()));
-        }
-        mineotaurProperties.put("group", "GROUP");
-        mineotaurProperties.put("groupName", "reference");
-        mineotaurProperties.put("db_path", dbPath);
-        mineotaurProperties.put("cache", "soft");
-        mineotaurProperties.put("total_memory", "4G");
-        mineotaurProperties.put("omero", hostName);
-        mineotaurProperties.store(new FileWriter(confDir + "mineotaur.properties"), "Mineotaur configuration properties");
-    }*/
 
 
 
