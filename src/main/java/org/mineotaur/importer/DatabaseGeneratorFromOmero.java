@@ -46,12 +46,142 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
     private OriginalFile dataFile;
     private OriginalFile labelFile;
     private List<String> hits = new ArrayList<>();
+    protected ResourceBundle properties;
+    private String groupId;
+    private String labelFileName;
+    private String dataFileName;
+    private String imageId;
+    private List<String> groupColumns;
+    private List<String> experimentColumns;
+    private String filterColumn;
+    private String geneForLabel;
+    private String hitColumn;
 
-    public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
+    /*public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
         this.userName = userName;
         this.hostName = hostName;
         this.screenId = screenId;
+        addDummyValues();
+    }*/
+    
+    public DatabaseGeneratorFromOmero(ResourceBundle properties) {
+        this.properties = properties;
+        processProperties();
+    }
+    
+    protected void processProperties() {
+        this.password = properties.getString("password");
+        this.userName = properties.getString("userName");
+        this.hostName = this.omero = properties.getString("hostName");
+        this.screenId = Long.valueOf(properties.getString("screenId"));
+        if (properties.containsKey("overwrite")) {
+            overwrite = Boolean.valueOf(properties.getString("overwrite"));    
+        }
+        else {
+            overwrite = (boolean) DefaultProperty.OVERWRITE.getValue();
+        }
+        if (properties.containsKey("totalMemory")) {
+            totalMemory = properties.getString("totalMemory");
+        }
+        else {
+            totalMemory = (String) DefaultProperty.TOTAL_MEMORY.getValue();
+        }
+        if (properties.containsKey("cache")) {
+            cache = properties.getString("cache");
+        }
+        else {
+            cache = "none";
+        }
+        if (properties.containsKey("groupName")) {
+            groupName = properties.getString("groupName");
+        }
+        else {
+            groupName = (String) DefaultProperty.GROUP_NAME.getValue();
+        }
+        if (properties.containsKey("separator")) {
+            separator = properties.getString("separator");
+        }
+        else {
+            separator = (String) DefaultProperty.SEPARATOR.getValue();
+        }
+        if (properties.containsKey("process_limit")) {
+            limit = Integer.valueOf(properties.getString("process_limit"));
+        }
+        else {
+            limit = (Integer) DefaultProperty.LIMIT.getValue();
+        }
+        if (properties.containsKey("labelFile")) {
+            labelFileName = properties.getString("labelFile");
+        }
+        else {
+            throw new IllegalArgumentException("No label file name provided.");
+        }
+        if (properties.containsKey("dataFile")) {
+            dataFileName = properties.getString("dataFile");
+        }
+        else {
+            throw new IllegalArgumentException("No data file name provided.");
+        }
+        if (properties.containsKey("dataFile")) {
+            dataFileName = properties.getString("dataFile");
+        }
+        else {
+            throw new IllegalArgumentException("No data file name provided.");
+        }
+        if (properties.containsKey("groupID")) {
+            groupId = properties.getString("groupID");
+        }
+        else {
+            throw new IllegalArgumentException("No groupID provided.");
+        }
+        if (properties.containsKey("imageID")) {
+            imageId = properties.getString("imageID");
+        }
+        else {
+            throw new IllegalArgumentException("No imageID provided.");
+        }
+        if (properties.containsKey("geneForLabel")) {
+            geneForLabel = properties.getString("geneForLabel");
+        }
+        else {
+            throw new IllegalArgumentException("No geneForLabel provided.");
+        }
+        if (properties.containsKey("hitColumn")) {
+            hitColumn = properties.getString("hitColumn");
+        }
+        else {
+            throw new IllegalArgumentException("No hitColumn provided.");
+        }
+        if (properties.containsKey("filterColumn")) {
+            filterColumn = properties.getString("filterColumn");
+        }
+        else {
+            throw new IllegalArgumentException("No filterColumn provided.");
+        }
+        if (properties.containsKey("groupColumns")) {
+            groupColumns = Arrays.asList(properties.getString("groupColumns").split(","));
+        }
+        else {
+            throw new IllegalArgumentException("No group columns provided.");
+        }
+        if (properties.containsKey("experimentColumns")) {
+            experimentColumns = Arrays.asList(properties.getString("experimentColumns").split(","));
+        }
+        else {
+            throw new IllegalArgumentException("No experiment columns provided.");
+        }
+        groupLabel = DefaultLabels.GROUP.getLabel();
+        group = DefaultLabels.GROUP.name();
+        descriptive = DefaultLabels.DESCRIPTIVE.name();
+        descriptiveLabel = DefaultLabels.DESCRIPTIVE.getLabel();
+        experimentLabel = DefaultLabels.EXPERIMENT.getLabel();
+        Map<String, RelationshipType> rel= new HashMap<>();
+        rel.put("EXPERIMENT", DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
+        rel.put(descriptive, DefaultRelationships.GROUP_CELL.getRelationshipType());
+        relationships.put(group, rel);
+        toPrecompute = true;
+        hits.add(wildTypeLabel.name());
     }
 
 
@@ -151,11 +281,11 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             if (dataFile != null && labelFile != null) {
                 break;
             }
-            if (dataFile == null || fileName.endsWith(".h5")) {
+            if (dataFile == null || dataFileName.equals(fileName)) {
                 dataFile = file;
                 continue;
             }
-            if (labelFile == null || "bulk_annotations".equals(fileName)) {
+            if (labelFile == null || labelFileName.equals(fileName)) {
                 labelFile = file;
                 continue;
             }
@@ -208,27 +338,31 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         Integer descriptiveID = null;
         for (int i = 0; i < cols.length; i++) {
             String colName = cols[i].name;
-            System.out.println(colName);
-            if ("ImageID".equals(colName)) {
+            if (imageId.equals(colName)) {
                 //experimentIDs.add(i);
                 experimentID = i;
             }
-            else if ("strainID".equals(colName)) {
+            else if (groupId.equals(colName)) {
                 //strainIDs.add(i);
                 strainID = i;
             }
-            if ("PlateID".equals(colName) || "WellID".equals(colName) || "ImageID".equals(colName) || "imageName".equals(colName) || "plateName".equals(colName) || "well".equals(colName)) {
+            if (experimentColumns.contains(colName)) {
+                experimentIDs.add(i);    
+            }
+            else if (groupColumns.contains(colName)) {
+                strainIDs.add(i);    
+            }
+            /*if ("PlateID".equals(colName) || "WellID".equals(colName) || "ImageID".equals(colName) || "imageName".equals(colName) || "plateName".equals(colName) || "well".equals(colName)) {
                 experimentIDs.add(i);
             }
             else if ("reference".equals(colName) || "name".equals(colName) || "alternativeName".equals(colName) || "description".equals(colName)) {
                 strainIDs.add(i);
-            }
+            }*/
             if (cols[i].getClass().equals(DoubleArrayColumn.class)) {
                 descriptiveID = i;
                 descriptiveHeader = colName.split(",");
                 for (int j = 0; j < descriptiveHeader.length; ++j) {
-
-                    if (descriptiveHeader[j].equals("predictedMT")) {
+                    if (descriptiveHeader[j].equals(filterColumn)) {
                         filter = j;
                         break;
                     }
@@ -294,7 +428,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                     descriptive.createRelationshipTo(strain, DefaultRelationships.GROUP_CELL.getRelationshipType());
                     Mineotaur.LOGGER.info("Descriptive node created.");
                     count++;
-                if (count > 10000) {
+                if (count > limit) {
                     count = 0;
                     tx.success();
                     tx.close();
@@ -343,9 +477,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                 String[] stringValues = ((StringColumn)c).values;
 
                 value = stringValues[i];
-                if (c.name.equals("name")) {
-                    System.out.println(value);
-                }
+
 
             }
             if (value == null) {
@@ -387,12 +519,12 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
             Mineotaur.LOGGER.info("Precomputing nodes.");
             precomputedLabel = DynamicLabel.label(group+COLLECTED);
-            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, 10000);
+            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, limit);
             Mineotaur.LOGGER.info("Creating indices.");
             GraphDatabaseUtils.createIndex(db, groupLabel, groupName);
             Mineotaur.LOGGER.info("Precomputing nodes.");
             precomputedLabel = DynamicLabel.label(group+COLLECTED);
-            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, 10000);
+            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, limit);
             Mineotaur.LOGGER.info("Generating property files.");
             storeConfigurationFiles();
             /*generateFeatureNameList();
@@ -442,7 +574,6 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
             dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
 
-            addDummyValues();
             createDirs(name, confDir, overwrite);
 
             startDB(dbPath, totalMemory, cache);
@@ -493,11 +624,10 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             Integer labelID = null;
             for (int i = 0; i < cols.length; i++) {
                 String colName = cols[i].name;
-                System.out.println(colName);
-                if ("Gene Identifier".equals(colName)) {
+                if (geneForLabel.equals(colName)) {
                     strainID = i;
                 }
-                if ("Mineotaur Hit Type".equals(colName)) {
+                if (hitColumn.equals(colName)) {
                     labelID = i;
                 }
             }
