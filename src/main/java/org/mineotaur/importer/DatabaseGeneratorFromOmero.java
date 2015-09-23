@@ -281,11 +281,11 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             if (dataFile != null && labelFile != null) {
                 break;
             }
-            if (dataFile == null || dataFileName.equals(fileName)) {
+            if (dataFile == null && dataFileName.equals(fileName)) {
                 dataFile = file;
                 continue;
             }
-            if (labelFile == null || labelFileName.equals(fileName)) {
+            if (labelFile == null && labelFileName.equals(fileName)) {
                 labelFile = file;
                 continue;
             }
@@ -631,6 +631,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                     labelID = i;
                 }
             }
+            Mineotaur.LOGGER.info("Label ID:" + labelID);
             long[] columnsToRead = new long[cols.length];
             for (int i = 0; i < cols.length; i++) {
                 columnsToRead[i] = i;
@@ -663,7 +664,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                     Mineotaur.LOGGER.warning("Gene id is empty.");
                     continue;
                 }
-
+                Mineotaur.LOGGER.info(sid + " " + labelColumn[i]);
 
                 /*System.out.println(sid);
                 System.out.println(labelColumn[i]);*/
