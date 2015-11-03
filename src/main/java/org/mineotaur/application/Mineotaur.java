@@ -29,7 +29,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import java.io.FileReader;
 import java.util.Arrays;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 /**
@@ -72,9 +75,12 @@ public class Mineotaur extends WebMvcConfigurerAdapter {
                 if (args.length == 4) {
                     gen = new DatabaseGeneratorFromFile(args[1], args[2], args[3]);
                 }
-                else if (args.length == 5) {
-                    gen = new DatabaseGeneratorFromOmero(args[1], args[2], args[3], Long.valueOf(args[4]));
+                else if (args.length == 2) {
+                    gen = new DatabaseGeneratorFromOmero(new PropertyResourceBundle(new FileReader((args[1]))));
                 }
+                /*else if (args.length == 5) {
+                    gen = new DatabaseGeneratorFromOmero(args[1], args[2], args[3], Long.valueOf(args[4]));
+                }*/
                 else {
                     throw new UnsupportedOperationException("The number of arguments must be 3 (if importing from files) or 4 (if importing from Omero).");
                 }
