@@ -20,3 +20,7 @@ USER build
 WORKDIR /home/build/src
 RUN /opt/maven/bin/mvn install
 
+WORKDIR /mineotaur
+ENTRYPOINT ["java", "-jar", "/home/build/src/target/Mineotaur-1.0.1.jar"]
+CMD ["-help"]
+
