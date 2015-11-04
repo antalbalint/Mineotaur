@@ -70,7 +70,7 @@ Each line starting from the second contains a group object ID and a 1 for each a
 Metadata wizard
 """"""""""""""""""""
 
-Mineoatur also provides a graphical interface to provide the metadata required for a standard data file by starting the wizard from the command line:
+Mineotaur also provides a graphical interface to provide the metadata required for a standard data file by starting the wizard from the command line:
 
     java -jar <path_to_jar file> -metadata <data_file> <spearator_character>
 
