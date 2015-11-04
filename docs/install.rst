@@ -67,8 +67,8 @@ Label lines
 
 Each line starting from the second contains a group object ID and a 1 for each annotation assigned to the group object or 0, otherwise.
 
-Wizard
-"""""""
+Metadata wizard
+""""""""""""""""
 
 Mineoatur also provides a graphical interface to provide the metadata required for a standard data file by starting the wizard from the command line:
 
