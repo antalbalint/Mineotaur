@@ -58,17 +58,17 @@ The label file contain the annotations for the group level objects. For example,
     :align: center
 
 Header
-""""""
+""""""""""
 
 The first line of the label file. The first column contains the name of the group object ID property from the data file, while the rest of the columns contain the annotations.
 
 Label lines
-""""""""""""
+""""""""""""""""""""
 
 Each line starting from the second contains a group object ID and a 1 for each annotation assigned to the group object or 0, otherwise.
 
 Metadata wizard
-""""""""""""""""
+""""""""""""""""""""
 
 Mineoatur also provides a graphical interface to provide the metadata required for a standard data file by starting the wizard from the command line:
 
