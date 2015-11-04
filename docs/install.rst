@@ -50,7 +50,7 @@ Data lines
 Each line after starting from the fourth should contain the actual measurements for a descriptive object and other meatadat connecting them to experimental conditions.
 
 Label file
------------
+^^^^^^^^^^^^^^^^^^
 
 The label file contain the annotations for the group level objects. For example, what genes were picked up as hits in a study. The label file consists of a header line and multiple label lines.
 
