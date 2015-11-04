@@ -143,7 +143,17 @@ function (events, ui, context, plots, util, pako, $) {
                 	$('.alert .close').on("click", function (e) {
                 		$(this).parent().hide();
                 	});*/
-
+					   $( "#slider-range-max" ).slider({
+                          range: "max",
+                          min: 0,
+                          max: 1,
+                          step: 0.1,
+                          slide: function( event, ui ) {
+                            $( "#amount" ).val( ui.value );
+                            $(".dot").attr("style","opacity: " + ui.value);
+                          }
+                        });
+                        $( "#amount" ).val( $( "#slider-range-max" ).slider( "value" ) );
                 	$('body').bind('keydown', function (e) {
                 		var keycode = 16;
                 		if (e.which === keycode) {

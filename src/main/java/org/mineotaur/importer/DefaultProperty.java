@@ -9,7 +9,7 @@ public enum DefaultProperty {
     DESCRIPTIVE("CELL"),
     SEPARATOR("\t"),
     TOTAL_MEMORY("4G"),
-    LIMIT(10000),
+    LIMIT(5000),
     OVERWRITE(false);
 
     private Object value;

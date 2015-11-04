@@ -45,8 +45,9 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="galleryModalTitle"></h4>
                 </div>
-                <div class="modal-body">
-                    <div id="thumbnails" class="col-sm-12">
+                <div class="modal-body container">
+                    <div class="row">
+                    <div id="thumbnails" class="col-sm-12"/>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -136,7 +137,7 @@
         <tbody id="infoBody" />
     </table>
 </div>
-<div th:fragment="comparison">
+<div th:fragment="comparison" class="container">
     <div class="row clearfix">
         <div class="popup-content col-md-12 column">
             <a href="#" id="switchChartsLink">
@@ -147,10 +148,12 @@
             </a>
         </div>
     </div>
-    <div class="popup-content col-md-6 column" id="graph0" hidden="hidden"/>
-    <div class="popup-content col-md-6 column" id="graph1" hidden="hidden"/>
-    <div class="popup-content col-md-6 column" id="graph2" hidden="hidden"/>
-    <div class="popup-content col-md-6 column" id="graph3" hidden="hidden"/>
+    <div class="row">
+        <div class="popup-content col-md-6 column" id="graph0" hidden="hidden"/>
+        <div class="popup-content col-md-6 column" id="graph1" hidden="hidden"/>
+        <div class="popup-content col-md-6 column" id="graph2" hidden="hidden"/>
+        <div class="popup-content col-md-6 column" id="graph3" hidden="hidden"/>
+    </div>
 </div>
 <div th:fragment="contextMenu(id, items)">
     <ul th:id="${id}" class="jeegoocontext cm_default">

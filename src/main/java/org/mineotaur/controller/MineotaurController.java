@@ -58,6 +58,7 @@ public class MineotaurController {
     private Map<String, String> menu2;
     private List<String> features;*/
     private List<String> groupNames;
+    private boolean multiScreen;
     //private String omeroURL;
 
     /**
@@ -105,6 +106,7 @@ public class MineotaurController {
         /*if (context.containsKey("omeroURL")) {
             omeroURL = (String) context.get("omeroURL");
         }*/
+        multiScreen = (boolean) context.get("multiscreen");
     }
 
     private void manageHTHCSDataDescriptor(DataDescriptor dataDescriptor) {

@@ -1,7 +1,6 @@
 package org.mineotaur.importer;
 
 import javassist.CannotCompileException;
-import javassist.ClassPool;
 import javassist.NotFoundException;
 import org.mineotaur.common.ClassUtils;
 import org.neo4j.graphdb.*;
@@ -10,7 +9,10 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.testng.Assert.*;
 
@@ -272,7 +274,7 @@ public class ImportFromFileTest{
         assertEquals(countObjects(dg.labels.get("EXPERIMENT")),0);
         assertEquals(countObjects(dg.labels.get("CELL")),0);
 
-        dg.processData(dg.db, dg.br, dg.separator, dg.keySet, dg.signatures, dg.classes, dg.header, dg.numericData, dg.nonUniqueNodes, dg.labels, dg.descriptive, dg.relKeySet, dg.relationships, dg.limit);
+        dg.processData(dg.db, dg.br, dg.separator, dg.keySet, dg.signatures, dg.classes, dg.header, dg.numericData, dg.nonUniqueNodes, dg.labels, dg.descriptive, dg.relKeySet, dg.relationships, dg.limit, null);
         assertEquals(countObjects(dg.labels.get("GENE")), 3);
         assertEquals(countObjects(dg.labels.get("EXPERIMENT")), 3);
         assertEquals(countObjects(dg.labels.get("CELL")), 795);

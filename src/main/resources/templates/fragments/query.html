@@ -17,13 +17,13 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 
 <body>
 <!--/*/
-<div th:fragment="property (label, name, list, desc)">
+<div  th:fragment="property (label, name, list, desc)">
    <span class="label label-primary" th:text="${label}"/> <br/>
-   <select th:id="${name}" th:name="${name}" style="width: 100px">
+   <select th:id="${name}" th:name="${name}" style="width: 100% !important;">
        <th:block th:each="p : ${list}" th:if="${desc == true}">
            <optgroup th:label="${#strings.substringAfter(p,'#')}" th:if="${#strings.startsWith(p,'#')}"/>
            <option th:value="${#strings.substringBefore(p,'/')}" th:text="${#strings.substringAfter(p,'/')}" th:if="!${#strings.startsWith(p,'#')}"/>
@@ -35,8 +35,8 @@
    </select>
 </div>
 <div th:fragment="aggregation (name, list)">
-    <span class="label label-primary">Aggregation mode</span><br/>
-    <select th:id="${name}" th:name="${name}" style="width: 100px">
+    <span class="label label-primary"  style="width: 100% !important;">Aggregation mode</span><br/>
+    <select th:id="${name}" th:name="${name}"  style="width: 100% !important;">
         <option th:each="p : ${list}" th:value="${p}" th:text="${p.toString()}"/>
     </select>
 </div>
@@ -90,7 +90,7 @@
 <div th:fragment="genes (geneNames, suffix, multiple, selected)">
     <span class="label label-primary">Genes</span> <br/>
     <th:block th:with="id=${#strings.append('gene',suffix)}">
-    <select th:id="${id}" th:name="${id}" th:multiple="${multiple}" style="width: 100px">
+    <select th:id="${id}" th:name="${id}" th:multiple="${multiple}" style="width: 100% !important;">
         <option th:each="p : ${geneNames}" th:value="${p}" th:text="${p}" th:selected="${selected}"/>
     </select>
     <br/><a href="#" th:id="${#strings.append('showGene',suffix)}" th:if="${multiple}">Enter a list of genes</a>
@@ -103,7 +103,7 @@
 </div>
 <div th:fragment="distributionPlot (prefix,multi)">
     <span class="label label-primary">Plot type</span> <br/>
-    <select th:id="${#strings.append(prefix, 'PlotType')}" style="width: 100px">
+    <select th:id="${#strings.append(prefix, 'PlotType')}" style="width: 100% !important;">
         <option th:value="${#strings.append(prefix, 'Histogram')}">Histogram</option>
         <option th:value="${#strings.append(prefix, 'MultiHistogram')}" th:if="${multi}">Multihistogram</option>
         <option th:value="${#strings.append(prefix, 'KDE')}">Kernel Density Estimation</option>

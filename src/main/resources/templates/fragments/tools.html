@@ -17,7 +17,7 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <body>
 <!--/*/
 <div th:fragment="plotTools">
@@ -39,6 +39,15 @@
     </select><br/>
     <input id="selection" name="selection" type="checkbox" class="tool"/>
     <label for="selection">Select area</label>
+
+
+</div>
+<div th:fragment="opacitySlider">
+    <p>
+    <label for="amount">Opacity:</label>
+  <input type="text" id="amount" readonly="true" style="border:0; color:#f6931f; font-weight:bold;"/>
+    </p>
+    <div id="slider-range-max"></div>
 </div>
 <div th:fragment="buttons">
     <h6><span class="glyphicon glyphicon-download"/> Download

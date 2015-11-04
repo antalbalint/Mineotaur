@@ -19,7 +19,7 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 	var selected = [];
 	var colors = d3.scale.category20();
 	var usedColors = {};
-
+	var opacity;
 	function getColor(label) {
 
 	    return colors(label);
@@ -252,6 +252,8 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		yAxis.outerTickSize(1);
 		// Divide the maximum opacity among the labels.
 		opacity = maxOpacity / labels.length;
+		$( "#slider-range-max" ).slider('value',opacity);
+		$( "#amount" ).val(opacity);
 		console.log(opacity);
 		// Div for the tooltip on the circles. Contains coordinates and name.
 		var tooltip = d3.select("body")
@@ -761,6 +763,12 @@ define(['mineotaur/util', 'mineotaur/controller', 'mineotaur/context', 'regressi
 		},
 		resetGeneFilter: function() {
 		    d3.select("#graph").select("svg").selectAll("circle").attr("class", "dot context1").attr("r", 3.5);
-		}
+		},
+		getOpacity: function() {
+			return opacity;
+		},
+		setOpacity: function(_opacity) {
+        			opacity = _opacity;
+        		},
 };
 });

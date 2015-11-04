@@ -1,48 +1,51 @@
 package org.mineotaur.importer;
 
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.NotFoundException;
 import org.mineotaur.application.Mineotaur;
 import org.mineotaur.common.ClassUtils;
 import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
 /**
  * Created by balintantal on 07/07/2015.
  */
-public class DatabaseGeneratorFromFile extends DatabaseGenerator{
+public class DatabaseGeneratorFromFile extends DatabaseGenerator {
     protected static final String NUMBER = "NUMBER";
     protected static final String ID = "ID";
     protected static final String FILTER = "FILTER";
-
-    protected Properties properties;
-    protected String propertyPath;
-/*
-    protected List<String> unique = new ArrayList<>();
-*/
+    /*
+        protected List<String> unique = new ArrayList<>();
+    */
     protected final Map<String, List<Node>> nonUniqueNodes = new HashMap<>();
-    protected Map<String, Map<String, RelationshipType>> relationships;
     protected final Map<String, Class> classes = new HashMap<>();
-    protected String[] header;
-    protected String[] nodeTypes;
-    protected String[] dataTypes;
     protected final Map<String, List<Integer>> signatures = new HashMap<>();
     protected final List<Integer> numericData = new ArrayList<>();
     protected final Map<String, List<String>> ids = new HashMap<>();
+    protected String dataFile;
+    protected String labelFile;
+    protected Properties properties;
+    protected String propertyPath;
+    protected Map<String, Map<String, RelationshipType>> relationships;
+    protected String[] header;
+    protected String[] nodeTypes;
+    protected String[] dataTypes;
     protected Set<String> keySet;
     protected Set<String> relKeySet;
     protected BufferedReader br;
     protected boolean overwrite;
-    protected final String dataFile;
-    protected final String labelFile;
     protected String relationshipString;
     protected List<String> hitList;
 
-
+    protected DatabaseGeneratorFromFile() {
+    }
     public DatabaseGeneratorFromFile(String propertyPath, String dataFile, String labelFile) {
         this.propertyPath = propertyPath;
         this.dataFile = dataFile;
@@ -55,12 +58,11 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         this.labelFile = labelFile;
     }
 
-    protected void processProperties(Properties prop) throws IOException {
+    protected void processProperties(Properties properties) throws IOException {
         if (properties.containsKey("name")) {
             name = properties.getProperty("name");
 
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("The input property file should contain a name property.");
         }
         group = properties.getProperty("group", (String) DefaultProperty.GROUP.getValue());
@@ -68,18 +70,16 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         descriptive = properties.getProperty("descriptive", (String) DefaultProperty.DESCRIPTIVE.getValue());
         separator = properties.getProperty("separator", (String) DefaultProperty.SEPARATOR.getValue());
         totalMemory = properties.getProperty("total_memory", (String) DefaultProperty.TOTAL_MEMORY.getValue());
-        relationshipString = properties.getProperty("relationships", group+"-"+descriptive);
+        relationshipString = properties.getProperty("relationships", group + "-" + descriptive);
         if (properties.containsKey("limit")) {
             limit = Integer.valueOf(properties.getProperty("limit"));
-        }
-        else {
+        } else {
             limit = (int) DefaultProperty.LIMIT.getValue();
             Mineotaur.LOGGER.warning("Property limit not provided, using default value: " + limit);
         }
         if (properties.containsKey("overwrite")) {
             overwrite = Boolean.valueOf(properties.getProperty("overwrite"));
-        }
-        else {
+        } else {
             overwrite = (boolean) DefaultProperty.OVERWRITE.getValue();
             Mineotaur.LOGGER.warning("Property overwrite not provided, using default value: " + overwrite);
         }
@@ -128,13 +128,14 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
 
         groupLabel = DynamicLabel.label(group);
         descriptiveLabel = DynamicLabel.label(descriptive);
-        precomputedLabel = DynamicLabel.label(group+COLLECTED);
+        precomputedLabel = DynamicLabel.label(group + COLLECTED);
         confDir = name + FILE_SEPARATOR + CONF + FILE_SEPARATOR;
         dbPath = name + FILE_SEPARATOR + DB + FILE_SEPARATOR;
     }
 
     /**
      * Processing input properties and creating a directory to store configuration files.
+     *
      * @throws IOException if there is an error with the input property file
      */
     protected void processProperties(String prop) throws IOException {
@@ -158,8 +159,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
             Mineotaur.LOGGER.info("Reading properties...");
             if (propertyPath != null) {
                 processProperties(propertyPath);
-            }
-            else {
+            } else {
                 processProperties(properties);
             }
             Mineotaur.LOGGER.info("Creating directories...");
@@ -169,13 +169,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
             relKeySet = relationships.keySet();
             Mineotaur.LOGGER.info("Starting database...");
             startDB(dbPath, totalMemory, cache);
-            Mineotaur.LOGGER.info("Processing metadata.");
-            processMetadata();
-            Mineotaur.LOGGER.info("Generating classes.");
-            generateClasses(keySet, signatures, ids, classes, header, dataTypes);
-            GraphDatabaseUtils.createIndex(db, groupLabel, groupName);
-            Mineotaur.LOGGER.info("Processing input data.");
-            processData(db, br, separator, keySet, signatures, classes, header, numericData, nonUniqueNodes, labels, descriptive, relKeySet, relationships, limit);
+            processScreen();
             Mineotaur.LOGGER.info("Processing label data.");
             labelGenes();
             if (filterProps != null && !filterProps.isEmpty()) {
@@ -194,21 +188,40 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
                 getImageIDs(relationships.get(group).get("EXPERIMENT"));
             }*/
             Mineotaur.LOGGER.info("Database generation finished. Start Mineotaur instance with -start " + name);
-        } catch (CannotCompileException | NotFoundException e) {
+        /*} catch (CannotCompileException | NotFoundException e) {
             e.printStackTrace();
+        */
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
+    protected void processScreen() {
+        try {
+            processScreen(dataFile, null);
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        } catch (CannotCompileException e) {
+            e.printStackTrace();
+        }
+    }
 
-
+    protected void processScreen(String dataFile, String screenName) throws NotFoundException, CannotCompileException {
+        Mineotaur.LOGGER.info("Processing metadata.");
+        processMetadata(dataFile);
+        Mineotaur.LOGGER.info("Generating classes.");
+        generateClasses(keySet, signatures, ids, classes, header, dataTypes);
+        GraphDatabaseUtils.createIndex(db, groupLabel, groupName);
+        Mineotaur.LOGGER.info("Processing input data.");
+        Label label = screenName != null ? DynamicLabel.label(screenName) : null;
+        processData(db, br, separator, keySet, signatures, classes, header, numericData, nonUniqueNodes, labels, descriptive, relKeySet, relationships, limit, label);
+    }
 
     /**
      * Method for processing the header information provided in the input.
      */
-    protected void processMetadata(){
+    protected void processMetadata(String dataFile) {
         try {
             br = new BufferedReader(new FileReader(dataFile));
             header = br.readLine().split(separator);
@@ -247,9 +260,9 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
     }
 
 
-
     /**
      * Method for generating classes for the object types defined in the input file.
+     *
      * @throws javassist.NotFoundException
      * @throws CannotCompileException
      */
@@ -262,7 +275,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         for (String key : keySet) {
             List<Integer> indices = signatures.get(key);
             List<String> idFields = ids.get(key);
-            classes.put(key, ClassUtils.createClass(pool, key, indices, header, dataTypes,  NUMBER, ClassUtils.buildEquals(key, idFields)));
+            classes.put(key, ClassUtils.createClass(pool, key, indices, header, dataTypes, NUMBER, ClassUtils.buildEquals(key, idFields)));
         }
     }
 
@@ -301,8 +314,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
                 Node newNode = null;
                 if (storedNodes != null) {
                     newNode = ClassUtils.lookupObject(data.get(key), storedNodes, db);
-                }
-                else {
+                } else {
                     storedNodes = new ArrayList<>();
                     nonUniqueNodes.put(key, storedNodes);
                 }
@@ -330,17 +342,13 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
 
     @Override
     protected void processData(GraphDatabaseService db) {
-        processData(db, br, separator, keySet, signatures, classes, header, numericData, nonUniqueNodes, labels, descriptive, relKeySet, relationships, limit);
+        processData(db, br, separator, keySet, signatures, classes, header, numericData, nonUniqueNodes, labels, descriptive, relKeySet, relationships, limit, null);
     }
-
 
 
     /**
      * Method to process the data provided in the input file line by line. Field br should be set to the first data line.
-     * @throws IOException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws NoSuchFieldException
+     *
      * @param db
      * @param br
      * @param separator
@@ -355,6 +363,10 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
      * @param relKeySet
      * @param relationships
      * @param limit
+     * @throws IOException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws NoSuchFieldException
      */
     public void processData(GraphDatabaseService db,
                             BufferedReader br,
@@ -369,7 +381,8 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
                             String descriptive,
                             Set<String> relKeySet,
                             Map<String, Map<String, RelationshipType>> relationships,
-                            int limit){
+                            int limit,
+                            Label screenLabel) {
         String line;
         Mineotaur.LOGGER.info("Processing data...");
         int lineCount = 0;
@@ -385,6 +398,12 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
                 Map<String, Object> data = generateObjectsFromLine(terms, keySet, signatures, classes, header, numericData);
                 Map<String, Node> newNodes = getNodesForObjects(db, data, keySet, descriptive, labels, nonUniqueNodes);
                 connectNodes(newNodes, relKeySet, relationships);
+                if (screenLabel != null) {
+                    for (String key: newNodes.keySet()) {
+                        Node node = newNodes.get(key);
+                        node.addLabel(screenLabel);
+                    }
+                }
                 nodeCount += classCount + relationshipCount;
                 /*if (nodeCount > limit) {
                     nodeCount = 0;
@@ -414,14 +433,15 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         Mineotaur.LOGGER.info(lineCount + " lines processed.");
     }
 
-     /**
+    /**
      * Method to label group objects.
-      * @param db
-      * @param separator
-      * @param groupLabel
-      * @param wildTypeLabel
-      * @param labelFile
-      */
+     *
+     * @param db
+     * @param separator
+     * @param groupLabel
+     * @param wildTypeLabel
+     * @param labelFile
+     */
     protected List<String> labelGenes(GraphDatabaseService db,
                                       String labelFile,
                                       String separator,
@@ -472,6 +492,11 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
         hitList = labelGenes(db, labelFile, separator, groupLabel, wildTypeLabel);
     }
 
+    @Override
+    protected void processMetadata() {
+        processMetadata(dataFile);
+    }
+
 
     @Override
     protected List<String> getHits() {
@@ -485,6 +510,7 @@ public class DatabaseGeneratorFromFile extends DatabaseGenerator{
 
     /**
      * Method to store feature names in an external file.
+     *
      * @param numericData
      * @param header
      */

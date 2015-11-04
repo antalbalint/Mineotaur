@@ -67,6 +67,16 @@ Label lines
 
 Each line starting from the second contains a group object ID and a 1 for each annotation assigned to the group object or 0, otherwise.
 
+Wizard
+"""""""
+
+Mineoatur also provides a graphical interface to provide the metadata required for a standard data file by starting the wizard from the command line:
+
+    java -jar <path_to_jar file> -metadata <data_file> <spearator_character>
+
+.. image:: /images/metadata_wizard.png
+    :align: center
+
 Options file
 ------------
 
@@ -81,6 +91,7 @@ The following options can be set:
 * separator: character used to separate columns in the data and the label files. Default: \\t
 * overwrite: whether to overwrite the current instance with the same name. Default: true
 
+Please note that the different object caching methods of the operating systems might affect the performance of Neo4J so it is advised to set the amount of total memory after some experimenting. Under OSX, it is also advised to perform a memory clean from time to time since a lot of object is kept in the memory, leading to performance loss in the long run.
 
 Generation from command line
 -------------------------------------

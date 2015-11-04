@@ -123,6 +123,14 @@ Since scatterplots can be overcrowded, it is might be hardd to find individual o
 
 The highlighting can be reset by using the Reset link.
 
+Setting the opacity
+--------------------
+
+To enable the visual inspection of crowded areas, once could use the opacity slider to set the right amount of transparency.
+
+.. image:: /images/opacity.png
+    :align: center
+
 
 
 

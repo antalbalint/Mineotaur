@@ -24,8 +24,6 @@ import org.mineotaur.common.AggregationMode;
 import org.mineotaur.common.FileUtils;
 import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
-import org.neo4j.tooling.GlobalGraphOperations;
-
 
 import java.io.File;
 import java.io.FileReader;
@@ -54,38 +52,71 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
     private List<String> groupNames;
     private Label groupLabel;
     private String groupName;
-
+    private boolean multiscreeen;
     public GenericEmbeddedGraphDatabaseProvider() {
         initProperties();
     }
 
-    private void loadFeatures() {
-        context.put("features", FileUtils.processTextFile(baseDir + "mineotaur.features"));
+    private void loadMultiScreen() {
+        if (properties.containsKey("multiscreen")) {
+            multiscreeen = properties.getString("multiscreen").equals("true");
+        }
+        context.put("multiscreen", multiscreeen);
     }
 
+    private void loadFeatures() {
+        if (multiscreeen) {
+            context.put("features1", FileUtils.processTextFile(baseDir + "mineotaur.features1"));
+            context.put("features2", FileUtils.processTextFile(baseDir + "mineotaur.features2"));
+        }
+        else {
+            context.put("features", FileUtils.processTextFile(baseDir + "mineotaur.features"));
+        }
+    }
+
+    private Map<String, String> parseFilters(List<String> filterList) {
+        Map<String, String> filters = new HashMap<>();
+        for (String filter: filterList) {
+            if (filter.contains("/")) {
+                String[] terms = filter.split("/");
+                filters.put(terms[0], terms[1]);
+            }
+            else {
+                filters.put(filter, filter);
+            }
+        }
+        return filters;
+    }
+    
+    private void handleFilters(String filters, String filterName) {
+        context.put(filters, parseFilters(FileUtils.processTextFile(baseDir + "mineotaur." + filters)));
+        context.put(filterName, properties.getString(filterName));
+    }
     private void loadFilters() {
         if (properties == null) {
             throw new IllegalStateException("Property file has not been loaded yet.");
         }
         if (properties.getString("hasFilters").equals("false")) {
             context.put("hasFilter", false);
-            context.put("filters", new ArrayList());
+            context.put("filters", new HashMap<String, String>());
         }
         else {
             context.put("hasFilter", true);
-            List<String> filterList = FileUtils.processTextFile(baseDir + "mineotaur.filters");
-            Map<String, String> filters = new HashMap<>();
-            for (String filter: filterList) {
-                if (filter.contains("/")) {
-                    String[] terms = filter.split("/");
-                    filters.put(terms[0], terms[1]);
-                }
-                else {
-                    filters.put(filter, filter);
-                }
+            if (multiscreeen) {
+//                Map<String, String> filters = parseFilters(FileUtils.processTextFile(baseDir + "mineotaur.filters"));
+                handleFilters("filter1", "filterName1");
+                handleFilters("filter2", "filterName2");
+                /*context.put("filters1", parseFilters(FileUtils.processTextFile(baseDir + "mineotaur.filters1")));
+                context.put("filterName1", properties.getString("filterName1"));
+                context.put("filters2", parseFilters(FileUtils.processTextFile(baseDir + "mineotaur.filters2")));
+                context.put("filterName2", properties.getString("filterName2"));*/
             }
-            context.put("filters", filters);
-            context.put("filterName", properties.getString("filterName"));
+            else {
+                handleFilters("filters", "filterName");
+                /*context.put("filters", parseFilters(FileUtils.processTextFile(baseDir + "mineotaur.filters")));
+                context.put("filterName", properties.getString("filterName"));*/
+            }
+            
         }
     }
 
@@ -179,6 +210,7 @@ public class GenericEmbeddedGraphDatabaseProvider implements GraphDatabaseProvid
                 }
                 properties = new PropertyResourceBundle(new FileReader(baseDir + "mineotaur.properties"));
                 checkEntries(properties);
+                loadMultiScreen();
                 loadFeatures();
                 loadFilters();
                 loadGroupNames();

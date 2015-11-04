@@ -139,6 +139,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                                     filters.forEach(function(f) {
                                         $(f).prop('disabled', false);
                                     });
+                                                $('#opacitySlider').show();
+
                                             	/*$("#geneFilt").prop('disabled', 'disabled');*/
                                             	$('#geneFiltLink').show();
                                             	$('#resetFiltLink').show();
@@ -207,6 +209,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                     	$('#geneFiltLink').hide();
                     	$('#resetFiltLink').hide();
                     	$('#tools').find('#showGeneInput').hide();
+                    	            $('#opacitySlider').show();
+
                     	$('#transpose').prop('disabled', false);
                     	$('#regression').prop('disabled', false);
                     	$('#selection').prop('disabled', false);
@@ -251,7 +255,7 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                                                         	$('#geneFiltLink').show();
                                                         	$('#resetFiltLink').show();
                                                         	$('#tools').find('#showGeneInput').show();
-
+            $('#opacitySlider').hide();
         	$('#transpose').prop('disabled', true);
         	$('#regression').prop('disabled', true);
         	$('#selection').prop('disabled', true);
@@ -303,6 +307,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                                             	$('#geneFiltLink').hide();
                                             	$('#resetFiltLink').hide();
                                             	$('#tools').find('#showGeneInput').hide();
+        	$('#opacitySlider').hide();
+
         	$('#transpose').prop('disabled', true);
         	$('#regression').prop('disabled', true);
         	$('#selection').prop('disabled', true);
