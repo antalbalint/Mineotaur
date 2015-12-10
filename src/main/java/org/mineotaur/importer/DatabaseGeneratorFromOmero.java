@@ -3,27 +3,26 @@ package org.mineotaur.importer;
 
 import Glacier2.CannotCreateSessionException;
 import Glacier2.PermissionDeniedException;
-import omero.RLong;
-import omero.rtypes;
-import omero.rtypes.RTypeObjectFactoryRegistry;
 import omero.ServerError;
 import omero.api.IContainerPrx;
-import omero.api.IMetadataPrx;
 import omero.api.IQueryPrx;
 import omero.api.ServiceFactoryPrx;
 import omero.client;
 import omero.grid.*;
-import omero.model.*;
+import omero.model.IObject;
+import omero.model.OriginalFile;
+import omero.model.Screen;
+import omero.model.Well;
+import omero.rtypes;
 import omero.sys.ParametersI;
 import org.mineotaur.application.Mineotaur;
-import org.mineotaur.common.FileUtils;
 import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
-import pojos.*;
+import pojos.PlateData;
+import pojos.ScreenData;
+import pojos.WellData;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.*;
 
 
@@ -56,6 +55,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
     private String filterColumn;
     private String geneForLabel;
     private String hitColumn;
+    private int rowsToFetch;
 
     /*public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
@@ -110,6 +110,12 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         }
         else {
             limit = (Integer) DefaultProperty.LIMIT.getValue();
+        }
+        if (properties.containsKey("row_prefetch")) {
+            rowsToFetch = Integer.valueOf(properties.getString("row_prefetch"));
+        }
+        else {
+            rowsToFetch = (Integer) DefaultProperty.ROW_PREFETCH.getValue();
         }
         if (properties.containsKey("labelFile")) {
             labelFileName = properties.getString("labelFile");
@@ -329,6 +335,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
 //read headers
         Column[] cols = table.getHeaders();
+        Mineotaur.LOGGER.info(Arrays.toString(cols));
         List<Integer> experimentIDs = new ArrayList<>();
         List<Integer> strainIDs = new ArrayList<>();
 //        String[] descriptiveHeader = null;
@@ -341,16 +348,14 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             if (imageId.equals(colName)) {
                 //experimentIDs.add(i);
                 experimentID = i;
-            }
-            else if (groupId.equals(colName)) {
+            } else if (groupId.equals(colName)) {
                 //strainIDs.add(i);
                 strainID = i;
             }
             if (experimentColumns.contains(colName)) {
-                experimentIDs.add(i);    
-            }
-            else if (groupColumns.contains(colName)) {
-                strainIDs.add(i);    
+                experimentIDs.add(i);
+            } else if (groupColumns.contains(colName)) {
+                strainIDs.add(i);
             }
             /*if ("PlateID".equals(colName) || "WellID".equals(colName) || "ImageID".equals(colName) || "imageName".equals(colName) || "plateName".equals(colName) || "well".equals(colName)) {
                 experimentIDs.add(i);
@@ -369,7 +374,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                 }
             }
         }
-
+        Mineotaur.LOGGER.info(String.valueOf(strainID));
 // Depending on size of table, you may only want to read some blocks.
         long[] columnsToRead = new long[cols.length];
         for (int i = 0; i < cols.length; i++) {
@@ -377,24 +382,29 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         }
 
 // The number of columns we wish to read.
-        long[] rowSubset = new long[(int) (table.getNumberOfRows()-1)];
-        for (int j = 0; j < rowSubset.length; j++) {
-            rowSubset[j] = j;
-        }
-        Data data = table.slice(columnsToRead, rowSubset); // read the data.
-        cols = data.columns;
-        Map<Long, Node> images = new HashMap<>();
-        Map<String, Node> strains = new HashMap<>();
-        String[] strainColumn = ((StringColumn) cols[strainID]).values;
-        long[] experimentColumn = ((ImageColumn) cols[experimentID]).values;
-        double[][] descriptiveColumn = ((DoubleArrayColumn)cols[descriptiveID]).values;
-        double[] filterColumn = descriptiveColumn[filter];
-        filterProps.add(descriptiveHeader[filter]);
-        int count = 0;
-        Transaction tx = null;
-        try {
-            tx = db.beginTx();
-            for (int i = 0; i < strainColumn.length; ++i) {
+        int tableLength = (int) table.getNumberOfRows() - 1;
+        for (int currentBatch = 0; currentBatch < tableLength; currentBatch += rowsToFetch) {
+
+            int batchSize = Math.min(currentBatch + rowsToFetch, tableLength);
+            long[] rowSubset = new long[(int) (batchSize)];
+            for (int j = 0; j < rowSubset.length; j++) {
+                rowSubset[j] = j + currentBatch;
+            }
+            table = entry.sharedResources().openTable(file);
+            Data data = table.slice(columnsToRead, rowSubset); // read the data.
+            cols = data.columns;
+            Map<Long, Node> images = new HashMap<>();
+            Map<String, Node> strains = new HashMap<>();
+            String[] strainColumn = ((StringColumn) cols[strainID]).values;
+            long[] experimentColumn = ((ImageColumn) cols[experimentID]).values;
+            double[][] descriptiveColumn = ((DoubleArrayColumn) cols[descriptiveID]).values;
+            double[] filterColumn = descriptiveColumn[filter];
+            filterProps.add(descriptiveHeader[filter]);
+            int count = 0;
+            Transaction tx = null;
+            try {
+                tx = db.beginTx();
+                for (int i = 0; i < strainColumn.length; ++i) {
 
                     Mineotaur.LOGGER.info("Line " + i);
                     String sid = strainColumn[i];
@@ -406,8 +416,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                         addProperties(strain, cols, strainIDs, i);
                         strains.put(sid, strain);
                         Mineotaur.LOGGER.info("Strain created with imageID: " + sid);
-                    }
-                    else {
+                    } else {
                         Mineotaur.LOGGER.info("Strain loaded with imageID: " + sid);
                     }
                     Long imageID = experimentColumn[i];
@@ -420,34 +429,32 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                         images.put(imageID, experiment);
                         experiment.createRelationshipTo(strain, DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
                         Mineotaur.LOGGER.info("Experiment created with imageID: " + imageID);
-                    }
-                    else {
+                    } else {
                         Mineotaur.LOGGER.info("Experiment loaded with imageID: " + imageID);
                     }
                     Node descriptive = createDescriptiveNode(descriptiveHeader, descriptiveColumn[i]);
                     descriptive.createRelationshipTo(strain, DefaultRelationships.GROUP_CELL.getRelationshipType());
                     Mineotaur.LOGGER.info("Descriptive node created.");
                     count++;
-                if (count > limit) {
-                    count = 0;
-                    tx.success();
-                    tx.close();
-                    tx = db.beginTx();
+                    if (count > limit) {
+                        count = 0;
+                        tx.success();
+                        tx.close();
+                        tx = db.beginTx();
+                    }
+
                 }
 
+
+            } finally {
+                tx.success();
+                tx.close();
             }
 
 
+            table.close();
         }
-        finally {
-            tx.success();
-            tx.close();
-        }
-
-
-        table.close();
     }
-
     protected Node createDescriptiveNode(String[] descriptiveHeader, double[] descriptiveColumn) {
         Node node = db.createNode(descriptiveLabel);
         for (int i = 0; i< descriptiveHeader.length; ++i) {
