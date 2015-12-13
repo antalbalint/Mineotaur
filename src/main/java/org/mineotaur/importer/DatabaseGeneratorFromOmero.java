@@ -335,6 +335,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
 //read headers
         Column[] cols = table.getHeaders();
+        int tableLength = (int) table.getNumberOfRows();
+        table.close();
+
         Mineotaur.LOGGER.info(Arrays.toString(cols));
         List<Integer> experimentIDs = new ArrayList<>();
         List<Integer> strainIDs = new ArrayList<>();
@@ -381,11 +384,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             columnsToRead[i] = i;
         }
 
-// The number of columns we wish to read.
-        int tableLength = (int) table.getNumberOfRows() - 1;
         for (int currentBatch = 0; currentBatch < tableLength; currentBatch += rowsToFetch) {
 
-            int batchSize = Math.min(currentBatch + rowsToFetch, tableLength);
+            int batchSize = Math.min(rowsToFetch, tableLength - currentBatch);
             long[] rowSubset = new long[(int) (batchSize)];
             for (int j = 0; j < rowSubset.length; j++) {
                 rowSubset[j] = j + currentBatch;
