@@ -385,7 +385,8 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         for (int i = 0; i < cols.length; i++) {
             columnsToRead[i] = i;
         }
-
+        Map<Long, Node> images = new HashMap<>();
+        Map<String, Node> strains = new HashMap<>();
         for (int currentBatch = 0; currentBatch < tableLength; currentBatch += rowsToFetch) {
 
             int batchSize = Math.min(rowsToFetch, tableLength - currentBatch);
@@ -396,12 +397,11 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             table = entry.sharedResources().openTable(file);
             Data data = table.slice(columnsToRead, rowSubset); // read the data.
             cols = data.columns;
-            Map<Long, Node> images = new HashMap<>();
-            Map<String, Node> strains = new HashMap<>();
+
             String[] strainColumn = ((StringColumn) cols[strainID]).values;
             long[] experimentColumn = ((ImageColumn) cols[experimentID]).values;
             double[][] descriptiveColumn = ((DoubleArrayColumn) cols[descriptiveID]).values;
-            double[] filterColumn = descriptiveColumn[filter];
+//            double[] filterColumn = descriptiveColumn[filter];
             if (!filterProps.contains(descriptiveHeader[filter])) {
                 filterProps.add(descriptiveHeader[filter]);
             }
@@ -450,7 +450,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                     }
 
                 }
-
+            Mineotaur.LOGGER.info("Number of strains: " + String.valueOf(strains.size()));
 
             } finally {
                 tx.success();
