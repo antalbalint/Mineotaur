@@ -450,7 +450,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                     }
 
                 }
-            Mineotaur.LOGGER.info("Number of strains: " + String.valueOf(strains.size()));
+
 
             } finally {
                 tx.success();
@@ -460,6 +460,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
             table.close();
         }
+        Mineotaur.LOGGER.info("Number of strains: " + String.valueOf(strains.size()));
     }
     protected Node createDescriptiveNode(String[] descriptiveHeader, double[] descriptiveColumn) {
         Node node = db.createNode(descriptiveLabel);
