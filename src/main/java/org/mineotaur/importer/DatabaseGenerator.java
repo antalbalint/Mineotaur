@@ -26,7 +26,9 @@ import org.mineotaur.common.GraphDatabaseUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.tooling.GlobalGraphOperations;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 /**
  * Class containing fields and methods to generate a graph database from the input provided by the user.
@@ -171,10 +173,14 @@ public abstract class DatabaseGenerator {
         try {
             tx = db.beginTx();
             RelationshipType rt = relationships.get(group).get(descriptive);
+            List<Node> groupNodes = new ArrayList<>();
             Iterator<Node> nodes = ggo.getAllNodesWithLabel(groupLabel).iterator();
             while (nodes.hasNext()) {
+                groupNodes.add(nodes.next());
+            }
+            for (Node node: groupNodes) {
                 Mineotaur.LOGGER.info("Precomputing: " + (count++));
-                Node node = nodes.next();
+//                Node node = nodes.next();
                 Iterator<Relationship> rels = node.getRelationships(rt).iterator();
                 Map<String, List<Double>> features = new HashMap<>();
                 Map<String, List<String>> innerfilter = new HashMap<>();

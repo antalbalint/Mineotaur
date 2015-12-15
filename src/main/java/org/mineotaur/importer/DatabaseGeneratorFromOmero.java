@@ -56,6 +56,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
     private String geneForLabel;
     private String hitColumn;
     private int rowsToFetch;
+    private int precomputeLimit;
 
     /*public DatabaseGeneratorFromOmero(String hostName, String userName, String password, Long screenId) {
         this.password = password;
@@ -111,6 +112,12 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         else {
             limit = (Integer) DefaultProperty.LIMIT.getValue();
         }
+        if (properties.containsKey("precompute_limit")) {
+            precomputeLimit = Integer.valueOf(properties.getString("precompute_limit"));
+        }
+        else {
+            precomputeLimit = (Integer) DefaultProperty.PRECOMPUTE_LIMIT.getValue();
+        }
         if (properties.containsKey("row_prefetch")) {
             rowsToFetch = Integer.valueOf(properties.getString("row_prefetch"));
         }
@@ -129,12 +136,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
         else {
             throw new IllegalArgumentException("No data file name provided.");
         }
-        if (properties.containsKey("dataFile")) {
-            dataFileName = properties.getString("dataFile");
-        }
-        else {
-            throw new IllegalArgumentException("No data file name provided.");
-        }
+
         if (properties.containsKey("groupID")) {
             groupId = properties.getString("groupID");
         }
@@ -400,7 +402,10 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             long[] experimentColumn = ((ImageColumn) cols[experimentID]).values;
             double[][] descriptiveColumn = ((DoubleArrayColumn) cols[descriptiveID]).values;
             double[] filterColumn = descriptiveColumn[filter];
-            filterProps.add(descriptiveHeader[filter]);
+            if (!filterProps.contains(descriptiveHeader[filter])) {
+                filterProps.add(descriptiveHeader[filter]);
+            }
+
             int count = 0;
             Transaction tx = null;
             try {
@@ -416,9 +421,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
                         strain.setProperty("strainID", sid);
                         addProperties(strain, cols, strainIDs, i);
                         strains.put(sid, strain);
-                        Mineotaur.LOGGER.info("Strain created with imageID: " + sid);
+                        Mineotaur.LOGGER.info("Strain created with ID: " + sid);
                     } else {
-                        Mineotaur.LOGGER.info("Strain loaded with imageID: " + sid);
+                        Mineotaur.LOGGER.info("Strain loaded with ID: " + sid);
                     }
                     Long imageID = experimentColumn[i];
                     Node experiment = images.get(imageID);
@@ -518,6 +523,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             readTable(dataFile);
             Mineotaur.LOGGER.info("Processing label data.");
             labelGenes();
+            closeConnection();
             Mineotaur.LOGGER.info(filterProps.toString());
             if (filterProps != null && !filterProps.isEmpty()) {
                 Mineotaur.LOGGER.info("Processing descriptive filters.");
@@ -525,14 +531,12 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             }
             Mineotaur.LOGGER.info("Connecting images to strains.");
             getImageIDs(DefaultRelationships.GROUP_EXPERIMENT.getRelationshipType());
-            Mineotaur.LOGGER.info("Precomputing nodes.");
-            precomputedLabel = DynamicLabel.label(group+COLLECTED);
-            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, limit);
+
             Mineotaur.LOGGER.info("Creating indices.");
             GraphDatabaseUtils.createIndex(db, groupLabel, groupName);
             Mineotaur.LOGGER.info("Precomputing nodes.");
             precomputedLabel = DynamicLabel.label(group+COLLECTED);
-            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, limit);
+            precomputeOptimized(db, ggo, groupLabel, descriptiveLabel, precomputedLabel, relationships, filterProps, group, descriptive, precomputeLimit);
             Mineotaur.LOGGER.info("Generating property files.");
             storeConfigurationFiles();
             /*generateFeatureNameList();

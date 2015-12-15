@@ -10,6 +10,7 @@ public enum DefaultProperty {
     SEPARATOR("\t"),
     TOTAL_MEMORY("4G"),
     LIMIT(5000),
+    PRECOMPUTE_LIMIT(1000),
     ROW_PREFETCH(1000),
     OVERWRITE(false);
 

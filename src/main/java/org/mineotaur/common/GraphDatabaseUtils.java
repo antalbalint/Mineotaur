@@ -9,8 +9,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.graphdb.schema.IndexDefinition;
 import org.neo4j.graphdb.schema.Schema;
 
-import java.util.concurrent.TimeUnit;
-
 public class GraphDatabaseUtils {
 
     /**
@@ -68,11 +66,11 @@ public class GraphDatabaseUtils {
             tx.success();
         }
 
-        try (Transaction tx = db.beginTx()) {
+        /*try (Transaction tx = db.beginTx()) {
             Schema schema = db.schema();
             schema.awaitIndexOnline( indexDefinition, 10, TimeUnit.SECONDS );
             tx.success();
-        }
+        }*/
     }
 
 }
