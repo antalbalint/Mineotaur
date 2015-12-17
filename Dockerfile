@@ -1,7 +1,7 @@
 FROM centos:centos7
 MAINTAINER ome-devel@lists.openmicroscopy.org.uk
 
-ENV MAVEN_VERSION=3.0.5
+ENV MAVEN_VERSION=3.3.9
 
 RUN yum install -y java-1.8.0-openjdk-devel tar
 
@@ -18,6 +18,9 @@ RUN chown -R build:build /home/build/src
 
 USER build
 WORKDIR /home/build/src
+
+# mvn needs JAVA_HOME
+ENV JAVA_HOME /usr/lib/jvm/java
 RUN /opt/maven/bin/mvn install
 
 WORKDIR /mineotaur
