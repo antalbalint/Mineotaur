@@ -3,13 +3,14 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
     var range = new Object();
     var prop1, prop2, prop1Val, prop2Val, values, type;
         var currentData;
-    var checkboxes = ['#wt', '#control', '#shape', '#mt', '#cc'];
-    var filters = ['#wtFilt', '#controlFilt', '#shapeFilt', '#mtFilt', '#ccFilt'];
+    var checkboxes = ['.hitFilter'];
+    var filters = ['.hitFilter'];
     var checkboxesGWDist = ['#wtGWDist', '#controlGWDist', '#shapeGWDist', '#mtGWDist', '#ccGWDist'];
     var mapValues = 'mapValues';
     var propName = '#prop';
 
-    function handleResponse(data, type, target, id, prop1Pm, prop2Pm) {
+    function handleResponse(data, type, target, id, prop1Pm, prop2Pm, mapValues1Pm, mapValues2Pm) {
+        console.log('prop1 hr:' + prop1Pm)
         ui.hideSpinner();
         $.unblockUI();
         util.shuffle(data);
@@ -20,6 +21,7 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         xRange = d3.extent(data, function (d) {
                 return d.x;
         });
+        console.log(xRange)
         yRange = d3.extent(data, function (d) {
                 return d.y;
         });
@@ -35,12 +37,18 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         context.setRange(xRange, yRange, xLogRange, yLogRange);
         var suffix = context.getSuffix(type);
         var mv = mapValues + suffix;
-
+        var timePoints1, timePoints2;
         if (type === 'groupwiseScatterplot' || type === 'cellwiseScatter') {
-            var timePoints1 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop1') + ')';
-            console.log(mv + 'Prop1');
-            console.log(timePoints1);
-            var timePoints2 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop2') + ')';
+            if (typeof(mapValues1Pm) === 'undefined' || typeof(mapValues2Pm) === 'undefined') {
+                timePoints1 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop1') + ')';
+                console.log(mv + 'Prop1');
+                console.log(timePoints1);
+                timePoints2 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop2') + ')';
+            }
+             else {
+                timePoints1 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop1', mapValues1Pm) + ')';
+                timePoints2 = ' (' + ui.convertCheckboxToTimepoints(mv + 'Prop1', mapValues2Pm) + ')';
+               }
             if (typeof(prop1Pm) === 'undefined' || typeof(prop1Pm) === 'undefined') {
                 //var p1 = suffix + propName+'1', p2 = suffix + propName+'2';
                 if (type == cellwiseScatter) {
@@ -60,8 +68,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                 prop2Val = $(p2).val()
             }
             else {
-                prop1 = prop1Val = prop1Pm;
-                prop2 = prop2Val = prop2Pm;
+                prop1 = prop1Val = prop1Pm + timePoints1;
+                prop2 = prop2Val = prop2Pm + timePoints2;
             }
             console.log(prop1);
             console.log(prop2);
@@ -120,8 +128,10 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
         /*getContext: function() {
             return context;
         },*/
-        groupwiseScatterplotSuccess: function(data, prop1Pm, prop2Pm) {
-        	handleResponse(data, 'groupwiseScatterplot', '#graph', 'chart', prop1Pm, prop2Pm);
+        groupwiseScatterplotSuccess: function(data, prop1Pm, prop2Pm, mapValues1Pm, mapValues2Pm) {
+            console.log('prop1 event:' + prop1Pm)
+            console.log('properties event: ' + context.getProperties())
+        	handleResponse(data, 'groupwiseScatterplot', '#graph', 'chart', prop1Pm, prop2Pm, mapValues1Pm, mapValues2Pm);
         	$('#groupwiseScatterPlotFormSubmit').removeAttr("disabled");
             $('#groupwiseScatterPlotFormReset').removeAttr("disabled");
             $('#transpose').prop('disabled', false);
@@ -147,6 +157,8 @@ define(['mineotaur/ui', 'mineotaur/util', 'mineotaur/context', 'd3', 'jquery', '
                                             	$('#tools').find('#showGeneInput').show();
             ui.resetFilters(checkboxes, filters);
             $('#toolNav').removeClass('disabled');
+            $('.hitFilter').removeClass('disabled');
+
             $('#navigation a[href="#tools"]').tab('show');
             ui.showGraph();
         	/*console.log(data);

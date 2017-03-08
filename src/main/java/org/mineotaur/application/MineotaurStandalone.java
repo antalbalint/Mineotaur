@@ -8,18 +8,30 @@ import org.mineotaur.importer.gui.ImporterWizard;
 import org.mineotaur.importer.gui.InputWizard;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import java.io.FileReader;
 import java.util.PropertyResourceBundle;
+import java.util.logging.Level;
 
 /**
  * Created by Balint on 2015-09-21.
  */
 @ComponentScan(basePackages = {"org.mineotaur.controller", "org.mineotaur.application"})
 @EnableAutoConfiguration
-public class MineotaurStandalone extends WebMvcConfigurerAdapter {
+@ConfigurationProperties()
+public class MineotaurStandalone extends WebMvcConfigurerAdapter{
+
+//    private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
+//            "classpath:/META-INF/resources/", "classpath:/resources/",
+//            "classpath:/static/", "classpath:/public/" };
+//    @Override
+//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        registry.addResourceHandler("/mineotaur/**").addResourceLocations(
+//                CLASSPATH_RESOURCE_LOCATIONS);
+//    }
 
     /**
      * Method to parse command line arguments using Apache Commons CLI.
@@ -90,8 +102,14 @@ public class MineotaurStandalone extends WebMvcConfigurerAdapter {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
+
+        Mineotaur.LOGGER.setLevel(Level.ALL);
         parseArguments(args);
     }
 
 
+/*    @Override
+    public void customize(ConfigurableEmbeddedServletContainer configurableEmbeddedServletContainer) {
+        configurableEmbeddedServletContainer.setContextPath("/mineotaur");
+    }*/
 }

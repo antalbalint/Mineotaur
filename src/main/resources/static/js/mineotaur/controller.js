@@ -98,7 +98,7 @@ function (events, ui, context, plots, util, pako, $) {
                                                                                 context.setURL(queryString);
                                                                         	    */
                                                                         	    $.ajax({
-                                                                                                                    url: "/decode",
+                                                                                                                    url: "/mineotaur/decode",
                                                                                                                     data: data,
                                                                                                                     dataType: "json",
                                                                                                                     type:"GET",
@@ -360,7 +360,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                                                                 context.setURL(queryString);
                                                         	    console.log(data);*/
                                                         	    $.ajax({
-                                                                                                    url: "/decode",
+                                                                                                    url: "/mineotaur/decode",
                                                                                                     data: data,
                                                                                                     dataType: "json",
                                                                                                     type:"GET",
@@ -387,7 +387,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                         	    context.setURL("content="+data['content']);
                         	    console.log(data);
                         	    $.ajax({
-                                                                    url: "/decode",
+                                                                    url: "/mineotaur/decode",
                                                                     data: data,
                                                                     dataType: "json",
                                                                     type:"POST",
@@ -424,7 +424,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                                                     	    context.setURL("content="+data['content']);
                                                     	    console.log(data);
                                                     	    $.ajax({
-                                                                                                url: "/decode",
+                                                                                                url: "/mineotaur/decode",
                                                                                                 data: data,
                                                                                                 dataType: "json",
                                                                                                 type:"POST",
@@ -478,7 +478,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                                                     	    context.setURL("content="+data['content']);
                                                     	    console.log(data);
                                                     	    $.ajax({
-                                                                                                url: "/decode",
+                                                                                                url: "/mineotaur/decode",
                                                                                                 data: data,
                                                                                                 dataType: "json",
                                                                                                 type:"POST",
@@ -546,46 +546,58 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                         		    ui.showGraph();
                         		}
                         	});
-                        	$('#ccFilt').bind('change', function () {
-                                                    		if ($(this).is(':checked')) {
-                                                    		    context.putback('Cell cycle hit');
-                                                    		    ui.showGraph();
-                                                    		} else {
-                                                    		    //TODO assign with some #mtFilt field
-                                                    		    context.filter('Cell cycle hit');
-                                                    		    ui.showGraph();
-                                                    		}
-                                                    	});
-                            $('#shapeFilt').bind('change', function () {
-                                                                                		if ($(this).is(':checked')) {
-                                                                                		    context.putback('Shape hit');
-                                                                                		    ui.showGraph();
-                                                                                		} else {
-                                                                                		    //TODO assign with some #mtFilt field
-                                                                                		    context.filter('Shape hit');
-                                                                                		    ui.showGraph();
-                                                                                		}
-                                                                                	});
-                            $('#wtFilt').bind('change', function () {
-                                                                                		if ($(this).is(':checked')) {
-                                                                                		    context.putback('Wild type');
-                                                                                		    ui.showGraph();
-                                                                                		} else {
-                                                                                		    //TODO assign with some #mtFilt field
-                                                                                		    context.filter('Wild type');
-                                                                                		    ui.showGraph();
-                                                                                		}
-                                                                                	});
-                            $('#controlFilt').bind('change', function () {
-                                                                                                            		if ($(this).is(':checked')) {
-                                                                                                            		    context.putback('Control');
-                                                                                                            		    ui.showGraph();
-                                                                                                            		} else {
-                                                                                                            		    //TODO assign with some #mtFilt field
-                                                                                                            		    context.filter('Control');
-                                                                                                            		    ui.showGraph();
-                                                                                                            		}
-                                                                                                            	});
+                        	$('.hitFilter').bind('change', function(event) {
+                        	    console.log('hit filter')
+                        	    console.log(this)
+                        	    if ($(this).is(':checked')) {
+                                    context.putback(event.target.value);
+                                    ui.showGraph();
+                                } else {
+                                    context.filter(event.target.value);
+                                    ui.showGraph();
+                                }
+                        	}
+                        	)
+//                        	$('#ccFilt').bind('change', function () {
+//                                                    		if ($(this).is(':checked')) {
+//                                                    		    context.putback('Cell cycle hit');
+//                                                    		    ui.showGraph();
+//                                                    		} else {
+//                                                    		    //TODO assign with some #mtFilt field
+//                                                    		    context.filter('Cell cycle hit');
+//                                                    		    ui.showGraph();
+//                                                    		}
+//                                                    	});
+//                            $('#shapeFilt').bind('change', function () {
+//                                                                                		if ($(this).is(':checked')) {
+//                                                                                		    context.putback('Shape hit');
+//                                                                                		    ui.showGraph();
+//                                                                                		} else {
+//                                                                                		    //TODO assign with some #mtFilt field
+//                                                                                		    context.filter('Shape hit');
+//                                                                                		    ui.showGraph();
+//                                                                                		}
+//                                                                                	});
+//                            $('#wtFilt').bind('change', function () {
+//                                                                                		if ($(this).is(':checked')) {
+//                                                                                		    context.putback('Wild type');
+//                                                                                		    ui.showGraph();
+//                                                                                		} else {
+//                                                                                		    //TODO assign with some #mtFilt field
+//                                                                                		    context.filter('Wild type');
+//                                                                                		    ui.showGraph();
+//                                                                                		}
+//                                                                                	});
+//                            $('#controlFilt').bind('change', function () {
+//                                                                                                            		if ($(this).is(':checked')) {
+//                                                                                                            		    context.putback('Control');
+//                                                                                                            		    ui.showGraph();
+//                                                                                                            		} else {
+//                                                                                                            		    //TODO assign with some #mtFilt field
+//                                                                                                            		    context.filter('Control');
+//                                                                                                            		    ui.showGraph();
+//                                                                                                            		}
+//                                                                                                            	});
                         	$('#regression').bind('change', function () {
                         		if ($(this).is(':checked')) {
                         			plots.addRegressionLine();
@@ -612,7 +624,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                         		util.downloadCSV.call(this, 'data.csv');
                         	});
                         	$('#share').on('click', function (event) {
-                        	    var string = window.location.origin + "/share?type=" + context.getType() + "&" + context.getURL();
+                        	    var string = window.location.origin + "/mineotaur/share?type=" + context.getType() + "&" + context.getURL();
                         	    //var string = window.location.href + "share?type=" + context.getType() + "&" + context.getURL();
                                 $('#shareTextArea').val(string);
                                 $('#shareTextArea').attr('readonly', true);
@@ -679,6 +691,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                                                             		$('#geneListDistModal').modal('show');
                                                             	});
                             	$('#submitGeneList').on('click', function (event) {
+                                    geneNames = context.getParameters()['gene']
 
                             		var lines = $('#geneListTextArea').val().split('\n');
                             		var actual = [],
@@ -726,6 +739,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
                             		/*$('#geneListModal').modal('hide');*/
                             	});
                             	$('#submitGeneListDist').on('click', function (event) {
+                                                                        geneNames = context.getParameters()['gene']
 
                                                             		var lines = $('#geneListDistTextArea').val().split('\n');
                                                             		var actual = [],
@@ -979,7 +993,7 @@ $('#groupwiseScatterPlotForm').submit(function(event){
 						context.setURL("content=" + data['content']);
 						console.log(data);
 						$.ajax({
-							url: "/decode",
+							url: "/mineotaur/decode",
 							data: data,
 							dataType: "json",
 							type: "GET",
@@ -992,22 +1006,24 @@ $('#groupwiseScatterPlotForm').submit(function(event){
 							// success identifies the function to invoke when the server response
 							// has been received
 							success: function(data) {
-								switch (type) {
+                                props = context.getProperties();
+                                mapValues = context.getMapValues();
+                                switch (type) {
 									case 'groupwiseScatterplot':
-										events.groupwiseScatterplotSuccess(data);
+										events.groupwiseScatterplotSuccess(data, props[0], props[1], mapValues[0], mapValues[1]);
 										break;
 									case 'cellwiseScatter':
-										events.cellwiseScatterSuccess(data);
+										events.cellwiseScatterSuccess(data, props[0], props[1], mapValues[0], mapValues[1]);
 										break;
 									case 'genewiseHistogram':
 									case 'genewiseKDE':
 									case 'genewiseMultihistogram':
-										events.groupwiseDistributionFormSuccess(data);
+										events.groupwiseDistributionFormSuccess(data, props[0], props[1], mapValues[0], mapValues[1]);
 										break;
 
 									case 'cellwiseHistogram':
 									case 'cellwiseKDE':
-										events.cellwiseDistributionSuccess(data);
+										events.cellwiseDistributionSuccess(data, props[0], props[1], mapValues[0], mapValues[1]);
 										break;
 								}
 							},

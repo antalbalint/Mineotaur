@@ -283,20 +283,27 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             String q = "SELECT link.child.file FROM ScreenAnnotationLink link WHERE link.parent.id=:id";
             List<IObject> results = proxy.findAllByQuery(q, param);
         Iterator<IObject> i = results.iterator();
+        Mineotaur.LOGGER.info(dataFileName);
+        Mineotaur.LOGGER.info(labelFileName);
         while (i.hasNext()) {
             OriginalFile file = (OriginalFile) i.next();
             String fileName = file.getName().getValue();
+            Mineotaur.LOGGER.info(fileName);
             if (dataFile != null && labelFile != null) {
                 break;
             }
-            if (dataFile == null && dataFileName.equals(fileName)) {
+            if (dataFile == null && dataFileName.equalsIgnoreCase(fileName)) {
                 dataFile = file;
+
                 continue;
             }
-            if (labelFile == null && labelFileName.equals(fileName)) {
+            if (labelFile == null && labelFileName.equalsIgnoreCase(fileName)) {
                 labelFile = file;
+
+
                 continue;
             }
+
             /*FileAnnotation a = (FileAnnotation)i.next();
             System.out.println(a.getFile().getName().getValue());*/
             /*FileAnnotationData fad = new FileAnnotationData(a);
@@ -334,13 +341,11 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
 
     protected void readTable(OriginalFile file) throws ServerError {
         TablePrx table = entry.sharedResources().openTable(file);
-
 //read headers
         Column[] cols = table.getHeaders();
         int tableLength = (int) table.getNumberOfRows();
-        table.close();
+//        table.close();
 
-        Mineotaur.LOGGER.info(Arrays.toString(cols));
         List<Integer> experimentIDs = new ArrayList<>();
         List<Integer> strainIDs = new ArrayList<>();
 //        String[] descriptiveHeader = null;
@@ -394,7 +399,7 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             for (int j = 0; j < rowSubset.length; j++) {
                 rowSubset[j] = j + currentBatch;
             }
-            table = entry.sharedResources().openTable(file);
+//            table = entry.sharedResources().openTable(file);
             Data data = table.slice(columnsToRead, rowSubset); // read the data.
             cols = data.columns;
 
@@ -458,8 +463,9 @@ public class DatabaseGeneratorFromOmero extends DatabaseGenerator{
             }
 
 
-            table.close();
+
         }
+        table.close();
         Mineotaur.LOGGER.info("Number of strains: " + String.valueOf(strains.size()));
     }
     protected Node createDescriptiveNode(String[] descriptiveHeader, double[] descriptiveColumn) {

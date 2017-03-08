@@ -23,7 +23,7 @@ define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'undersco
 
         resetFilters: function(checkboxes, filters) {
             for (i = 0; i < checkboxes.length; ++i) {
-                //console.log(checkboxes[i]);
+                console.log(checkboxes[i]);
                 if ($(checkboxes[i]).is(":checked")) {
 
                         $(filters[i]).prop('disabled', false);
@@ -182,6 +182,12 @@ define(['mineotaur/util','mineotaur/plots','mineotaur/context','spin', 'undersco
             time = time.substring(0,time.length-2);
             return time;
         },
+        convertArrayToTimepoints: function(checkbox, array) {
+                    var time = '';
+                    $('input[name=' + checkbox + ']').each(function(d) {if ($(this).val() in array) time = time + $(this).next('label').text() + ', ';});
+                    time = time.substring(0,time.length-2);
+                    return time;
+                },
         showSpinner: function(element) {
         	var target = document.getElementById(element);
         	spinner = new Spinner().spin(target);

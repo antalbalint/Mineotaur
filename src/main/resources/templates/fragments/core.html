@@ -198,7 +198,7 @@ require.config({
 require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur/events', 'pako', 'jquery', 'jquery.blockUI'], function(controller, context, ui, events, $) {
 
         var sharedLink = /*[[${sharedLink}]]*/false;
-            //console.log(sharedLink);
+            console.log(sharedLink);
             groupNames = /*[[${dataDescriptor.groupNames}]]*/null;
             cellProperties = /*[[${dataDescriptor.features}]]*/null;
             aggValues = /*[[${dataDescriptor.aggValues}]]*/null;
@@ -211,13 +211,23 @@ require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur
             }
             context.setLabels(hits);
             parameters = {'gene': groupNames, 'props': cellProperties, 'aggValues': aggValues, 'stages': stages, 'hits': hits};
-
+            console.log(parameters)
             context.setParameters(parameters);
 
     var toDecode = /*[[${toDecode}]]*/ false;
     if (toDecode) {
         type = /*[[${type}]]*/ null;
         content = /*[[${content}]]*/ content;
+       prop1 = /*[[${prop1}]]*/null;
+                console.log(prop1);
+
+                prop2 = /*[[${prop2}]]*/null;
+                console.log(prop2);
+                context.setProperties([prop1, prop2]);
+                mapValuesProp1 = /*[[${mapValuesProp1}]]*/null;
+                mapValuesProp2 = /*[[${mapValuesProp2}]]*/null;
+                context.setMapValues([mapValuesProp1,  mapValuesProp2]);
+                console.log(mapValuesProp1)
         //console.log(type);
         //console.log(pako.inflate(atob(content), { to: 'string' }));
         data = {}
@@ -229,6 +239,7 @@ require(['mineotaur/controller', 'mineotaur/context', 'mineotaur/ui', 'mineotaur
     }
     else {
      if (sharedLink) {
+        console.log('shared')
      prop1 = /*[[${prop1}]]*/null;
                 console.log(prop1);
 

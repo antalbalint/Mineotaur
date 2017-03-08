@@ -7,6 +7,7 @@ define(['underscore', 'pako'], function (_, pako) {
     map['tools'] = ['#regression', '#log', '#transpose', '#selection'];
 
     var props=[];
+    var mapValues=[];
     var legends=[];
     var formData={};
     var range={};
@@ -422,6 +423,7 @@ define(['underscore', 'pako'], function (_, pako) {
 
        setData: function(_data) {
         data=_data;
+        filtered=[]
        },
 
        getGenename: function() {
@@ -475,6 +477,8 @@ define(['underscore', 'pako'], function (_, pako) {
             }
         });
         data = inner;
+        console.log(filtered)
+        console.log(data)
        },
 
        filterDec: function(label) {
@@ -502,6 +506,8 @@ define(['underscore', 'pako'], function (_, pako) {
        },
 
         putback: function(label) {
+            console.log('put back')
+            console.log(label)
             var inner = [];
                     filtered.forEach(function(d) {
                         if (d.labels.indexOf(label) > -1) {
@@ -512,6 +518,7 @@ define(['underscore', 'pako'], function (_, pako) {
                         }
                     });
                     filtered = inner;
+            console.log(filtered)
         },
 
        setFormData: function(prefix) {
@@ -567,6 +574,12 @@ define(['underscore', 'pako'], function (_, pako) {
        },
        getOmeroDetailURL: function() {
         return omeroDetailURL;
+       },
+       getMapValues: function() {
+        return mapValues;
+       },
+       setMapValues: function(_mapValues) {
+        mapValues = _mapValues;
        },
     }
 });

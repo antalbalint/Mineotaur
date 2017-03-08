@@ -70,7 +70,7 @@
         </th:block>
     </th:block>
 </div>
-<div th:fragment="hits (hits, suffix, desc)">
+<div th:fragment="hits (hits, suffix, desc, filter)">
     <span class="label label-primary">Hit type</span><br/>
     <th:block th:each="h: ${hits}" th:if="${desc == true}">
         <th:block th:with="id=${#strings.append(h.key,suffix)}">
@@ -80,7 +80,12 @@
     </th:block>
     <th:block th:each="h: ${hits}" th:if="${desc == false}">
         <th:block th:with="id=${#strings.append(h,suffix)}">
-        <input th:id="${id}" th:value="${h}" type="checkbox" checked="true" th:name="${#strings.append('hitCheckbox',suffix)}"/>
+        <th:block th:if="${filter==true}">
+                <input th:id="${id}" th:value="${h}" type="checkbox" checked="true" th:name="${#strings.append('hitCheckbox',suffix)}" class="hitFilter"/>
+        </th:block>
+        <th:block th:if="${filter==false}">
+                <input th:id="${id}" th:value="${h}" type="checkbox" checked="true" th:name="${#strings.append('hitCheckbox',suffix)}"/>
+        </th:block>
         <label th:for="${id}" th:text="${h}"/><br/>
         </th:block>
     </th:block>

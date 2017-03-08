@@ -211,14 +211,169 @@ public class MineotaurController {
      */
     @RequestMapping("/")
     protected String start(Model model) {
+
         return "index";
     }
 
+    /*@RequestMapping("/cleanup")
+    protected String cleanup(Model model) {
+        List<String> features = (List<String>) ((Map<String, Object>) provider.getContext()).get("features");
+        Set<String> filters = (Set<String>) ((Map<String, String>)((Map<String, Object>) provider.getContext()).get("filters")).keySet();
+        *//*Mineotaur.LOGGER.info(features.toString());
+        Mineotaur.LOGGER.info(filters.toString());*//*
+        int count = 0;
+        Transaction tx = null;
+        try  {
+            tx = db.beginTx();
+            for (String geneName: groupNames) {
+                Mineotaur.LOGGER.info(geneName);
+                Node strain = strainMap.get(geneName);
+
+                for (String feature: features) {
+//                    Mineotaur.LOGGER.info(feature);
+                    RelationshipType aggRt = DynamicRelationshipType.withName(feature);
+                    Iterator<Relationship> preRels = strain.getRelationships(aggRt).iterator();
+                    while (preRels.hasNext()) {
+                        Relationship preRel = preRels.next();
+                        Node node = preRel.getOtherNode(strain);
+                        preRel.delete();
+//                        Mineotaur.LOGGER.info(String.valueOf(node.getId()));
+                        node.delete();
+                    }
+                    RelationshipType rt = DynamicRelationshipType.withName(feature+"_ARRAY");
+                    if (strain.hasRelationship(rt)) {
+                        Iterator<Relationship> arrayRels = strain.getRelationships(rt).iterator();
+                        while (arrayRels.hasNext()) {
+                            Node node = arrayRels.next().getOtherNode(strain);
+                            *//*Iterator<String> properties = node.getPropertyKeys().iterator();
+                            while (properties.hasNext()) {
+                                String key = properties.next();
+                                Mineotaur.LOGGER.info(key);
+                            }*//*
+                            double[] array = (double[]) node.getProperty(feature);
+                            String[] filtArr = (String[]) node.getProperty("filter");
+                            Map<String, List<Double>> valuesByfilter = new HashMap<>();
+                            for (String filter: filters) {
+                                valuesByfilter.put(filter, new ArrayList<>());
+                            }
+                            for (int i = 0; i < array.length; ++i) {
+//                                if (!Double.isNaN(array[i])) {
+//                                    stat.addValue(array[i]);
+//                                }
+                                if (!Double.isNaN(array[i]) && !filtArr[i].equals("NaN")) {
+                                    valuesByfilter.get(filtArr[i]).add(array[i]);
+                                }
+                            }
+                            for (String filter: valuesByfilter.keySet()) {
+                                List<Double> values = valuesByfilter.get(filter);
+
+                            }
+                            List<String> filterValues = new ArrayList<>();
+                            filterValues.addAll(filters);
+                            Map<String[], List<Double>> powerSet = new HashMap<>();
+                            double maxSize = Math.pow(2, filters.size());
+                            int set = 1;
+                            while (set < maxSize) {
+                                List<String> combination = new ArrayList<>();
+                                List<Double> values = new ArrayList<>();
+                                for (int i = 0; i < filters.size(); ++i) {
+                                    if (((set >> i) & 1) == 1) {
+                                        String filter = filterValues.get(i);
+                                        combination.add(filter);
+                                        values.addAll(valuesByfilter.get(filter));
+//                                        System.out.print(i + ", ");
+                                    }
+                                }
+
+//                                powerSet.put(combination.toArray(new String[combination.size()]), values);
+//                                System.out.println(combination);
+                                DescriptiveStatistics stat = new DescriptiveStatistics();
+                                for (Double val:values) {
+
+                                    if (!Double.isNaN(val))
+                                        stat.addValue(val);
+                                }
+                                Node precomputedAgg = db.createNode();
+                                precomputedAgg.setProperty("Average", stat.getMean());
+                                precomputedAgg.setProperty("Minimum", stat.getMin());
+                                precomputedAgg.setProperty("Maximum", stat.getMax());
+                                precomputedAgg.setProperty("Standard deviation", stat.getStandardDeviation());
+                                precomputedAgg.setProperty("Median", stat.getPercentile(50));
+                                precomputedAgg.setProperty("Count", stat.getN());
+                                Relationship rel = precomputedAgg.createRelationshipTo(strain, aggRt);
+                                rel.setProperty("filter", combination.toArray(new String[combination.size()]));
+                                count++;
+//                                Mineotaur.LOGGER.info(feature + "(" + combination + "): " + stat.getMean());
+                                set += 1;
+                            }
+                        }
+                    }
+                    if (count > 5000) {
+                        tx.success();
+                        tx.close();
+                        tx = db.beginTx();
+                        count = 0;
+                    }
+                }
+
+//                break;
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            tx.success();
+            tx.close();
+        }
+//        listData(strainMap.get(groupNames.get(0)));
+
+        return "index";
+    }
+
+    public void listData(Node strain) {
+        try (Transaction tx = db.beginTx()) {
+            Iterator<Relationship> rels = strain.getRelationships().iterator();
+            while (rels.hasNext()) {
+                Relationship rel = rels.next();
+//                Mineotaur.LOGGER.info(rel.getType().name());
+                String rtName = rel.getType().name();
+                if (rtName.equals("length") || rtName.equals("length_ARRAY")) {
+                    Node node = rel.getOtherNode(strain);
+                    Iterator<String> properties = node.getPropertyKeys().iterator();
+                    while (properties.hasNext()) {
+                        String key = properties.next();
+
+                        if (key.equals("length")) {
+                            Mineotaur.LOGGER.info(key + ": " + (Arrays.toString((double[])node.getProperty(key))));
+
+                        }
+                        else if (key.equals("filter")) {
+                            Mineotaur.LOGGER.info(key + ": " + (Arrays.toString((String[])node.getProperty(key))));
+
+                        }
+                        else {
+                            Mineotaur.LOGGER.info(key + ": " + node.getProperty(key));
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }*/
     @RequestMapping("/share")
-    protected String query(Model model, @RequestParam String type, @RequestParam String content) {
+    protected String query(Model model, @RequestParam MultiValueMap<String, String> params, @RequestParam String type, @RequestParam String content) {
         if (model == null || type == null || content == null || "".equals(type) || "".equals(content)) {
             throw new IllegalArgumentException();
         }
+        Map<String, Object> model2 = StringUtils.decodeURL(model, params, groupNames).asMap();
+        model.addAttribute("prop1", model2.get("prop1"));
+        model.addAttribute("prop2", model2.get("prop2"));
+        model.addAttribute("mapValuesProp1", model2.get("mapValuesProp1"));
+        model.addAttribute("mapValuesProp2", model2.get("mapValuesProp2"));
+
         model.addAttribute("content", content);
         model.addAttribute("type", type);
         model.addAttribute("toDecode", true);
@@ -304,20 +459,27 @@ public class MineotaurController {
         try (Transaction tx = db.beginTx()) {
 
             for (String geneName : geneList) {
-
+//                Mineotaur.LOGGER.info("Gene name: " + geneName);
                 Node strain = strainMap.get(geneName);
                 if (strain == null) {
                     continue;
                 }
 
                 List<String> actualLabels = getActualLabels(hitLabels, strain);
-                if (actualLabels.isEmpty()) {
+//                Mineotaur.LOGGER.info(actualLabels.toString());
+                /*if (actualLabels.isEmpty()) {
                     continue;
-                }
+                }*/
                 Double xAgg, yAgg;
                 if (hasFilter) {
+//                    Mineotaur.LOGGER.info(mapValuesProp1.toString());
+//                    Mineotaur.LOGGER.info(mapValuesProp2.toString());
+//                    listData(strain);
                     xAgg = getFilteredAggregatedData(strain, prop1, geneName, aggProp1, mapValuesProp1);
                     yAgg = getFilteredAggregatedData(strain, prop2, geneName, aggProp2, mapValuesProp2);
+//                    getFilteredAggregatedData(strain, "length", geneName, aggProp2, mapValuesProp2);
+//                    getFilteredAggregatedData(strain, "width", geneName, aggProp2, mapValuesProp2);
+
                 }
                 else {
                     xAgg = getAggregatedData(strain, prop1, geneName, aggProp1);
@@ -342,6 +504,7 @@ public class MineotaurController {
         }
         return dataPoints;
     }
+
 
 
     /**
@@ -548,13 +711,15 @@ public class MineotaurController {
             node = rel.getOtherNode(strain);
         }
         if (node == null) {
+
             throw new IllegalStateException("There is no node stored for strain " + genename + " for property " + prop1);
+
         }
-        Iterator<String> props = node.getPropertyKeys().iterator();
+        /*Iterator<String> props = node.getPropertyKeys().iterator();
         Mineotaur.LOGGER.info(String.valueOf(props.hasNext()));
         while (props.hasNext()) {
             Mineotaur.LOGGER.info(props.next());
-        }
+        }*/
         double[] prop1Arr = (double[]) node.getProperty(prop1,null);
         if (prop1Arr == null) {
             return new double[]{};
@@ -574,7 +739,7 @@ public class MineotaurController {
     }
 
     protected Double getFilteredAggregatedData(Node strain, String prop1, String genename, String aggregate, List<String> filter) {
-        if (strain == null || prop1 == null || "".equals(prop1) || genename == null || "".equals(genename) || aggregate == null || "".equals(aggregate) || filter == null || filter.isEmpty())  {
+        if (strain == null || prop1 == null || "".equals(prop1) || genename == null /*|| "".equals(genename)*/ || aggregate == null || "".equals(aggregate) || filter == null || filter.isEmpty())  {
             throw new IllegalArgumentException();
         }
         Iterator<Relationship> prop1Iterator = strain.getRelationships(DynamicRelationshipType.withName(prop1)).iterator();
@@ -582,26 +747,46 @@ public class MineotaurController {
         while (prop1Iterator.hasNext()) {
             Relationship rel = prop1Iterator.next();
             String[] filterArr = (String[]) rel.getProperty("filter");
+//            Mineotaur.LOGGER.info("filters: " + Arrays.toString(filterArr));
             if (filterArr.length != filter.size()) {
                 continue;
             }
             boolean filterMatch = true;
+            int count = 0;
             for (String f: filterArr) {
+                if (f.equalsIgnoreCase("NaN")) {
+                    continue;
+                }
                 if (!filter.contains(f)) {
                     filterMatch = false;
                     break;
                 }
+                count++;
             }
-            if (filterMatch) {
+//            Mineotaur.LOGGER.info("filter size: " + count + " vs " + filter.size());
+            /*boolean filterMatch = false;
+            for (String f: filterArr) {
+                if (filter.contains(f)) {
+                    filterMatch = true;
+                    break;
+                }
+            }*/
+            if (count == filter.size() && filterMatch) {
+//                Mineotaur.LOGGER.info("Filter match: " + Arrays.toString(filterArr) + " vs " + filter);
                 node = rel.getOtherNode(strain);
                 break;
             }
         }
         if (node == null) {
+            /*prop1Iterator = strain.getRelationships().iterator();
+            while (prop1Iterator.hasNext()) {
+                Mineotaur.LOGGER.info(prop1Iterator.next().getType().name());
+            }*/
             Mineotaur.LOGGER.warning("There is no node stored for strain " + genename + " for property " + prop1);
             return null;
         }
         Object value = node.getProperty(aggregate,null);
+//        Mineotaur.LOGGER.info(prop1 + ": " + value);
         if (value instanceof Double) {
             return (Double) value;
         }
